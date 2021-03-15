@@ -1,0 +1,11 @@
+name: Simple Tool
+resultsPath: ${toolHome}/simpleResult.txt
+commands:
+  win:
+    - name: Pint to screen
+      exec: echo "This is a test"
+    - name: Write file
+      exec: echo This is the simple result > ${toolHome}/simpleResult.txt
+  unix:
+    - name: My command
+      exec: echo This is the simple result > ${toolHome}/simpleResult.txt
