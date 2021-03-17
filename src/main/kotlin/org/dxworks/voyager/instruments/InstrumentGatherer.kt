@@ -13,18 +13,18 @@ class InstrumentGatherer(baseFolder: String) {
         private val log = logger<InstrumentGatherer>()
     }
 
-    val tools: List<Tool>
+    val instruments: List<Instrument>
 
     init {
-        tools =
+        instruments =
             Path.of(baseFolder).toFile().listFiles(FileFilter { it.isToolBaseFolder() })?.mapNotNull { createTool(it) }
                 ?: emptyList()
     }
 
-    private fun createTool(it: File): Tool? {
+    private fun createTool(it: File): Instrument? {
         val absolutePath = it.absolutePath
         return try {
-            Tool(absolutePath, yamlMapper.readValue(it.resolve(executionConfigName)))
+            Instrument(absolutePath, yamlMapper.readValue(it.resolve(executionConfigName)))
         } catch (e: Exception) {
             log.error("Tool at $absolutePath could not be added", e)
             return null

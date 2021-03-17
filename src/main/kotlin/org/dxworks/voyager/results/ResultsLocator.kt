@@ -1,20 +1,28 @@
 package org.dxworks.voyager.results
 
-import org.dxworks.voyager.instruments.Tool
-import java.io.File
+import org.dxworks.voyager.instruments.Instrument
 import java.nio.file.FileSystems
 import java.nio.file.Path
 
-class ResultsLocator() {
-    fun locate(tool: Tool): List<File> {
-        return tool.configuration.results.map { results ->
-            val dir = Path.of(tool.process({ results.dir })).toFile()
-            return if (results.files.isEmpty()) {
-                listOf(dir)
+class ResultsLocator {
+    fun locate(instrument: Instrument): InstrumentResult {
+        return InstrumentResult(instrument, instrument.configuration.results.flatMap { results ->
+            val dir = Path.of(instrument.process({ results.dir })).toFile()
+            if (results.files.isEmpty()) {
+                listOf(FileAndAlias(dir, instrument.name))
             } else {
-                val map = results.files.map(FileSystems.getDefault()::getPathMatcher)
-                dir.list { file, _ -> map.any { it.matches(file.toPath()) } }?.map(dir::resolve) ?: emptyList()
+                val pathMatchers = results.files.map(FileSystems.getDefault()::getPathMatcher)
+                dir.walkTopDown().filter { file ->
+                    pathMatchers.any {
+                        it.matches(dir.toPath().relativize(file.toPath()))
+                    }
+                }.map {
+                    FileAndAlias(
+                        it,
+                        Path.of(instrument.name, dir.toPath().relativize(it.toPath()).toString()).toString()
+                    )
+                }.toList()
             }
-        }
+        })
     }
 }

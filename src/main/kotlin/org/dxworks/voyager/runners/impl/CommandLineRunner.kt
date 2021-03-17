@@ -4,7 +4,7 @@ import org.dxworks.voyager.config.Command
 import org.dxworks.voyager.config.analysisFolder
 import org.dxworks.voyager.runners.CommandExecutionResult
 import org.dxworks.voyager.runners.ToolRunner
-import org.dxworks.voyager.instruments.Tool
+import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.utils.commandInterpreterName
 import org.dxworks.voyager.utils.interpreterArg
 import org.dxworks.voyager.utils.isUnix
@@ -19,24 +19,24 @@ class CommandLineRunner(baseFolder: File) : ToolRunner(baseFolder) {
     private val processBuilder = ProcessBuilder()
 
     override fun internalRun(
-        tool: Tool,
+        instrument: Instrument,
         baseFolder: File
     ): List<CommandExecutionResult> {
 
-        val commands = if (isUnix) tool.configuration.commands.unix else tool.configuration.commands.win
+        val commands = if (isUnix) instrument.configuration.commands.unix else instrument.configuration.commands.win
 
         if (commands == null || commands.isEmpty()) {
-            log.warn("${tool.name} does not have anything to run")
+            log.warn("${instrument.name} does not have anything to run")
             return emptyList()
         }
 
         return commands.mapIndexed { index, command ->
-            val identifier = getCommandIdentifier(command, tool, index)
+            val identifier = getCommandIdentifier(command, instrument, index)
             try {
                 log.info("Running command $identifier")
                 val process = getProcessForCommand(
-                    tool.process({ command.exec }, analysisFolder to baseFolder.absolutePath),
-                    Path.of(command.dir?.let { dir -> tool.process({ dir }) } ?: tool.path).toFile()
+                    instrument.process({ command.exec }, analysisFolder to baseFolder.absolutePath),
+                    Path.of(command.dir?.let { dir -> instrument.process({ dir }) } ?: instrument.path).toFile()
                 )
                 setupLogger(identifier, process)
                 if (process.waitFor() == 0) {
@@ -59,8 +59,8 @@ class CommandLineRunner(baseFolder: File) : ToolRunner(baseFolder) {
         BufferedReader(process.inputStream.reader()).forEachLine { logger.info(it) }
     }
 
-    private fun getCommandIdentifier(command: Command, tool: Tool, index: Int): String {
-        val indexFromTool = "${index + 1} from ${tool.name}"
+    private fun getCommandIdentifier(command: Command, instrument: Instrument, index: Int): String {
+        val indexFromTool = "${index + 1} from ${instrument.name}"
         return command.name?.let { "$it ($indexFromTool)" } ?: indexFromTool
     }
 

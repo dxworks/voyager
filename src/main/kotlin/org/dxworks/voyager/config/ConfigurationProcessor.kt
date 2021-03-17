@@ -3,7 +3,7 @@ package org.dxworks.voyager.config
 import com.fasterxml.jackson.module.kotlin.readValue
 import freemarker.template.Configuration
 import freemarker.template.Template
-import org.dxworks.voyager.instruments.Tool
+import org.dxworks.voyager.instruments.Instrument
 import java.io.StringWriter
 import java.nio.file.Path
 
@@ -30,22 +30,22 @@ class ConfigurationProcessor private constructor() {
         fields[key] = value
     }
 
-    fun addValue(tool: Tool, key: String, value: String) {
-        getToolFields(tool)[key] = value
+    fun addValue(instrument: Instrument, key: String, value: String) {
+        getToolFields(instrument)[key] = value
     }
 
-    private fun getToolFields(tool: Tool) = toolFields.computeIfAbsent(tool.name) { HashMap() }
+    private fun getToolFields(instrument: Instrument) = toolFields.computeIfAbsent(instrument.name) { HashMap() }
 
-    fun process(tool: Tool, template: String, vararg additionalFields: Pair<String, String>): String {
+    fun process(instrument: Instrument, template: String, vararg additionalFields: Pair<String, String>): String {
         return StringWriter().also {
             Template("", template, defaultConfiguration).process(
-                fields + getToolFieldsWithDefaults(tool) + additionalFields, it
+                fields + getToolFieldsWithDefaults(instrument) + additionalFields, it
             )
         }.toString()
     }
 
-    private fun getToolFieldsWithDefaults(tool: Tool): Map<String, String> {
-        return getToolFields(tool).apply { tool.configuration.defaults.forEach { (k, v) -> putIfAbsent(k, v) } }
+    private fun getToolFieldsWithDefaults(instrument: Instrument): Map<String, String> {
+        return getToolFields(instrument).apply { instrument.configuration.defaults.forEach { (k, v) -> putIfAbsent(k, v) } }
     }
 }
 

@@ -4,7 +4,7 @@ import org.dxworks.voyager.config.ConfigurationProcessor
 import org.dxworks.voyager.config.InstrumentConfiguration
 import org.dxworks.voyager.config.toolHomeField
 
-open class Tool(val path: String, val configuration: InstrumentConfiguration) {
+open class Instrument(val path: String, val configuration: InstrumentConfiguration) {
     val name = configuration.name
 
     fun process(

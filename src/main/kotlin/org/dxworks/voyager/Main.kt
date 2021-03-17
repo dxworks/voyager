@@ -5,8 +5,8 @@ import org.dxworks.argumenthor.config.ArgumenthorConfiguration
 import org.dxworks.argumenthor.config.fields.impl.StringField
 import org.dxworks.argumenthor.config.sources.impl.ArgsSource
 import org.dxworks.voyager.config.ConfigurationProcessor
+import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.instruments.InstrumentGatherer
-import org.dxworks.voyager.instruments.Tool
 import org.dxworks.voyager.results.ResultsLocator
 import org.dxworks.voyager.results.ResultsPackager
 import org.dxworks.voyager.runners.impl.CommandLineRunner
@@ -23,26 +23,26 @@ private val log = LoggerFactory.getLogger("Main")
 
 fun main(args: Array<String>) {
     val argumenthor = getArgumenthor(args)
-    val (tools, site) = prepareTools(argumenthor)
+    val (instruments, site) = prepareTools(argumenthor)
     ConfigurationProcessor.get().setConfigurationSource(argumenthor.getValue(voyagerConfig)!!)
 
     val commandLineRunner = CommandLineRunner(Path.of(site).toFile())
 
-    val results = tools.map { commandLineRunner.run(it) }
+    val results = instruments.map { commandLineRunner.run(it) }
 
     val resultsLocator = ResultsLocator()
 
-    val resultsPaths = results.filterNot { it.hasErrors() }
-        .flatMap { resultsLocator.locate(it.tool) }
+    val instrumentResults = results.filterNot { it.hasErrors() }
+        .map { resultsLocator.locate(it.instrument) }
 
-    log.info(if (resultsPaths.isEmpty()) "Nothing to package" else "Packaging results")
+    log.info(if (instrumentResults.isEmpty()) "Nothing to package" else "Packaging results")
 
-    ResultsPackager().packageResults(resultsPaths)
+    ResultsPackager().packageResults(instrumentResults)
 
     log.info("Done")
 }
 
-private fun prepareTools(argumenthor: Argumenthor): Pair<List<Tool>, String> {
+private fun prepareTools(argumenthor: Argumenthor): Pair<List<Instrument>, String> {
     val toolsLocation = getArg(argumenthor, instruments)
     val instrumentGatherer = if (toolsLocation != null) InstrumentGatherer(toolsLocation) else {
         log.error("Could not read tools location")
@@ -53,7 +53,7 @@ private fun prepareTools(argumenthor: Argumenthor): Pair<List<Tool>, String> {
         log.error("Could not read base folder")
         exitProcess(1)
     }
-    val instruments = instrumentGatherer.tools
+    val instruments = instrumentGatherer.instruments
     if (instruments.isEmpty()) {
         log.warn("No tools found, nothing to run")
         exitProcess(1)

@@ -1,5 +1,6 @@
 package org.dxworks.voyager.zip
 
+import org.dxworks.voyager.results.FileAndAlias
 import org.dxworks.voyager.utils.logger
 import java.io.File
 import java.io.FileOutputStream
@@ -12,23 +13,12 @@ class Zipper {
         private val log = logger<Zipper>()
     }
 
-    fun zipFiles(files: List<File>, zipPath: String) {
+    fun zipFiles(files: List<FileAndAlias>, zipPath: String) {
         val fos = FileOutputStream(zipPath)
         val zipOut = ZipOutputStream(fos)
         files.forEach {
-            zipFile(it, it.name, zipOut)
+            zipFile(it.file, it.alias, zipOut)
         }
-        zipOut.close()
-        fos.close()
-    }
-
-    fun zipFolder() {
-        val sourceFile = "zipTest"
-        val fos = FileOutputStream("dirCompressed.zip")
-        val zipOut = ZipOutputStream(fos)
-        val fileToZip = File(sourceFile)
-
-        zipFile(fileToZip, fileToZip.name, zipOut)
         zipOut.close()
         fos.close()
     }

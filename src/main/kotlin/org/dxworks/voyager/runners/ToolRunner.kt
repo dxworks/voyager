@@ -1,7 +1,7 @@
 package org.dxworks.voyager.runners
 
 import org.dxworks.voyager.config.InstrumentConfiguration
-import org.dxworks.voyager.instruments.Tool
+import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.utils.logger
 import java.io.File
 import java.io.FileFilter
@@ -12,22 +12,22 @@ abstract class ToolRunner(private val baseFolder: File) {
         val log = logger<ToolRunner>()
     }
 
-    fun run(tool: Tool): ToolExecutionResult {
-        log.info("Started running ${tool.name}")
-        val toolExecutionResult = ToolExecutionResult(tool)
-        if (tool.process(InstrumentConfiguration::onEach) == "true") {
+    fun run(instrument: Instrument): ToolExecutionResult {
+        log.info("Started running ${instrument.name}")
+        val toolExecutionResult = ToolExecutionResult(instrument)
+        if (instrument.process(InstrumentConfiguration::onEach) == "true") {
             baseFolder.listFiles(FileFilter { it.isDirectory })?.forEach {
-                toolExecutionResult.results[it.name] = internalRun(tool, it)
+                toolExecutionResult.results[it.name] = internalRun(instrument, it)
             }
         } else {
-            toolExecutionResult.results[baseFolder.name] = internalRun(tool, baseFolder)
+            toolExecutionResult.results[baseFolder.name] = internalRun(instrument, baseFolder)
         }
-        log.info("Finished running ${tool.name}")
+        log.info("Finished running ${instrument.name}")
         if (toolExecutionResult.results.isEmpty()) {
-            log.warn("No projects found for running ${tool.name}")
+            log.warn("No projects found for running ${instrument.name}")
         }
         return toolExecutionResult
     }
 
-    protected abstract fun internalRun(tool: Tool, baseFolder: File): List<CommandExecutionResult>
+    protected abstract fun internalRun(instrument: Instrument, baseFolder: File): List<CommandExecutionResult>
 }
