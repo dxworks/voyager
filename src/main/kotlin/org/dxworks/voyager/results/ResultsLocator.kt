@@ -1,6 +1,6 @@
 package org.dxworks.voyager.results
 
-import org.dxworks.voyager.tools.Tool
+import org.dxworks.voyager.instruments.Tool
 import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Path

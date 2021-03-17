@@ -4,7 +4,7 @@ import org.dxworks.voyager.config.Command
 import org.dxworks.voyager.config.analysisFolder
 import org.dxworks.voyager.runners.CommandExecutionResult
 import org.dxworks.voyager.runners.ToolRunner
-import org.dxworks.voyager.tools.Tool
+import org.dxworks.voyager.instruments.Tool
 import org.dxworks.voyager.utils.commandInterpreterName
 import org.dxworks.voyager.utils.interpreterArg
 import org.dxworks.voyager.utils.isUnix

@@ -3,7 +3,7 @@ package org.dxworks.voyager.config
 import com.fasterxml.jackson.module.kotlin.readValue
 import freemarker.template.Configuration
 import freemarker.template.Template
-import org.dxworks.voyager.tools.Tool
+import org.dxworks.voyager.instruments.Tool
 import java.io.StringWriter
 import java.nio.file.Path
 

@@ -1,6 +1,6 @@
 package org.dxworks.voyager.config
 
-data class ToolConfiguration(
+data class InstrumentConfiguration(
     val name: String,
     val commands: Commands,
     val results: List<ResultsDir>,

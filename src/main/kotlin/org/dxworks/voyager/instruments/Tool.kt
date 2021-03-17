@@ -1,14 +1,14 @@
-package org.dxworks.voyager.tools
+package org.dxworks.voyager.instruments
 
 import org.dxworks.voyager.config.ConfigurationProcessor
-import org.dxworks.voyager.config.ToolConfiguration
+import org.dxworks.voyager.config.InstrumentConfiguration
 import org.dxworks.voyager.config.toolHomeField
 
-open class Tool(val path: String, val configuration: ToolConfiguration) {
+open class Tool(val path: String, val configuration: InstrumentConfiguration) {
     val name = configuration.name
 
     fun process(
-        configFieldProvider: (ToolConfiguration) -> String,
+        configFieldProvider: (InstrumentConfiguration) -> String,
         vararg additionalFields: Pair<String, String>
     ): String {
         return ConfigurationProcessor.get()

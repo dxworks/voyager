@@ -5,26 +5,26 @@ import org.dxworks.argumenthor.config.ArgumenthorConfiguration
 import org.dxworks.argumenthor.config.fields.impl.StringField
 import org.dxworks.argumenthor.config.sources.impl.ArgsSource
 import org.dxworks.voyager.config.ConfigurationProcessor
+import org.dxworks.voyager.instruments.InstrumentGatherer
+import org.dxworks.voyager.instruments.Tool
 import org.dxworks.voyager.results.ResultsLocator
 import org.dxworks.voyager.results.ResultsPackager
 import org.dxworks.voyager.runners.impl.CommandLineRunner
-import org.dxworks.voyager.tools.InstrumentGatherer
-import org.dxworks.voyager.tools.Tool
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.system.exitProcess
 
 private const val site = "site"
 private const val instruments = "instruments"
-private const val toolsConfig = "toolsConfig"
-private const val defaultToolsConfig = "toolsConfig.yml"
+private const val voyagerConfig = "voyagerConfig"
+private const val defaultVoyagerConfig = "voyager.yml"
 
 private val log = LoggerFactory.getLogger("Main")
 
 fun main(args: Array<String>) {
     val argumenthor = getArgumenthor(args)
     val (tools, site) = prepareTools(argumenthor)
-    ConfigurationProcessor.get().setConfigurationSource(argumenthor.getValue(toolsConfig)!!)
+    ConfigurationProcessor.get().setConfigurationSource(argumenthor.getValue(voyagerConfig)!!)
 
     val commandLineRunner = CommandLineRunner(Path.of(site).toFile())
 
@@ -68,7 +68,7 @@ private fun getArg(argumenthor: Argumenthor, arg: String) =
 private fun getArgumenthor(args: Array<String>) = Argumenthor(ArgumenthorConfiguration(
     StringField(site, System.getProperty("user.home") + "/repos"),
     StringField(instruments, "."),
-    StringField(toolsConfig, defaultToolsConfig)
+    StringField(voyagerConfig, defaultVoyagerConfig)
 ).apply {
     addSource(ArgsSource().also { it.argsList = args.toList() })
 })
