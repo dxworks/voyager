@@ -6,4 +6,4 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 
 val yamlMapper = ObjectMapper(YAMLFactory()).registerKotlinModule()
 
-const val executionConfigName = "config.yaml"
+const val executionConfigName = "tool.yml"

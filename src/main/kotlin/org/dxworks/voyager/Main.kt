@@ -5,8 +5,8 @@ import org.dxworks.argumenthor.config.ArgumenthorConfiguration
 import org.dxworks.argumenthor.config.fields.impl.StringField
 import org.dxworks.argumenthor.config.sources.impl.ArgsSource
 import org.dxworks.voyager.config.ConfigurationProcessor
+import org.dxworks.voyager.config.ToolConfiguration
 import org.dxworks.voyager.config.baseAnalysisFolder
-import org.dxworks.voyager.config.toolHomeField
 import org.dxworks.voyager.results.ResultsPackager
 import org.dxworks.voyager.runners.impl.CommandLineRunner
 import org.dxworks.voyager.tools.Tool
@@ -17,12 +17,17 @@ import kotlin.system.exitProcess
 
 private const val base = "base"
 private const val tools = "tools"
+private const val toolsConfig = "toolsConfig"
+private const val defaultToolsConfig = "toolsConfig.yml"
 
 private val log = LoggerFactory.getLogger("Main")
+
 fun main(args: Array<String>) {
-    val (tools, baseFolder) = prepareTools(args)
+    val argumenthor = getArgumenthor(args)
+    val (tools, baseFolder) = prepareTools(argumenthor)
 
     val configurationProcessor = ConfigurationProcessor.get()
+    configurationProcessor.setConfigurationSource(argumenthor.getValue("toolsConfig")!!)
     configurationProcessor.addValue(baseAnalysisFolder, baseFolder)
 
     val commandLineRunner = CommandLineRunner(Paths.get(baseFolder).toFile())
@@ -31,7 +36,7 @@ fun main(args: Array<String>) {
 
     val resultsPaths = results.filterNot { it.hasErrors() }
         .filter { it.results.isNotEmpty() }
-        .map { it.tool.process(it.tool.configuration.resultsPath) }
+        .map { it.tool.process(ToolConfiguration::resultsPath) }
 
     log.info(if (resultsPaths.isEmpty()) "Nothing to package" else "Packaging results")
 
@@ -40,9 +45,7 @@ fun main(args: Array<String>) {
     log.info("Done")
 }
 
-private fun prepareTools(args: Array<String>): Pair<List<Tool>, String> {
-    val argumenthor = getArgumenthor(args)
-
+private fun prepareTools(argumenthor: Argumenthor): Pair<List<Tool>, String> {
     val toolsLocation = getArg(argumenthor, tools)
     val toolGatherer = if (toolsLocation != null) ToolGatherer(toolsLocation) else {
         log.error("Could not read tools location")
@@ -61,18 +64,14 @@ private fun prepareTools(args: Array<String>): Pair<List<Tool>, String> {
     return Pair(tools, baseFolder)
 }
 
-private fun getTemplateFields(
-    tool: Tool,
-    baseFolder: String
-) = mapOf(toolHomeField to tool.path, baseAnalysisFolder to baseFolder)
-
 private fun getArg(argumenthor: Argumenthor, arg: String) =
     argumenthor.getValue<String>(arg)?.trim('\"', '\'')
 
 
 private fun getArgumenthor(args: Array<String>) = Argumenthor(ArgumenthorConfiguration(
     StringField(base, System.getProperty("user.home") + "/repos"),
-    StringField(tools, ".")
+    StringField(tools, "."),
+    StringField(toolsConfig, defaultToolsConfig)
 ).apply {
     addSource(ArgsSource().also { it.argsList = args.toList() })
 })

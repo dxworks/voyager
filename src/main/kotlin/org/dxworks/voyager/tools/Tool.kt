@@ -7,7 +7,11 @@ import org.dxworks.voyager.config.toolHomeField
 open class Tool(val path: String, val configuration: ToolConfiguration) {
     val name = configuration.name
 
-    fun process(template: String, vararg additionalFields: Pair<String, String>): String {
-        return ConfigurationProcessor.get().process(template, *additionalFields, toolHomeField to path)
+    fun process(
+        configFieldProvider: (ToolConfiguration) -> String,
+        vararg additionalFields: Pair<String, String>
+    ): String {
+        return ConfigurationProcessor.get()
+            .process(this, configFieldProvider.invoke(configuration), *additionalFields, toolHomeField to path)
     }
 }

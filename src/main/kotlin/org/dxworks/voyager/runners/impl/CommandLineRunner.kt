@@ -19,7 +19,7 @@ class CommandLineRunner(baseFolder: File) : ToolRunner(baseFolder) {
 
     override fun internalRun(
         tool: Tool,
-        projectFolder: File
+        baseFolder: File
     ): List<CommandExecutionResult> {
 
         val commands = if (isUnix) tool.configuration.commands.unix else tool.configuration.commands.win
@@ -31,19 +31,24 @@ class CommandLineRunner(baseFolder: File) : ToolRunner(baseFolder) {
 
         return commands.mapIndexed { index, command ->
             val identifier = getCommandIdentifier(command, tool, index)
-            log.info("Running command $identifier")
-            val process = getProcessForCommand(
-                tool.process(command.exec, currentProjectFolder to projectFolder.absolutePath),
-                projectFolder
-            )
-            setupLogger(identifier, process)
-            if (process.waitFor() == 0) {
-                log.info("Command $identifier completed")
-                CommandExecutionResult(command)
-            } else {
-                val errors = getLines(process.errorStream).joinToString("\n")
-                log.error("Command $identifier failed with errors:\n$errors")
-                CommandExecutionResult(command, errors)
+            try {
+                log.info("Running command $identifier")
+                val process = getProcessForCommand(
+                    tool.process({ command.exec }, currentProjectFolder to baseFolder.absolutePath),
+                    baseFolder
+                )
+                setupLogger(identifier, process)
+                if (process.waitFor() == 0) {
+                    log.info("Command $identifier completed")
+                    CommandExecutionResult(command)
+                } else {
+                    val errors = getLines(process.errorStream).joinToString("\n")
+                    log.error("Command $identifier failed with errors:\n$errors")
+                    CommandExecutionResult(command, errors)
+                }
+            } catch (e: Exception) {
+                log.error("Command $identifier could not be run")
+                CommandExecutionResult(command, "Command could not be run:\n${e.message}")
             }
         }
     }
