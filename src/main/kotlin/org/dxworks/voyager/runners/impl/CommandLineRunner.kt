@@ -3,7 +3,7 @@ package org.dxworks.voyager.runners.impl
 import org.dxworks.voyager.config.Command
 import org.dxworks.voyager.config.analysisFolder
 import org.dxworks.voyager.runners.CommandExecutionResult
-import org.dxworks.voyager.runners.ToolRunner
+import org.dxworks.voyager.runners.InstrumentRunner
 import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.utils.commandInterpreterName
 import org.dxworks.voyager.utils.interpreterArg
@@ -14,7 +14,7 @@ import java.io.File
 import java.io.InputStream
 import java.nio.file.Path
 
-class CommandLineRunner(baseFolder: File) : ToolRunner(baseFolder) {
+class CommandLineRunner(baseFolder: File) : InstrumentRunner(baseFolder) {
 
     private val processBuilder = ProcessBuilder()
 
@@ -60,8 +60,8 @@ class CommandLineRunner(baseFolder: File) : ToolRunner(baseFolder) {
     }
 
     private fun getCommandIdentifier(command: Command, instrument: Instrument, index: Int): String {
-        val indexFromTool = "${index + 1} from ${instrument.name}"
-        return command.name?.let { "$it ($indexFromTool)" } ?: indexFromTool
+        val indexFromInstrument = "${index + 1} from ${instrument.name}"
+        return command.name?.let { "$it ($indexFromInstrument)" } ?: indexFromInstrument
     }
 
     private fun getProcessForCommand(command: String, directory: File) =

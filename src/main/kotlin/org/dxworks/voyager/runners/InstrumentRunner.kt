@@ -7,26 +7,26 @@ import java.io.File
 import java.io.FileFilter
 
 
-abstract class ToolRunner(private val baseFolder: File) {
+abstract class InstrumentRunner(private val baseFolder: File) {
     companion object {
-        val log = logger<ToolRunner>()
+        val log = logger<InstrumentRunner>()
     }
 
-    fun run(instrument: Instrument): ToolExecutionResult {
+    fun run(instrument: Instrument): InstrumentExecutionResult {
         log.info("Started running ${instrument.name}")
-        val toolExecutionResult = ToolExecutionResult(instrument)
+        val instrumentExecutionResult = InstrumentExecutionResult(instrument)
         if (instrument.process(InstrumentConfiguration::onEach) == "true") {
             baseFolder.listFiles(FileFilter { it.isDirectory })?.forEach {
-                toolExecutionResult.results[it.name] = internalRun(instrument, it)
+                instrumentExecutionResult.results[it.name] = internalRun(instrument, it)
             }
         } else {
-            toolExecutionResult.results[baseFolder.name] = internalRun(instrument, baseFolder)
+            instrumentExecutionResult.results[baseFolder.name] = internalRun(instrument, baseFolder)
         }
         log.info("Finished running ${instrument.name}")
-        if (toolExecutionResult.results.isEmpty()) {
+        if (instrumentExecutionResult.results.isEmpty()) {
             log.warn("No projects found for running ${instrument.name}")
         }
-        return toolExecutionResult
+        return instrumentExecutionResult
     }
 
     protected abstract fun internalRun(instrument: Instrument, baseFolder: File): List<CommandExecutionResult>

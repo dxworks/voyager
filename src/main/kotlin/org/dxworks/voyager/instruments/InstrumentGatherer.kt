@@ -17,22 +17,22 @@ class InstrumentGatherer(baseFolder: String) {
 
     init {
         instruments =
-            Path.of(baseFolder).toFile().listFiles(FileFilter { it.isToolBaseFolder() })?.mapNotNull { createTool(it) }
+            Path.of(baseFolder).toFile().listFiles(FileFilter { it.isInstrumentFolder() })
+                ?.mapNotNull { createInstrument(it) }
                 ?: emptyList()
     }
 
-    private fun createTool(it: File): Instrument? {
+    private fun createInstrument(it: File): Instrument? {
         val absolutePath = it.absolutePath
         return try {
             Instrument(absolutePath, yamlMapper.readValue(it.resolve(executionConfigName)))
         } catch (e: Exception) {
-            log.error("Tool at $absolutePath could not be added", e)
+            log.error("Instrument at $absolutePath could not be added", e)
             return null
         }
-
     }
 }
 
-private fun File.isToolBaseFolder(): Boolean {
+private fun File.isInstrumentFolder(): Boolean {
     return list()?.contains(executionConfigName) ?: false
 }

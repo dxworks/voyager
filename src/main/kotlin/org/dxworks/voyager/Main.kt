@@ -23,7 +23,7 @@ private val log = LoggerFactory.getLogger("Main")
 
 fun main(args: Array<String>) {
     val argumenthor = getArgumenthor(args)
-    val (instruments, site) = prepareTools(argumenthor)
+    val (instruments, site) = prepareInstruments(argumenthor)
     ConfigurationProcessor.get().setConfigurationSource(argumenthor.getValue(voyagerConfig)!!)
 
     val commandLineRunner = CommandLineRunner(Path.of(site).toFile())
@@ -42,10 +42,10 @@ fun main(args: Array<String>) {
     log.info("Done")
 }
 
-private fun prepareTools(argumenthor: Argumenthor): Pair<List<Instrument>, String> {
-    val toolsLocation = getArg(argumenthor, instruments)
-    val instrumentGatherer = if (toolsLocation != null) InstrumentGatherer(toolsLocation) else {
-        log.error("Could not read tools location")
+private fun prepareInstruments(argumenthor: Argumenthor): Pair<List<Instrument>, String> {
+    val instrumentsLocation = getArg(argumenthor, instruments)
+    val instrumentGatherer = if (instrumentsLocation != null) InstrumentGatherer(instrumentsLocation) else {
+        log.error("Could not read instruments location")
         exitProcess(1)
     }
     val site = getArg(argumenthor, site)
@@ -55,7 +55,7 @@ private fun prepareTools(argumenthor: Argumenthor): Pair<List<Instrument>, Strin
     }
     val instruments = instrumentGatherer.instruments
     if (instruments.isEmpty()) {
-        log.warn("No tools found, nothing to run")
+        log.warn("No instruments found at ${instrumentsLocation}, nothing to run")
         exitProcess(1)
     }
     return Pair(instruments, site)

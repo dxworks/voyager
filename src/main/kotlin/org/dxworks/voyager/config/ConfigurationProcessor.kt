@@ -7,12 +7,12 @@ import org.dxworks.voyager.instruments.Instrument
 import java.io.StringWriter
 import java.nio.file.Path
 
-const val toolHomeField = "instrument"
+const val instrumentHome = "instrument"
 const val analysisFolder = "site"
 
 class ConfigurationProcessor private constructor() {
     private val fields: MutableMap<String, String> = HashMap()
-    private val toolFields: MutableMap<String, MutableMap<String, String>> = HashMap()
+    private val instrumentFields: MutableMap<String, MutableMap<String, String>> = HashMap()
 
     companion object {
         private var singleton: ConfigurationProcessor? = null
@@ -22,7 +22,7 @@ class ConfigurationProcessor private constructor() {
     fun setConfigurationSource(sourceFile: String) {
         val file = Path.of(sourceFile).toFile()
         if (file.exists()) {
-            toolFields.putAll(yamlMapper.readValue<Map<String, MutableMap<String, String>>>(file))
+            instrumentFields.putAll(yamlMapper.readValue<Map<String, MutableMap<String, String>>>(file))
         }
     }
 
@@ -31,21 +31,29 @@ class ConfigurationProcessor private constructor() {
     }
 
     fun addValue(instrument: Instrument, key: String, value: String) {
-        getToolFields(instrument)[key] = value
+        getInstrumentFields(instrument)[key] = value
     }
 
-    private fun getToolFields(instrument: Instrument) = toolFields.computeIfAbsent(instrument.name) { HashMap() }
+    private fun getInstrumentFields(instrument: Instrument) =
+        instrumentFields.computeIfAbsent(instrument.name) { HashMap() }
 
     fun process(instrument: Instrument, template: String, vararg additionalFields: Pair<String, String>): String {
         return StringWriter().also {
             Template("", template, defaultConfiguration).process(
-                fields + getToolFieldsWithDefaults(instrument) + additionalFields, it
+                fields + getInstrumentFieldsWithDefaults(instrument) + additionalFields, it
             )
         }.toString()
     }
 
-    private fun getToolFieldsWithDefaults(instrument: Instrument): Map<String, String> {
-        return getToolFields(instrument).apply { instrument.configuration.defaults.forEach { (k, v) -> putIfAbsent(k, v) } }
+    private fun getInstrumentFieldsWithDefaults(instrument: Instrument): Map<String, String> {
+        return getInstrumentFields(instrument).apply {
+            instrument.configuration.defaults.forEach { (k, v) ->
+                putIfAbsent(
+                    k,
+                    v
+                )
+            }
+        }
     }
 }
 
