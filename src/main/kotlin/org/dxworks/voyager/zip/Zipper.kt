@@ -12,10 +12,10 @@ class Zipper {
         private val log = logger<Zipper>()
     }
 
-    fun zipFiles(files: List<String>, zipPath: String) {
+    fun zipFiles(files: List<File>, zipPath: String) {
         val fos = FileOutputStream(zipPath)
         val zipOut = ZipOutputStream(fos)
-        files.map { File(it) }.forEach {
+        files.forEach {
             zipFile(it, it.name, zipOut)
         }
         zipOut.close()

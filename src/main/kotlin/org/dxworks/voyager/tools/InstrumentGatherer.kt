@@ -5,14 +5,14 @@ import org.dxworks.voyager.config.executionConfigName
 import org.dxworks.voyager.config.yamlMapper
 import java.io.File
 import java.io.FileFilter
-import java.nio.file.Paths
+import java.nio.file.Path
 
-class ToolGatherer(baseFolder: String) {
+class InstrumentGatherer(baseFolder: String) {
     val tools: List<Tool>
 
     init {
-        tools = Paths.get(baseFolder).toFile().listFiles(FileFilter { it.isToolBaseFolder() })?.map { createTool(it) }
-                ?: emptyList()
+        tools = Path.of(baseFolder).toFile().listFiles(FileFilter { it.isToolBaseFolder() })?.map { createTool(it) }
+            ?: emptyList()
     }
 
     private fun createTool(it: File): Tool {

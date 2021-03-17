@@ -1,5 +1,6 @@
 package org.dxworks.voyager.runners
 
+import org.dxworks.voyager.config.ToolConfiguration
 import org.dxworks.voyager.tools.Tool
 import org.dxworks.voyager.utils.logger
 import java.io.File
@@ -14,7 +15,7 @@ abstract class ToolRunner(private val baseFolder: File) {
     fun run(tool: Tool): ToolExecutionResult {
         log.info("Started running ${tool.name}")
         val toolExecutionResult = ToolExecutionResult(tool)
-        if (tool.configuration.onEach) {
+        if (tool.process(ToolConfiguration::onEach) == "true") {
             baseFolder.listFiles(FileFilter { it.isDirectory })?.forEach {
                 toolExecutionResult.results[it.name] = internalRun(tool, it)
             }

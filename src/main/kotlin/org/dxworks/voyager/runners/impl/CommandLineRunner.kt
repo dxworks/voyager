@@ -1,7 +1,7 @@
 package org.dxworks.voyager.runners.impl
 
 import org.dxworks.voyager.config.Command
-import org.dxworks.voyager.config.currentProjectFolder
+import org.dxworks.voyager.config.analysisFolder
 import org.dxworks.voyager.runners.CommandExecutionResult
 import org.dxworks.voyager.runners.ToolRunner
 import org.dxworks.voyager.tools.Tool
@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStream
+import java.nio.file.Path
 
 class CommandLineRunner(baseFolder: File) : ToolRunner(baseFolder) {
 
@@ -34,8 +35,8 @@ class CommandLineRunner(baseFolder: File) : ToolRunner(baseFolder) {
             try {
                 log.info("Running command $identifier")
                 val process = getProcessForCommand(
-                    tool.process({ command.exec }, currentProjectFolder to baseFolder.absolutePath),
-                    baseFolder
+                    tool.process({ command.exec }, analysisFolder to baseFolder.absolutePath),
+                    Path.of(command.dir?.let { dir -> tool.process({ dir }) } ?: tool.path).toFile()
                 )
                 setupLogger(identifier, process)
                 if (process.waitFor() == 0) {

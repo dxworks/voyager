@@ -1,6 +1,7 @@
 package org.dxworks.voyager.config
 
 data class Command(
-    val name: String?,
-    val exec: String
+    val name: String? = null,
+    val exec: String,
+    val dir: String? = null
 )

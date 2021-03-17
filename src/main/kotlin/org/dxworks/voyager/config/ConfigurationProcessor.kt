@@ -5,12 +5,10 @@ import freemarker.template.Configuration
 import freemarker.template.Template
 import org.dxworks.voyager.tools.Tool
 import java.io.StringWriter
-import java.nio.file.Paths
+import java.nio.file.Path
 
-const val toolHomeField = "toolHome"
-const val baseAnalysisFolder = "baseAnalysisFolder"
-const val currentProjectFolder = "currentProjectFolder"
-
+const val toolHomeField = "instrument"
+const val analysisFolder = "site"
 
 class ConfigurationProcessor private constructor() {
     private val fields: MutableMap<String, String> = HashMap()
@@ -22,7 +20,7 @@ class ConfigurationProcessor private constructor() {
     }
 
     fun setConfigurationSource(sourceFile: String) {
-        val file = Paths.get(sourceFile).toFile()
+        val file = Path.of(sourceFile).toFile()
         if (file.exists()) {
             toolFields.putAll(yamlMapper.readValue<Map<String, MutableMap<String, String>>>(file))
         }

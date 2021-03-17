@@ -1,6 +1,7 @@
 package org.dxworks.voyager.results
 
 import org.junit.jupiter.api.Test
+import java.nio.file.Path
 
 internal class ResultsPackagerTest {
 
@@ -10,9 +11,9 @@ internal class ResultsPackagerTest {
         val rootFolder = resource.path
         ResultsPackager().packageResults(
             listOf(
-                "$rootFolder/resultFolder1/result1",
-                "$rootFolder/resultFolder2/resultFolder21",
-                "$rootFolder/result",
+                Path.of("$rootFolder/resultFolder1/result1").toFile(),
+                Path.of("$rootFolder/resultFolder2/resultFolder21").toFile(),
+                Path.of("$rootFolder/result").toFile(),
             )
         )
     }
