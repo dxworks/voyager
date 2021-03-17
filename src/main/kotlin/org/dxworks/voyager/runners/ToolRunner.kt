@@ -11,11 +11,11 @@ abstract class ToolRunner(private val baseFolder: File) {
         val log = logger<ToolRunner>()
     }
 
-    fun run(tool: Tool, templateFields: Map<String, String>): ToolExecutionResult {
+    fun run(tool: Tool): ToolExecutionResult {
         log.info("Started running ${tool.name}")
         val toolExecutionResult = ToolExecutionResult(tool)
         baseFolder.listFiles(FileFilter { it.isDirectory })?.forEach {
-            toolExecutionResult.results[it.name] = internalRun(tool, it,templateFields)
+            toolExecutionResult.results[it.name] = internalRun(tool, it)
         }
         log.info("Finished running ${tool.name}")
         if (toolExecutionResult.results.isEmpty()) {
@@ -24,5 +24,5 @@ abstract class ToolRunner(private val baseFolder: File) {
         return toolExecutionResult
     }
 
-    protected abstract fun internalRun(tool: Tool, projectFolder: File, templateFields: Map<String, String>): List<CommandExecutionResult>
+    protected abstract fun internalRun(tool: Tool, projectFolder: File): List<CommandExecutionResult>
 }

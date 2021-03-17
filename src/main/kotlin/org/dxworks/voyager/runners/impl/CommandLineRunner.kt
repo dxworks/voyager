@@ -19,8 +19,7 @@ class CommandLineRunner(baseFolder: File) : ToolRunner(baseFolder) {
 
     override fun internalRun(
         tool: Tool,
-        projectFolder: File,
-        templateFields: Map<String, String>
+        projectFolder: File
     ): List<CommandExecutionResult> {
 
         val commands = if (isUnix) tool.configuration.commands.unix else tool.configuration.commands.win

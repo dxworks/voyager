@@ -18,9 +18,29 @@ import kotlin.system.exitProcess
 private const val base = "base"
 private const val tools = "tools"
 
+private val log = LoggerFactory.getLogger("Main")
 fun main(args: Array<String>) {
-    val log = LoggerFactory.getLogger("main")
+    val (tools, baseFolder) = prepareTools(args)
 
+    val configurationProcessor = ConfigurationProcessor.get()
+    configurationProcessor.addValue(baseAnalysisFolder, baseFolder)
+
+    val commandLineRunner = CommandLineRunner(Paths.get(baseFolder).toFile())
+
+    val results = tools.map { commandLineRunner.run(it) }
+
+    val resultsPaths = results.filterNot { it.hasErrors() }
+        .filter { it.results.isNotEmpty() }
+        .map { it.tool.process(it.tool.configuration.resultsPath) }
+
+    log.info(if (resultsPaths.isEmpty()) "Nothing to package" else "Packaging results")
+
+    ResultsPackager().packageResults(resultsPaths)
+
+    log.info("Done")
+}
+
+private fun prepareTools(args: Array<String>): Pair<List<Tool>, String> {
     val argumenthor = getArgumenthor(args)
 
     val toolsLocation = getArg(argumenthor, tools)
@@ -36,25 +56,9 @@ fun main(args: Array<String>) {
     val tools = toolGatherer.tools
     if (tools.isEmpty()) {
         log.warn("No tools found, nothing to run")
-        return
+        exitProcess(1)
     }
-
-    val configurationProcessor = ConfigurationProcessor.get()
-    configurationProcessor.addValue(baseAnalysisFolder, baseFolder)
-
-    val commandLineRunner = CommandLineRunner(Paths.get(baseFolder).toFile())
-
-    val results = tools.map { commandLineRunner.run(it, getTemplateFields(it, baseFolder)) }
-
-    val resultsPaths = results.filterNot { it.hasErrors() }
-        .filter { it.results.isNotEmpty() }
-        .map { it.tool.process(it.tool.configuration.resultsPath) }
-
-    log.info(if (resultsPaths.isEmpty()) "Nothing to package" else "Packaging results")
-
-    ResultsPackager().packageResults(resultsPaths)
-
-    log.info("Done")
+    return Pair(tools, baseFolder)
 }
 
 private fun getTemplateFields(

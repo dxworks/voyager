@@ -9,7 +9,5 @@ internal class MainKtTest {
         val tools = javaClass.getResource("/simpleToolTest").path.removePrefix("/")
         val base = javaClass.getResource("/testProjectFolder").path.removePrefix("/")
         main(arrayOf("-tools=\"$tools\"", "-base=\"$base\""))
-
-
     }
 }
