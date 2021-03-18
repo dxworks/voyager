@@ -2,10 +2,10 @@ package org.dxworks.voyager.runners.impl
 
 import org.dxworks.voyager.config.Command
 import org.dxworks.voyager.config.MissionControl
-import org.dxworks.voyager.config.analysisFolder
 import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.runners.CommandExecutionResult
 import org.dxworks.voyager.runners.InstrumentRunner
+import org.dxworks.voyager.utils.analysisFolder
 import org.dxworks.voyager.utils.commandInterpreterName
 import org.dxworks.voyager.utils.interpreterArg
 import org.slf4j.LoggerFactory

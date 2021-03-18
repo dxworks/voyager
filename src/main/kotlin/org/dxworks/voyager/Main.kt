@@ -34,7 +34,7 @@ fun main(args: Array<String>) {
 
     log.info(if (instrumentResults.isEmpty()) "Nothing to package" else "Packaging samples")
 
-    SampleContainer(defaultContainerName).fill(instrumentResults)
+    SampleContainer(defaultContainerName).fill(instrumentResults, Path.of(missionReport).toFile())
 
     log.info("Done")
 }

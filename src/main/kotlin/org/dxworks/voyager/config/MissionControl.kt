@@ -6,9 +6,6 @@ import org.dxworks.voyager.utils.logger
 import org.dxworks.voyager.utils.yamlMapper
 import java.nio.file.Path
 
-const val instrumentHome = "instrument"
-const val analysisFolder = "site"
-
 class MissionControl private constructor() {
     private lateinit var missionConfig: MissionConfig
 
@@ -22,6 +19,7 @@ class MissionControl private constructor() {
         val file = Path.of(sourceFile).toFile()
         if (file.exists()) {
             missionConfig = yamlMapper.readValue(file)
+            log.info("Starting mission ${missionConfig.mission}")
         }
     }
 
