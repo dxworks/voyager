@@ -1,9 +1,9 @@
 package org.dxworks.voyager.instruments
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import org.dxworks.voyager.config.executionConfigName
-import org.dxworks.voyager.config.yamlMapper
+import org.dxworks.voyager.utils.defaultInstrumentConfig
 import org.dxworks.voyager.utils.logger
+import org.dxworks.voyager.utils.yamlMapper
 import java.io.File
 import java.io.FileFilter
 import java.nio.file.Path
@@ -25,7 +25,7 @@ class InstrumentGatherer(baseFolder: String) {
     private fun createInstrument(it: File): Instrument? {
         val absolutePath = it.absolutePath
         return try {
-            Instrument(absolutePath, yamlMapper.readValue(it.resolve(executionConfigName)))
+            Instrument(absolutePath, yamlMapper.readValue(it.resolve(defaultInstrumentConfig)))
         } catch (e: Exception) {
             log.error("Instrument at $absolutePath could not be added", e)
             return null
@@ -34,5 +34,5 @@ class InstrumentGatherer(baseFolder: String) {
 }
 
 private fun File.isInstrumentFolder(): Boolean {
-    return list()?.contains(executionConfigName) ?: false
+    return list()?.contains(defaultInstrumentConfig) ?: false
 }
