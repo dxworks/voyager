@@ -5,6 +5,7 @@ import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.utils.logger
 import org.dxworks.voyager.utils.yamlMapper
 import java.nio.file.Path
+import kotlin.system.exitProcess
 
 class MissionControl private constructor() {
     private lateinit var missionConfig: MissionConfig
@@ -20,6 +21,9 @@ class MissionControl private constructor() {
         if (file.exists()) {
             missionConfig = yamlMapper.readValue(file)
             log.info("Starting mission ${missionConfig.mission}")
+        } else {
+            log.error("Could not load mission config from $sourceFile")
+            exitProcess(0)
         }
     }
 

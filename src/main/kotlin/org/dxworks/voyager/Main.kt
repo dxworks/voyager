@@ -7,6 +7,7 @@ import org.dxworks.argumenthor.config.sources.impl.ArgsSource
 import org.dxworks.voyager.config.MissionControl
 import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.instruments.InstrumentGatherer
+import org.dxworks.voyager.report.MissionSummary
 import org.dxworks.voyager.runners.impl.CommandLineRunner
 import org.dxworks.voyager.samples.SampleContainer
 import org.dxworks.voyager.samples.SamplesLocator
@@ -34,9 +35,10 @@ fun main(args: Array<String>) {
 
     log.info(if (instrumentResults.isEmpty()) "Nothing to package" else "Packaging samples")
 
-    SampleContainer(defaultContainerName).fill(instrumentResults, Path.of(missionReport).toFile())
+    val containerContent =
+        SampleContainer(defaultContainerName).fill(instrumentResults, Path.of(missionReport).toFile())
 
-    log.info("Done")
+    MissionSummary(results, containerContent).toString().split("\n").forEach(log::info)
 }
 
 private fun prepareInstruments(argumenthor: Argumenthor): Pair<List<Instrument>, String> {

@@ -32,8 +32,9 @@ class CommandLineRunner(baseFolder: File) : InstrumentRunner(baseFolder) {
             val identifier = getCommandIdentifier(command, instrument, index)
             val exec = command.exec
             if (exec == null) {
-                CommandExecutionResult(command, "Nothing to run")
+                CommandExecutionResult(command, 0, "Nothing to run")
             } else {
+                val start = System.currentTimeMillis()
                 try {
                     log.info("Running command $identifier")
                     val process = getProcessForCommand(
@@ -41,17 +42,23 @@ class CommandLineRunner(baseFolder: File) : InstrumentRunner(baseFolder) {
                         Path.of(command.dir?.let { dir -> instrument.process({ dir }) } ?: instrument.path).toFile()
                     )
                     setupLogger(identifier, process)
-                    if (process.waitFor() == 0) {
+                    val processExitValue = process.waitFor()
+                    val stop = System.currentTimeMillis()
+                    if (processExitValue == 0) {
                         log.info("Command $identifier completed")
-                        CommandExecutionResult(command)
+                        CommandExecutionResult(command, stop - start)
                     } else {
                         val errors = getLines(process.errorStream).joinToString("\n")
                         log.error("Command $identifier failed with errors:\n$errors")
-                        CommandExecutionResult(command, errors)
+                        CommandExecutionResult(command, stop - start, errors)
                     }
                 } catch (e: Exception) {
                     log.error("Command $identifier could not be run")
-                    CommandExecutionResult(command, "Command could not be run:\n${e.message}")
+                    CommandExecutionResult(
+                        command,
+                        System.currentTimeMillis() - start,
+                        "Command could not be run:\n${e.message}"
+                    )
                 }
             }
         }

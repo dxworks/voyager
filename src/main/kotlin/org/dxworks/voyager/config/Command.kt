@@ -3,7 +3,7 @@ package org.dxworks.voyager.config
 import org.dxworks.voyager.utils.isUnix
 
 data class Command(
-    val name: String? = null,
+    val name: String,
     val win: String?,
     val unix: String?,
     val dir: String? = null

@@ -18,3 +18,10 @@ val isUnix by lazy { isLinux || isMac }
 val commandInterpreterName by lazy { if (isUnix) "bash" else "cmd.exe" }
 val interpreterArg by lazy { if (isUnix) "-c" else "/C" }
 
+inline fun <T> Iterable<T>.sumByLong(selector: (T) -> Long): Long {
+    var sum = 0L
+    for (element in this) {
+        sum += selector(element)
+    }
+    return sum
+}
