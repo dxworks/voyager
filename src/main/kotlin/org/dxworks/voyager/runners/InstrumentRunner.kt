@@ -13,20 +13,24 @@ abstract class InstrumentRunner(private val baseFolder: File) {
     }
 
     fun run(instrument: Instrument): InstrumentExecutionResult {
+        val start = System.currentTimeMillis()
         log.info("Started running ${instrument.name}")
-        val instrumentExecutionResult = InstrumentExecutionResult(instrument)
+        val results: MutableMap<String, List<CommandExecutionResult>> = HashMap()
         if (MissionControl.get().runsOnEach(instrument)) {
             baseFolder.listFiles(FileFilter { it.isDirectory })?.forEach {
-                instrumentExecutionResult.results[it.name] = internalRun(instrument, it)
+
+                results[it.name] = internalRun(instrument, it)
             }
         } else {
-            instrumentExecutionResult.results[baseFolder.name] = internalRun(instrument, baseFolder)
+            results[baseFolder.name] = internalRun(instrument, baseFolder)
         }
         log.info("Finished running ${instrument.name}")
-        if (instrumentExecutionResult.results.isEmpty()) {
+        if (results.isEmpty()) {
             log.warn("No projects found for running ${instrument.name}")
         }
-        return instrumentExecutionResult
+        return InstrumentExecutionResult(instrument, System.currentTimeMillis() - start)
+            .also { it.results.putAll(results)
+        }
     }
 
     protected abstract fun internalRun(instrument: Instrument, baseFolder: File): List<CommandExecutionResult>

@@ -19,6 +19,7 @@ import kotlin.system.exitProcess
 private val log = LoggerFactory.getLogger("Main")
 
 fun main(args: Array<String>) {
+    val start = System.currentTimeMillis()
     val argumenthor = getArgumenthor(args)
     MissionControl.get().setContractSource(argumenthor.getValue(mission)!!)
 
@@ -38,7 +39,8 @@ fun main(args: Array<String>) {
     val containerContent =
         SampleContainer(defaultContainerName).fill(instrumentResults, Path.of(missionReport).toFile())
 
-    MissionSummary(results, containerContent).toString().split("\n").forEach(log::info)
+    MissionSummary(results, containerContent, System.currentTimeMillis() - start).toString().split("\n")
+        .forEach(log::info)
 }
 
 private fun prepareInstruments(argumenthor: Argumenthor): Pair<List<Instrument>, String> {

@@ -3,10 +3,13 @@ package org.dxworks.voyager.report
 import org.dxworks.voyager.runners.CommandExecutionResult
 import org.dxworks.voyager.runners.InstrumentExecutionResult
 import org.dxworks.voyager.samples.FileAndAlias
-import org.dxworks.voyager.utils.sumByLong
 import java.time.Duration
 
-data class MissionSummary(val instrumentResults: List<InstrumentExecutionResult>, val samples: List<FileAndAlias>) {
+data class MissionSummary(
+    val instrumentResults: List<InstrumentExecutionResult>,
+    val samples: List<FileAndAlias>,
+    val elapsedTime: Long
+) {
     override fun toString(): String {
         val sb = StringBuilder()
         sb.appendLine("------------------- Mission Summary -------------------")
@@ -18,17 +21,19 @@ data class MissionSummary(val instrumentResults: List<InstrumentExecutionResult>
                     sb.appendLine(getCommandSummary(it, site))
                 }
             }
+            sb.appendLine()
             sb.appendLine("Elapsed time: ${formatElapsedTime(instrumentResult.elapsedTime)}")
             sb.appendLine("------ end ${instrumentResult.instrument.name} ------")
         }
         sb.appendLine()
-        sb.appendLine("____________________container____________________")
+        sb.appendLine("_______________________container_______________________")
+        sb.appendLine()
         samples.forEach {
             sb.appendLine(it.alias)
         }
-        sb.appendLine("_________________________________________________")
+        sb.appendLine("_______________________________________________________")
         sb.appendLine()
-        sb.appendLine("Elapsed time:${formatElapsedTime(instrumentResults.sumByLong { it.elapsedTime })}")
+        sb.appendLine("Elapsed time:${formatElapsedTime(elapsedTime)}")
         sb.appendLine("----------------- end Mission Summary -----------------")
         return sb.toString()
     }
@@ -48,7 +53,7 @@ data class MissionSummary(val instrumentResults: List<InstrumentExecutionResult>
 
     private fun addDots(it: String, length: Int): String {
         val sb = StringBuilder("$it ")
-        while(sb.length < length){
+        while (sb.length < length) {
             sb.append('.')
         }
         return sb.toString()
