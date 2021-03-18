@@ -7,9 +7,9 @@ import org.dxworks.argumenthor.config.sources.impl.ArgsSource
 import org.dxworks.voyager.config.ConfigurationProcessor
 import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.instruments.InstrumentGatherer
-import org.dxworks.voyager.results.ResultsLocator
-import org.dxworks.voyager.results.ResultsPackager
 import org.dxworks.voyager.runners.impl.CommandLineRunner
+import org.dxworks.voyager.samples.SampleContainer
+import org.dxworks.voyager.samples.SamplesLocator
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.system.exitProcess
@@ -18,6 +18,7 @@ private const val site = "site"
 private const val instruments = "instruments"
 private const val voyagerConfig = "voyagerConfig"
 private const val defaultVoyagerConfig = "voyager.yml"
+private const val defaultContainerName = "Dx-Voyager.zip"
 
 private val log = LoggerFactory.getLogger("Main")
 
@@ -30,14 +31,14 @@ fun main(args: Array<String>) {
 
     val results = instruments.map { commandLineRunner.run(it) }
 
-    val resultsLocator = ResultsLocator()
+    val resultsLocator = SamplesLocator()
 
     val instrumentResults = results.filterNot { it.hasErrors() }
-        .map { resultsLocator.locate(it.instrument) }
+        .mapNotNull { resultsLocator.locate(it.instrument) }
 
-    log.info(if (instrumentResults.isEmpty()) "Nothing to package" else "Packaging results")
+    log.info(if (instrumentResults.isEmpty()) "Nothing to package" else "Packaging samples")
 
-    ResultsPackager().packageResults(instrumentResults)
+    SampleContainer(defaultContainerName).fill(instrumentResults)
 
     log.info("Done")
 }

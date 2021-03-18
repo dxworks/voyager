@@ -1,6 +1,6 @@
 package org.dxworks.voyager.runners
 
-import org.dxworks.voyager.config.InstrumentConfiguration
+import org.dxworks.voyager.config.ConfigurationProcessor
 import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.utils.logger
 import java.io.File
@@ -15,7 +15,7 @@ abstract class InstrumentRunner(private val baseFolder: File) {
     fun run(instrument: Instrument): InstrumentExecutionResult {
         log.info("Started running ${instrument.name}")
         val instrumentExecutionResult = InstrumentExecutionResult(instrument)
-        if (instrument.process(InstrumentConfiguration::onEach) == "true") {
+        if (shouldRunOnEachSite(instrument)) {
             baseFolder.listFiles(FileFilter { it.isDirectory })?.forEach {
                 instrumentExecutionResult.results[it.name] = internalRun(instrument, it)
             }
@@ -27,6 +27,11 @@ abstract class InstrumentRunner(private val baseFolder: File) {
             log.warn("No projects found for running ${instrument.name}")
         }
         return instrumentExecutionResult
+    }
+
+    private fun shouldRunOnEachSite(instrument: Instrument): Boolean {
+        return ConfigurationProcessor.get().getInstrumentFields(instrument)["onEach"]?.let { it.toBoolean() }
+            ?: instrument.configuration.onEach
     }
 
     protected abstract fun internalRun(instrument: Instrument, baseFolder: File): List<CommandExecutionResult>

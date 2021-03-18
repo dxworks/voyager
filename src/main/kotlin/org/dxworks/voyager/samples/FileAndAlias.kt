@@ -1,4 +1,4 @@
-package org.dxworks.voyager.results
+package org.dxworks.voyager.samples
 
 import java.io.File
 
