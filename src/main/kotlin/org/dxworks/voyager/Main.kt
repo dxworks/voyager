@@ -25,8 +25,7 @@ fun main(args: Array<String>) {
 
     val results = instruments.map(Instrument::run)
 
-    val instrumentResults = results.filterNot { it.hasErrors() }
-        .mapNotNull { it.instrument.getResults() }
+    val instrumentResults = results.mapNotNull { it.instrument.getResults() }
 
     log.info(if (instrumentResults.isEmpty()) "Nothing to package" else "Packaging results")
 

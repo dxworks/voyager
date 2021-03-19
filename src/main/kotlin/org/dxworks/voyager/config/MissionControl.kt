@@ -60,6 +60,7 @@ class MissionControl private constructor() {
     private fun getInstrumentFieldsWithDefaults(instrument: Instrument): Map<String, String?> {
         return getInstrumentFields(instrument).apply {
             instrument.configuration.parameters.forEach { (k, v) -> putIfAbsent(k, v) }
+            putIfAbsent(instrumentHome, instrument.path)
         }
     }
 

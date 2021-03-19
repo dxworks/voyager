@@ -26,12 +26,11 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     val name = configuration.name
 
 
-    fun processTemplate(
+    private fun processTemplate(
         template: String,
         vararg additionalFields: Pair<String, String>
     ): String {
-        return missionControl
-            .process(this, template, *additionalFields, instrumentHome to path)
+        return missionControl.process(this, template, *additionalFields, instrumentHome to path)
     }
 
 
@@ -54,9 +53,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         }
 
         return InstrumentExecutionResult(this, System.currentTimeMillis() - start)
-            .also {
-                it.results.putAll(results)
-            }
+            .also { it.results.putAll(results) }
     }
 
     private fun internalRun(repo: File): List<CommandExecutionResult> {
@@ -76,9 +73,13 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
                 try {
                     log.info("Running command $identifier")
                     val process = getProcessForCommand(
-                        processTemplate(exec, repoFolder to repo.normalize().absolutePath),
-                        Path.of(command.dir?.let { dir -> processTemplate(dir) } ?: path)
-                            .toFile()
+                        processTemplate(exec, repoFolder to repo.normalize().absolutePath, repoName to repo.name),
+                        Path.of(command.dir?.let { dir ->
+                            processTemplate(
+                                dir,
+                                repoFolder to repo.normalize().absolutePath, repoName to repo.name
+                            )
+                        } ?: path).toFile()
                     )
                     setupLogger(identifier, process)
                     val processExitValue = process.waitFor()
@@ -92,7 +93,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
                         CommandExecutionResult(command, stop - start, errors)
                     }
                 } catch (e: Exception) {
-                    log.error("Command $identifier could not be run")
+                    log.error("Command $identifier could not be run:\n${e.message}")
                     CommandExecutionResult(
                         command,
                         System.currentTimeMillis() - start,
@@ -127,22 +128,17 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     }
 
     private fun setupLogger(identifier: String, process: Process) {
-        val logger = LoggerFactory.getLogger(identifier)
-        BufferedReader(process.inputStream.reader()).forEachLine { logger.info(it) }
+        LoggerFactory.getLogger(identifier).apply {
+            BufferedReader(process.inputStream.reader()).forEachLine { info(it) }
+        }
     }
 
-    private fun getCommandIdentifier(command: Command, index: Int): String {
-        val indexFromInstrument = "${index + 1} from $name"
-        return command.name.let { "$it ($indexFromInstrument)" }
-    }
+    private fun getCommandIdentifier(command: Command, index: Int) =
+        "${command.name} (${index + 1} from $name)"
 
     private fun getProcessForCommand(command: String, directory: File) =
         processBuilder.directory(directory).command(commandInterpreterName, interpreterArg, command).start()
 
-    private fun getLines(inputStream: InputStream): List<String> {
-        val reader = BufferedReader(inputStream.reader())
-        val lines: MutableList<String> = ArrayList()
-        reader.forEachLine { lines.add(it) }
-        return lines
-    }
+    private fun getLines(inputStream: InputStream) =
+        ArrayList<String>().apply { BufferedReader(inputStream.reader()).forEachLine(this::add) }
 }

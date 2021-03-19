@@ -9,6 +9,7 @@ const val runFieldName = "run"
 
 const val instrumentHome = "instrument"
 const val repoFolder = "repo"
+const val repoName= "repoName"
 
 const val defaultInstrumentConfig = "instrument.yml"
 const val defaultMissionConfig = "mission.yml"
