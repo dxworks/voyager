@@ -14,7 +14,9 @@ class MissionControl private constructor() {
     private val globalConfig: GlobalConfig
     val target: File
         get() = Path.of(missionConfig.target).toFile()
-
+    val instrumentsDir: File
+        get() = Path.of(missionConfig.instrumentsDir ?: globalConfig.instrumentsDir ?: defaultInstrumentsLocation)
+            .toFile()
     private lateinit var missionConfig: MissionConfig
 
     init {

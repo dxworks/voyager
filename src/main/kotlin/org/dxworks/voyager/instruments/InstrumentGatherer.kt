@@ -6,21 +6,15 @@ import org.dxworks.voyager.utils.logger
 import org.dxworks.voyager.utils.yamlMapper
 import java.io.File
 import java.io.FileFilter
-import java.nio.file.Path
 
-class InstrumentGatherer(baseFolder: String) {
+class InstrumentGatherer(instrumentsDir: File) {
     companion object {
         private val log = logger<InstrumentGatherer>()
     }
 
-    val instruments: List<Instrument>
-
-    init {
-        instruments =
-            Path.of(baseFolder).toFile().listFiles(FileFilter { it.isInstrumentFolder() })
-                ?.mapNotNull { createInstrument(it) }
-                ?: emptyList()
-    }
+    val instruments: List<Instrument> = instrumentsDir.listFiles(FileFilter(File::isInstrumentFolder))
+        ?.mapNotNull { createInstrument(it) }
+        ?: emptyList()
 
     private fun createInstrument(it: File): Instrument? {
         val absolutePath = it.absolutePath

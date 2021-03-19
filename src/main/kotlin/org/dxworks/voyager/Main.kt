@@ -19,9 +19,23 @@ private val log = LoggerFactory.getLogger("Main")
 fun main(args: Array<String>) {
     val start = System.currentTimeMillis()
     val argumenthor = getArgumenthor(args)
-    MissionControl.get().setContractSource(argumenthor.getValue(mission)!!)
+    val missionControl = MissionControl.get()
 
-    val instruments = prepareInstruments(argumenthor)
+    missionControl.setContractSource(argumenthor.getValue(mission)!!)
+
+    val instrumentsDir = missionControl.instrumentsDir
+    val instrumentGatherer = InstrumentGatherer(instrumentsDir)
+    val target = getArg(argumenthor, target)
+    if (target == null) {
+        log.error("Could not read base folder")
+        exitProcess(1)
+    }
+    val instruments1 = instrumentGatherer.instruments
+    if (instruments1.isEmpty()) {
+        log.warn("No instruments found at ${instrumentsDir}, nothing to run")
+        exitProcess(1)
+    }
+    val instruments = missionControl.getMissionInstruments(instruments1)
 
     val results = instruments.map(Instrument::run)
 
@@ -36,33 +50,10 @@ fun main(args: Array<String>) {
         .forEach(log::info)
 }
 
-private fun prepareInstruments(argumenthor: Argumenthor): List<Instrument> {
-    val instrumentsLocation = getArg(argumenthor, instruments)
-    val instrumentGatherer = if (instrumentsLocation != null) InstrumentGatherer(instrumentsLocation) else {
-        log.error("Could not read instruments location")
-        exitProcess(1)
-    }
-    val repo = getArg(argumenthor, target)
-    if (repo == null) {
-        log.error("Could not read base folder")
-        exitProcess(1)
-    }
-    val instruments = instrumentGatherer.instruments
-    if (instruments.isEmpty()) {
-        log.warn("No instruments found at ${instrumentsLocation}, nothing to run")
-        exitProcess(1)
-    }
-
-    return MissionControl.get().getMissionInstruments(instruments)
-}
-
 private fun getArg(argumenthor: Argumenthor, arg: String) =
     argumenthor.getValue<String>(arg)?.trim('\"', '\'')
 
-
 private fun getArgumenthor(args: Array<String>) = Argumenthor(ArgumenthorConfiguration(
-    StringField(target, System.getProperty("user.home") + "/repos"),
-    StringField(instruments, "."),
     StringField(mission, defaultMissionConfig)
 ).apply {
     addSource(ArgsSource().also { it.argsList = args.toList() })
