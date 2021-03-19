@@ -2,13 +2,29 @@ package org.dxworks.voyager.config
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.dxworks.voyager.instruments.Instrument
+import org.dxworks.voyager.utils.globalConfigName
+import org.dxworks.voyager.utils.home
 import org.dxworks.voyager.utils.logger
 import org.dxworks.voyager.utils.yamlMapper
+import java.io.File
 import java.nio.file.Path
 import kotlin.system.exitProcess
 
 class MissionControl private constructor() {
+    private val configFile = home.resolve(globalConfigName)
+    private val globalConfig: GlobalConfig
+    val target: File
+        get() = Path.of(missionConfig.target).toFile()
+
     private lateinit var missionConfig: MissionConfig
+
+    init {
+        val defaultConfig = javaClass.getResourceAsStream("/$globalConfigName")
+        if (!configFile.exists()) {
+            configFile.writeBytes(defaultConfig.readAllBytes())
+        }
+        globalConfig = yamlMapper.readValue(configFile)
+    }
 
     companion object {
         private val log = logger<MissionControl>()
@@ -48,9 +64,9 @@ class MissionControl private constructor() {
         }
     }
 
-    fun getCommands(instrument: Instrument): List<Command>? {
+    fun getOrderedCommands(instrument: Instrument): List<Command>? {
         val commands = missionConfig.instruments[instrument.name]?.commands
-        return if (commands == null) {
+        return if (globalConfig.runsAll || commands == null) {
             instrument.configuration.commands
         } else {
             val commandNameToCommand =
@@ -64,12 +80,16 @@ class MissionControl private constructor() {
     }
 
     fun getMissionInstruments(instruments: List<Instrument>): List<Instrument> {
-        val instrumentNameToInstrument =
-            missionConfig.instruments.map { config -> config.key to instruments.find { it.name == config.key } }
-        val (foundInstruments, notFoundInstruments) = instrumentNameToInstrument.partition { it.second != null }
-        notFoundInstruments.forEach {
-            log.warn("Could not find instrument ${it.first}")
+        return if (globalConfig.runsAll) {
+            instruments
+        } else {
+            val instrumentNameToInstrument =
+                missionConfig.instruments.map { config -> config.key to instruments.find { it.name == config.key } }
+            val (foundInstruments, notFoundInstruments) = instrumentNameToInstrument.partition { it.second != null }
+            notFoundInstruments.forEach {
+                log.warn("Could not find instrument ${it.first}")
+            }
+            foundInstruments.map { it.second!! }
         }
-        return foundInstruments.map { it.second!! }
     }
 }

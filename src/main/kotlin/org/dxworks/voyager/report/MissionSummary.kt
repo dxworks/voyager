@@ -1,13 +1,13 @@
 package org.dxworks.voyager.report
 
-import org.dxworks.voyager.runners.CommandExecutionResult
-import org.dxworks.voyager.runners.InstrumentExecutionResult
-import org.dxworks.voyager.samples.FileAndAlias
+import org.dxworks.voyager.results.execution.CommandExecutionResult
+import org.dxworks.voyager.results.execution.InstrumentExecutionResult
+import org.dxworks.voyager.results.FileAndAlias
 import java.time.Duration
 
 data class MissionSummary(
     val instrumentResults: List<InstrumentExecutionResult>,
-    val samples: List<FileAndAlias>,
+    val results: List<FileAndAlias>,
     val elapsedTime: Long
 ) {
     override fun toString(): String {
@@ -16,9 +16,9 @@ data class MissionSummary(
         sb.appendLine()
         instrumentResults.forEach { instrumentResult ->
             sb.appendLine("-------- ${instrumentResult.instrument.name} --------")
-            instrumentResult.results.forEach { (site, result) ->
+            instrumentResult.results.forEach { (repo, result) ->
                 result.forEach {
-                    sb.appendLine(getCommandSummary(it, site))
+                    sb.appendLine(getCommandSummary(it, repo))
                 }
             }
             sb.appendLine()
@@ -28,7 +28,7 @@ data class MissionSummary(
         sb.appendLine()
         sb.appendLine("_______________________container_______________________")
         sb.appendLine()
-        samples.forEach {
+        results.forEach {
             sb.appendLine(it.alias)
         }
         sb.appendLine("_______________________________________________________")
@@ -40,12 +40,12 @@ data class MissionSummary(
 
     private fun getCommandSummary(
         it: CommandExecutionResult,
-        site: String
+        repo: String
     ): String {
 
         return String.format(
             "%-12s %-40s %-7s [ %s ]",
-            site,
+            repo,
             addDots(it.command.name, 40),
             it.errors?.let { "FAIL" } ?: "SUCCESS",
             formatElapsedTime(it.elapsedTime))

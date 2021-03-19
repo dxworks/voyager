@@ -1,6 +1,6 @@
 package org.dxworks.voyager.zip
 
-import org.dxworks.voyager.samples.FileAndAlias
+import org.dxworks.voyager.results.FileAndAlias
 import org.dxworks.voyager.utils.logger
 import java.io.File
 import java.io.FileOutputStream

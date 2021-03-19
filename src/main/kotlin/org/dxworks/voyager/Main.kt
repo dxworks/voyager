@@ -8,9 +8,7 @@ import org.dxworks.voyager.config.MissionControl
 import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.instruments.InstrumentGatherer
 import org.dxworks.voyager.report.MissionSummary
-import org.dxworks.voyager.runners.impl.CommandLineRunner
-import org.dxworks.voyager.samples.SampleContainer
-import org.dxworks.voyager.samples.SamplesLocator
+import org.dxworks.voyager.results.SampleContainer
 import org.dxworks.voyager.utils.*
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
@@ -23,18 +21,14 @@ fun main(args: Array<String>) {
     val argumenthor = getArgumenthor(args)
     MissionControl.get().setContractSource(argumenthor.getValue(mission)!!)
 
-    val (instruments, site) = prepareInstruments(argumenthor)
+    val instruments = prepareInstruments(argumenthor)
 
-    val commandLineRunner = CommandLineRunner(Path.of(site).toFile())
-
-    val results = instruments.map { commandLineRunner.run(it) }
-
-    val resultsLocator = SamplesLocator()
+    val results = instruments.map(Instrument::run)
 
     val instrumentResults = results.filterNot { it.hasErrors() }
-        .mapNotNull { resultsLocator.locate(it.instrument) }
+        .mapNotNull { it.instrument.getResults() }
 
-    log.info(if (instrumentResults.isEmpty()) "Nothing to package" else "Packaging samples")
+    log.info(if (instrumentResults.isEmpty()) "Nothing to package" else "Packaging results")
 
     val containerContent =
         SampleContainer(defaultContainerName).fill(instrumentResults, Path.of(missionReport).toFile())
@@ -43,14 +37,14 @@ fun main(args: Array<String>) {
         .forEach(log::info)
 }
 
-private fun prepareInstruments(argumenthor: Argumenthor): Pair<List<Instrument>, String> {
+private fun prepareInstruments(argumenthor: Argumenthor): List<Instrument> {
     val instrumentsLocation = getArg(argumenthor, instruments)
     val instrumentGatherer = if (instrumentsLocation != null) InstrumentGatherer(instrumentsLocation) else {
         log.error("Could not read instruments location")
         exitProcess(1)
     }
-    val site = getArg(argumenthor, region)
-    if (site == null) {
+    val repo = getArg(argumenthor, target)
+    if (repo == null) {
         log.error("Could not read base folder")
         exitProcess(1)
     }
@@ -60,7 +54,7 @@ private fun prepareInstruments(argumenthor: Argumenthor): Pair<List<Instrument>,
         exitProcess(1)
     }
 
-    return Pair(MissionControl.get().getMissionInstruments(instruments), site)
+    return MissionControl.get().getMissionInstruments(instruments)
 }
 
 private fun getArg(argumenthor: Argumenthor, arg: String) =
@@ -68,7 +62,7 @@ private fun getArg(argumenthor: Argumenthor, arg: String) =
 
 
 private fun getArgumenthor(args: Array<String>) = Argumenthor(ArgumenthorConfiguration(
-    StringField(region, System.getProperty("user.home") + "/repos"),
+    StringField(target, System.getProperty("user.home") + "/repos"),
     StringField(instruments, "."),
     StringField(mission, defaultMissionConfig)
 ).apply {
