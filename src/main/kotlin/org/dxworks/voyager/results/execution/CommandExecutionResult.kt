@@ -1,6 +1,6 @@
 package org.dxworks.voyager.results.execution
 
-import org.dxworks.voyager.config.Command
+import org.dxworks.voyager.instruments.config.Command
 
 class CommandExecutionResult(
     val command: Command,

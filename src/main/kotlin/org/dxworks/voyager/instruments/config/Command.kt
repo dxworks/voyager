@@ -1,4 +1,4 @@
-package org.dxworks.voyager.config
+package org.dxworks.voyager.instruments.config
 
 import org.dxworks.voyager.utils.isUnix
 

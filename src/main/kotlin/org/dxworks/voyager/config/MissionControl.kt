@@ -2,10 +2,9 @@ package org.dxworks.voyager.config
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.dxworks.voyager.instruments.Instrument
-import org.dxworks.voyager.utils.globalConfigName
-import org.dxworks.voyager.utils.home
-import org.dxworks.voyager.utils.logger
-import org.dxworks.voyager.utils.yamlMapper
+import org.dxworks.voyager.instruments.config.Command
+import org.dxworks.voyager.instruments.config.InstrumentRunStrategy
+import org.dxworks.voyager.utils.*
 import java.io.File
 import java.nio.file.Path
 import kotlin.system.exitProcess
@@ -54,8 +53,8 @@ class MissionControl private constructor() {
     }
 
     fun runsOnEach(instrument: Instrument): Boolean {
-        return getInstrumentFields(instrument)["onEach"]?.let { it.toBoolean() }
-            ?: instrument.configuration.onEach
+        return (getInstrumentFields(instrument)[runFieldName]?.let(InstrumentRunStrategy.Companion::fromLabel)
+            ?: instrument.configuration.run) == InstrumentRunStrategy.ON_EACH
     }
 
     private fun getInstrumentFieldsWithDefaults(instrument: Instrument): Map<String, String?> {
