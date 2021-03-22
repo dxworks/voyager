@@ -9,7 +9,10 @@ import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.instruments.InstrumentGatherer
 import org.dxworks.voyager.report.MissionSummary
 import org.dxworks.voyager.results.SampleContainer
-import org.dxworks.voyager.utils.*
+import org.dxworks.voyager.utils.defaultContainerName
+import org.dxworks.voyager.utils.defaultMissionConfig
+import org.dxworks.voyager.utils.mission
+import org.dxworks.voyager.utils.missionReport
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.system.exitProcess
@@ -21,21 +24,16 @@ fun main(args: Array<String>) {
     val argumenthor = getArgumenthor(args)
     val missionControl = MissionControl.get()
 
-    missionControl.setContractSource(argumenthor.getValue(mission)!!)
+    missionControl.setMissionSource(getArg(argumenthor, mission)!!)
 
     val instrumentsDir = missionControl.instrumentsDir
-    val instrumentGatherer = InstrumentGatherer(instrumentsDir)
-    val target = getArg(argumenthor, target)
-    if (target == null) {
-        log.error("Could not read base folder")
-        exitProcess(1)
-    }
-    val instruments1 = instrumentGatherer.instruments
-    if (instruments1.isEmpty()) {
+
+    val instruments = missionControl.getMissionInstruments(InstrumentGatherer(instrumentsDir).instruments)
+
+    if (instruments.isEmpty()) {
         log.warn("No instruments found at ${instrumentsDir}, nothing to run")
         exitProcess(1)
     }
-    val instruments = missionControl.getMissionInstruments(instruments1)
 
     val results = instruments.map(Instrument::run)
 

@@ -1,9 +1,10 @@
 package org.dxworks.voyager.report
 
+import org.dxworks.voyager.results.FileAndAlias
 import org.dxworks.voyager.results.execution.CommandExecutionResult
 import org.dxworks.voyager.results.execution.InstrumentExecutionResult
-import org.dxworks.voyager.results.FileAndAlias
 import java.time.Duration
+import kotlin.math.max
 
 data class MissionSummary(
     val instrumentResults: List<InstrumentExecutionResult>,
@@ -16,9 +17,11 @@ data class MissionSummary(
         sb.appendLine()
         instrumentResults.forEach { instrumentResult ->
             sb.appendLine("-------- ${instrumentResult.instrument.name} --------")
+            val maxRepoLength = instrumentResult.results.maxOf { (k, _) -> k.length }
             instrumentResult.results.forEach { (repo, result) ->
+                val maxCommandName = result.maxOf { c -> c.command.name.length }
                 result.forEach {
-                    sb.appendLine(getCommandSummary(it, repo))
+                    sb.appendLine(getCommandSummary(it, maxCommandName, repo, maxRepoLength))
                 }
             }
             sb.appendLine()
@@ -33,22 +36,24 @@ data class MissionSummary(
         }
         sb.appendLine("_______________________________________________________")
         sb.appendLine()
-        sb.appendLine("Elapsed time:${formatElapsedTime(elapsedTime)}")
+        sb.appendLine("Elapsed time: ${formatElapsedTime(elapsedTime)}")
         sb.appendLine("----------------- end Mission Summary -----------------")
         return sb.toString()
     }
 
     private fun getCommandSummary(
-        it: CommandExecutionResult,
-        repo: String
+        commandExecutionResult: CommandExecutionResult,
+        maxCommandName: Int,
+        repo: String,
+        maxRepoLength: Int
     ): String {
 
         return String.format(
-            "%-12s %-40s %-7s [ %s ]",
+            "%-${maxRepoLength}s %-40s %-7s [ %s ]",
             repo,
-            addDots(it.command.name, 40),
-            it.errors?.let { "FAIL" } ?: "SUCCESS",
-            formatElapsedTime(it.elapsedTime))
+            addDots(commandExecutionResult.command.name, max(40, maxCommandName + 5)),
+            commandExecutionResult.errors?.let { "FAIL" } ?: "SUCCESS",
+            formatElapsedTime(commandExecutionResult.elapsedTime))
     }
 
     private fun addDots(it: String, length: Int): String {

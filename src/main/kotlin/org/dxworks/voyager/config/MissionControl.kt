@@ -10,21 +10,26 @@ import java.nio.file.Path
 import kotlin.system.exitProcess
 
 class MissionControl private constructor() {
-    private val configFile = home.resolve(globalConfigName)
+    private val globalConfigFile = home.resolve(globalConfigName)
     private val globalConfig: GlobalConfig
     val target: File
         get() = Path.of(missionConfig.target).toFile()
     val instrumentsDir: File
-        get() = Path.of(missionConfig.instrumentsDir ?: globalConfig.instrumentsDir ?: defaultInstrumentsLocation)
-            .toFile()
+        get() = (missionConfig.instrumentsDir ?: globalConfig.instrumentsDir)?.let { Path.of(it).toFile() }
+            ?: defaultInstrumentsDir()
+
+    private fun defaultInstrumentsDir() =
+        missionHome.resolve(defaultInstrumentsLocation)
+
+    private lateinit var missionHome: File
     private lateinit var missionConfig: MissionConfig
 
     init {
         val defaultConfig = javaClass.getResourceAsStream("/$globalConfigName")
-        if (!configFile.exists()) {
-            configFile.writeBytes(defaultConfig.readAllBytes())
+        if (!globalConfigFile.exists()) {
+            globalConfigFile.writeBytes(defaultConfig.readAllBytes())
         }
-        globalConfig = yamlMapper.readValue(configFile)
+        globalConfig = yamlMapper.readValue(globalConfigFile)
     }
 
     companion object {
@@ -33,9 +38,10 @@ class MissionControl private constructor() {
         fun get() = singleton ?: MissionControl().also { singleton = it }
     }
 
-    fun setContractSource(sourceFile: String) {
+    fun setMissionSource(sourceFile: String) {
         val file = Path.of(sourceFile).toFile()
         if (file.exists()) {
+            missionHome = file.parentFile
             missionConfig = yamlMapper.readValue(file)
             log.info("Starting mission ${missionConfig.mission}")
         } else {
