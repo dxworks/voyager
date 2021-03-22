@@ -10,8 +10,12 @@ import java.nio.file.Path
 import kotlin.system.exitProcess
 
 class MissionControl private constructor() {
-    private val globalConfigFile = home.resolve(globalConfigName)
-    private val globalConfig: GlobalConfig
+    private val globalConfigFile = Path.of(globalConfigName).toFile()
+    private val globalConfig: GlobalConfig = if (globalConfigFile.exists()) {
+        yamlMapper.readValue(globalConfigFile)
+    } else {
+        GlobalConfig()
+    }
     val target: File
         get() = Path.of(missionConfig.target).toFile()
     val instrumentsDir: File
@@ -23,14 +27,6 @@ class MissionControl private constructor() {
 
     private lateinit var missionHome: File
     private lateinit var missionConfig: MissionConfig
-
-    init {
-        val defaultConfig = javaClass.getResourceAsStream("/$globalConfigName")
-        if (!globalConfigFile.exists()) {
-            globalConfigFile.writeBytes(defaultConfig.readAllBytes())
-        }
-        globalConfig = yamlMapper.readValue(globalConfigFile)
-    }
 
     companion object {
         private val log = logger<MissionControl>()
@@ -99,5 +95,15 @@ class MissionControl private constructor() {
             }
             foundInstruments.map { it.second!! }
         }
+    }
+
+    fun getProcessBuilder() = ProcessBuilder().apply {
+        environment()[pathEnv] =
+            globalConfig.environments.values.joinToString(
+                separator = pathEnvSeparator,
+                postfix = pathEnvSeparator
+            ) {
+                Path.of(it).toAbsolutePath().toString()
+            } + environment()[pathEnv]
     }
 }

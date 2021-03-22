@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileFilter
-import java.io.InputStream
 import java.nio.file.FileSystems
 import java.nio.file.Path
 
@@ -21,7 +20,6 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         private val log = logger<Instrument>()
     }
 
-    private val processBuilder = ProcessBuilder()
     private val missionControl = MissionControl.get()
     val name = configuration.name
 
@@ -81,14 +79,14 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
                             )
                         } ?: path).toFile()
                     )
-                    setupLogger(identifier, process)
+                    val errorsBuilder = setupLogger(identifier, process)
                     val processExitValue = process.waitFor()
                     val stop = System.currentTimeMillis()
                     if (processExitValue == 0) {
                         log.info("Command $identifier completed")
                         CommandExecutionResult(command, stop - start)
                     } else {
-                        val errors = getLines(process.errorStream).joinToString("\n")
+                        val errors = errorsBuilder.toString()
                         log.error("Command $identifier failed with errors:\n$errors")
                         CommandExecutionResult(command, stop - start, errors)
                     }
@@ -127,18 +125,22 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         }
     }
 
-    private fun setupLogger(identifier: String, process: Process) {
+    private fun setupLogger(identifier: String, process: Process): StringBuilder {
+        val stringBuilder = StringBuilder()
         LoggerFactory.getLogger(identifier).apply {
             BufferedReader(process.inputStream.reader()).forEachLine { info(it) }
+            BufferedReader(process.errorStream.reader()).forEachLine {
+                info(it)
+                stringBuilder.appendLine(it)
+            }
         }
+        return stringBuilder
     }
 
     private fun getCommandIdentifier(command: Command, index: Int) =
         "${command.name} (${index + 1} from $name)"
 
     private fun getProcessForCommand(command: String, directory: File) =
-        processBuilder.directory(directory).command(commandInterpreterName, interpreterArg, command).start()
-
-    private fun getLines(inputStream: InputStream) =
-        ArrayList<String>().apply { BufferedReader(inputStream.reader()).forEachLine(this::add) }
+        missionControl.getProcessBuilder().directory(directory).command(commandInterpreterName, interpreterArg, command)
+            .start()
 }
