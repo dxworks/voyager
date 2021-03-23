@@ -8,12 +8,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        path: .
-#      - uses: actions/checkout@v2
-#        with:
-#          repository: apache/airflow.git
-#          ref: a7e144bec855f6ccf0fa5ae8447894195ffe170f
-#          path: site
+        with:
+          path: voyager
+      - uses: actions/checkout@v2
+        with:
+          repository: apache/airflow.git
+          ref: a7e144bec855f6ccf0fa5ae8447894195ffe170f
+          path: site
 #      - uses: actions/checkout@v2
 #        with:
 #          repository: angular/angular.git
@@ -95,7 +96,7 @@ jobs:
 #          ref: a51ba24aa6b9d5e8864cd6420357091fbd663ed1
 #          path: site
 
-      - run: ls -al
+      - run: ls -d */*/*
       - run: mvn package
         working-directory: voyager
       - run: cp /voyager/target/dx-voyager.jar dx-voyager.jar
