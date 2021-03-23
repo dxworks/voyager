@@ -1,0 +1,5 @@
+mission: Environments Test
+target: .
+instruments:
+  Github environments test:
+    run: once

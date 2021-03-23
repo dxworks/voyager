@@ -1,0 +1,15 @@
+name: Github environments test
+results:
+  - dir: ${instrument}
+    files:
+      - results
+commands:
+  - name: Java Version
+    win: java -version >> results
+    unix: java -version >> results
+  - name: Python Version
+    win: python --version >> results
+    unix: python --version >> results
+  - name: Node Version
+    win: node -v >> results
+    unix: node -v >> results

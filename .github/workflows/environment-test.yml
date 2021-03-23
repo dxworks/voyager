@@ -1,0 +1,19 @@
+name: Test
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: mvn clean build
+      - run: cp target/dx-voyager.jar target/test-classes/githubEnvironmentTest/dx-voyager.jar
+      - run: cd target/test-classes/githubEnvironmentTest
+      - run: java -jar dx-voyager.jar
