@@ -101,7 +101,7 @@ jobs:
         working-directory: voyager
       - run: cp /voyager/target/dx-voyager.jar dx-voyager.jar
       - run: cp /voyager/target/test-classes/missionTest/mission.yml mission.yml
-      - rum: cp -r /voyager/target/test-classes/missionTest/instruments instruments
+      - run: cp -r /voyager/target/test-classes/missionTest/instruments instruments
       - run: java -jar dx-voyager.jar
       - uses: actions/upload-artifact@v2
         with:
