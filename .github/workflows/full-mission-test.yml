@@ -8,93 +8,94 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/checkout@v2
-        with:
-          repository: apache/airflow.git
-          ref: a7e144bec855f6ccf0fa5ae8447894195ffe170f
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: angular/angular.git
-          ref: 0516fbb180e4b1cc5faa4af8a69dd333dbd86a73
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: angular/angular.git
-          ref: 0516fbb180e4b1cc5faa4af8a69dd333dbd86a73
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: biojava/biojava.git
-          ref: 15ce47d9a8618e9af8e7de7b15f0f31b7cc394f2
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: google/googletest.git
-          ref: 1a8ecf1813d022cc7914e04564b92decff6161fc
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: apache/superset.git
-          ref: fd7c9eb71e193022816c323eca62564d32fc932a
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: apache/kafka.git
-          ref: 99b9b3e84f4e98c3f07714e1de6a139a004cbc5b
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: keras-team/keras.git
-          ref: 9372aa7ad321b3f74bc0e75d54d82efe549b4466
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: apache/maven.git
-          ref: c3cf29438e3d65d6ee5c5726f8611af99d9a649a
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: uber/okbuck.git
-          ref: dc2ddc69832801db29e2e76b3ed64467ac460bb9
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: pytorch/pytorch.git
-          ref: 1b792a7f1501d3e534e4b651da0a5edbacb49eab
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: facebook/react.git
-          ref: d0eaf782930b6e6c575f50bf688e667b9f6795b7
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: rakhimov/scram.git
-          ref: b85b78940de38996eeffec54d946824bd4280a1c
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: apache/skywalking.git
-          ref: b28f2705273b18fe962a66cc0f60766030741902
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: apache/spark.git
-          ref: 0494dc90af48ce7da0625485a4dc6917a244d580
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: tensorflow/tensorflow.git
-          ref: 0c3b09c3ba735f5d1c5d3362501c9d6aff87bf8c
-          path: site
-      - uses: actions/checkout@v2
-        with:
-          repository: videolan/vlc.git
-          ref: a51ba24aa6b9d5e8864cd6420357091fbd663ed1
-          path: site
+        path: .
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: apache/airflow.git
+#          ref: a7e144bec855f6ccf0fa5ae8447894195ffe170f
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: angular/angular.git
+#          ref: 0516fbb180e4b1cc5faa4af8a69dd333dbd86a73
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: angular/angular.git
+#          ref: 0516fbb180e4b1cc5faa4af8a69dd333dbd86a73
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: biojava/biojava.git
+#          ref: 15ce47d9a8618e9af8e7de7b15f0f31b7cc394f2
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: google/googletest.git
+#          ref: 1a8ecf1813d022cc7914e04564b92decff6161fc
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: apache/superset.git
+#          ref: fd7c9eb71e193022816c323eca62564d32fc932a
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: apache/kafka.git
+#          ref: 99b9b3e84f4e98c3f07714e1de6a139a004cbc5b
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: keras-team/keras.git
+#          ref: 9372aa7ad321b3f74bc0e75d54d82efe549b4466
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: apache/maven.git
+#          ref: c3cf29438e3d65d6ee5c5726f8611af99d9a649a
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: uber/okbuck.git
+#          ref: dc2ddc69832801db29e2e76b3ed64467ac460bb9
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: pytorch/pytorch.git
+#          ref: 1b792a7f1501d3e534e4b651da0a5edbacb49eab
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: facebook/react.git
+#          ref: d0eaf782930b6e6c575f50bf688e667b9f6795b7
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: rakhimov/scram.git
+#          ref: b85b78940de38996eeffec54d946824bd4280a1c
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: apache/skywalking.git
+#          ref: b28f2705273b18fe962a66cc0f60766030741902
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: apache/spark.git
+#          ref: 0494dc90af48ce7da0625485a4dc6917a244d580
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: tensorflow/tensorflow.git
+#          ref: 0c3b09c3ba735f5d1c5d3362501c9d6aff87bf8c
+#          path: site
+#      - uses: actions/checkout@v2
+#        with:
+#          repository: videolan/vlc.git
+#          ref: a51ba24aa6b9d5e8864cd6420357091fbd663ed1
+#          path: site
 
-
+      - run: ls -al
       - run: mvn package
         working-directory: voyager
       - run: cp /voyager/target/dx-voyager.jar dx-voyager.jar
