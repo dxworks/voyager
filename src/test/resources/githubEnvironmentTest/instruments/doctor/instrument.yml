@@ -5,11 +5,11 @@ results:
       - results
 commands:
   - name: Java Version
-    win: java -version >> results
-    unix: java -version >> results
+    win: java -version && java -version &>> results
+    unix: java -version && java -version &>> results
   - name: Python Version
-    win: python --version >> results
-    unix: python --version >> results
+    win: python --version && python --version >> results
+    unix: python --version && python --version >> results
   - name: Node Version
-    win: node -v >> results
-    unix: node -v >> results
+    win: node -v && node -v >> results
+    unix: node -v && node -v >> results
