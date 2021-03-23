@@ -22,8 +22,8 @@ jobs:
       - run: |
           cd target/test-classes/githubEnvironmentTest
           java -jar dx-voyager.jar
-      - uses: ncipollo/release-action@v1
+      - uses: actions/upload-artifact@v2
         with:
-          artifacts: "target/test-classes/githubEnvironmentTest/data-container.zip"
-          token: ${{ secrets.VOYAGER_PACKAGE_GITHUB_TOKEN }}
-          tag: environment-test
+          name: environment-test-data-container
+          path: target/test-classes/githubEnvironmentTest/data-container.zip
+          retention-days: 2
