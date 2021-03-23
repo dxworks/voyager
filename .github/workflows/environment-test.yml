@@ -23,7 +23,7 @@ jobs:
           cd target/test-classes/githubEnvironmentTest
           java -jar dx-voyager.jar
       - uses: ncipollo/release-action@v1
-          with:
-            artifacts: "target/test-classes/githubEnvironmentTest/data-container.zip"
-            token: ${{ secrets.VOYAGER_PACKAGE_GITHUB_TOKEN }}
-            tag: environment-test
+        with:
+          artifacts: "target/test-classes/githubEnvironmentTest/data-container.zip"
+          token: ${{ secrets.VOYAGER_PACKAGE_GITHUB_TOKEN }}
+          tag: environment-test
