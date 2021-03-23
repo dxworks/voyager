@@ -5,7 +5,7 @@ results:
       - results
 commands:
   - name: Java Version
-    win: java -version && java -version &>> results
+    win: java -version && java -version >> results 2>> results
     unix: java -version && java -version &>> results
   - name: Python Version
     win: python --version && python --version >> results
