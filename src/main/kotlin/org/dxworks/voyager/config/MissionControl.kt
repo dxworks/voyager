@@ -37,7 +37,7 @@ class MissionControl private constructor() {
     fun setMissionSource(sourceFile: String) {
         val file = Path.of(sourceFile).toFile()
         if (file.exists()) {
-            missionHome = file.parentFile
+            missionHome = file.absoluteFile.parentFile
             missionConfig = yamlMapper.readValue(file)
             log.info("Starting mission ${missionConfig.mission}")
         } else {
