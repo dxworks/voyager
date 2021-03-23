@@ -101,5 +101,5 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: mission-test-data-container
-          path: target/test-classes/missionTest/data-container.zip
+          path: data-container.zip
           retention-days: 2
