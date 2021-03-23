@@ -99,10 +99,10 @@ jobs:
 
       - run: mvn package
         working-directory: voyager
-      - run: cp target/dx-voyager.jar target/test-classes/missionTest/dx-voyager.jar
-      - run: |
-          cd target/test-classes/missionTest
-          java -jar dx-voyager.jar
+      - run: cp /voyager/target/dx-voyager.jar dx-voyager.jar
+      - run: cp /voyager/target/test-classes/missionTest/mission.yml mission.yml
+      - rum: cp -r /voyager/target/test-classes/missionTest/instruments instruments
+      - run: java -jar dx-voyager.jar
       - uses: actions/upload-artifact@v2
         with:
           name: mission-test-data-container

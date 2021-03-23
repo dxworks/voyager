@@ -1,4 +1,4 @@
 mission: Full mission test
-target: ../../../../site
+target: site
 instruments:
   Git log:

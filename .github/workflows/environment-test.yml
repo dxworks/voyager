@@ -19,9 +19,8 @@ jobs:
           node-version: '14'
       - run: mvn package
       - run: cp target/dx-voyager.jar target/test-classes/githubEnvironmentTest/dx-voyager.jar
-      - run: |
-          cd target/test-classes/githubEnvironmentTest
-          java -jar dx-voyager.jar
+      - run: java -jar dx-voyager.jar
+        working-directory: target/test-classes/githubEnvironmentTest
       - uses: actions/upload-artifact@v2
         with:
           name: environment-test-data-container
