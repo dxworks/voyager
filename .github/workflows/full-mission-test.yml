@@ -8,8 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        with:
-          path: voyager
       - uses: actions/checkout@v2
         with:
           repository: apache/airflow.git
