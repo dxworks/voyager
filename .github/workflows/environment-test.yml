@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - run: mvn clean build
+      - run: mvn clean package
       - run: cp target/dx-voyager.jar target/test-classes/githubEnvironmentTest/dx-voyager.jar
       - run: cd target/test-classes/githubEnvironmentTest
       - run: java -jar dx-voyager.jar
