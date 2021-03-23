@@ -16,7 +16,4 @@ jobs:
           node-version: '14'
       - run: mvn clean package
       - run: cp target/dx-voyager.jar target/test-classes/githubEnvironmentTest/dx-voyager.jar
-      - run: ls -al
-      - run: cd target/test-classes/githubEnvironmentTest
-      - run: ls -al
-      - run: java -jar dx-voyager.jar
+      - run: cd target/test-classes/githubEnvironmentTest && java -jar dx-voyager.jar
