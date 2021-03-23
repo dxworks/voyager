@@ -1,0 +1,14 @@
+name: Git log
+run: onEach
+results:
+  - dir: ${instrument}/results
+    files:
+      - "*.git"
+commands:
+  - name: create results dir
+    win: mkdir results
+    unix: mkdir results
+  - name: git log
+    win: git log --encoding=UTF-8 --no-merges --find-renames --numstat --raw --format="commit:%H%nauthor:%an%nemail:%ae%ndate:%cD %nmessage:%n%s%n%b%nnumstat:" > "${instrument}/results/${repoName}.git"
+    unix: git log --encoding=UTF-8 --no-merges --find-renames --numstat --raw --format="commit:%H%nauthor:%an%nemail:%ae%ndate:%cD%nmessage:%n%s%n%b%nnumstat:" > "${instrument}/results/${repoName}.git"
+    dir: ${repo}
