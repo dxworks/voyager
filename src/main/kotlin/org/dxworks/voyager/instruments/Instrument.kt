@@ -28,7 +28,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         template: String,
         vararg additionalFields: Pair<String, String>
     ): String {
-        return missionControl.process(this, template, *additionalFields, instrumentHome to path)
+        return missionControl.processTemplate(this, template, *additionalFields, instrumentHome to path)
     }
 
 
@@ -70,7 +70,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
                 val start = System.currentTimeMillis()
                 try {
                     log.info("Running command $identifier")
-                    val process = getProcessForCommand(
+                    val process = getProcessForCommand(command,
                         processTemplate(exec, repoFolder to repo.normalize().absolutePath, repoName to repo.name),
                         Path.of(command.dir?.let { dir ->
                             processTemplate(
@@ -140,7 +140,8 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     private fun getCommandIdentifier(command: Command, index: Int) =
         "${command.name} (${index + 1} from $name)"
 
-    private fun getProcessForCommand(command: String, directory: File) =
-        missionControl.getProcessBuilder().directory(directory).command(commandInterpreterName, interpreterArg, command)
+    private fun getProcessForCommand(command: Command, exec: String, directory: File) =
+        missionControl.getProcessBuilder(this, command).directory(directory)
+            .command(commandInterpreterName, interpreterArg, exec)
             .start()
 }

@@ -50,7 +50,7 @@ class MissionControl private constructor() {
     private fun getInstrumentFields(instrument: Instrument): MutableMap<String, String?> =
         missionConfig.instruments[instrument.name]?.parameters?.toMutableMap() ?: HashMap()
 
-    fun process(instrument: Instrument, parameter: String, vararg additionalFields: Pair<String, String>): String {
+    fun processTemplate(instrument: Instrument, parameter: String, vararg additionalFields: Pair<String, String>): String {
         val data = getInstrumentFieldsWithDefaults(instrument) + additionalFields
         var processedTemplate = parameter
         data.forEach { (k, v) -> processedTemplate = processedTemplate.replace("\${$k}", v ?: "null") }
