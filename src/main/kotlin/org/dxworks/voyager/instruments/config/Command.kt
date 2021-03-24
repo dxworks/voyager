@@ -6,6 +6,7 @@ data class Command(
     val name: String,
     val win: String?,
     val unix: String?,
+    val environment: Map<String, String> = emptyMap(),
     val dir: String? = null
 ) {
     val exec: String?

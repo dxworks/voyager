@@ -4,6 +4,7 @@ data class MissionConfig(
     val mission: String,
     val target: String,
     val instruments: Map<String, InstrumentMissionConfiguration>,
-    val instrumentsDir: String? = null
+    val environment: Map<String, String> = emptyMap(),
+    val instrumentsDir: String? = null,
 ) {
 }

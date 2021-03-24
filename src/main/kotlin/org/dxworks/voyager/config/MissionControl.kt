@@ -1,6 +1,7 @@
 package org.dxworks.voyager.config
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import org.dxworks.voyager.config.global.GlobalConfig
 import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.instruments.config.Command
 import org.dxworks.voyager.instruments.config.InstrumentRunStrategy
@@ -97,13 +98,19 @@ class MissionControl private constructor() {
         }
     }
 
-    fun getProcessBuilder() = ProcessBuilder().apply {
-        environment()[pathEnv] =
-            globalConfig.environments.values.joinToString(
+    fun getProcessBuilder(instrument: Instrument, command: Command) = ProcessBuilder().apply {
+        val environment = environment()
+        environment[pathEnv] =
+            globalConfig.runtimes.values.joinToString(
                 separator = pathEnvSeparator,
                 postfix = pathEnvSeparator
             ) {
                 Path.of(it).toAbsolutePath().toString()
-            } + environment()[pathEnv]
+            } + environment[pathEnv]
+
+        globalConfig.environment.forEach { (k, v) -> environment[k] = v }
+        missionConfig.environment.forEach { (k, v) -> environment[k] = v }
+        instrument.configuration.environment.forEach { (k, v) -> environment[k] = v }
+        command.environment.forEach { (k, v) -> environment[k] = v }
     }
 }
