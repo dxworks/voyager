@@ -9,9 +9,10 @@ import org.dxworks.voyager.results.execution.CommandExecutionResult
 import org.dxworks.voyager.results.execution.InstrumentExecutionResult
 import org.dxworks.voyager.utils.*
 import org.slf4j.LoggerFactory
-import java.io.BufferedReader
 import java.io.File
 import java.io.FileFilter
+import java.io.InputStreamReader
+import java.io.Reader
 import java.nio.file.FileSystems
 import java.nio.file.Path
 
@@ -128,8 +129,8 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     private fun setupLogger(identifier: String, process: Process): StringBuilder {
         val stringBuilder = StringBuilder()
         LoggerFactory.getLogger(identifier).apply {
-            BufferedReader(process.inputStream.reader()).forEachLine { info(it) }
-            BufferedReader(process.errorStream.reader()).forEachLine {
+            process.inputStream.reader().forEachLine { info(it) }
+            process.errorStream.reader().forEachLine {
                 info(it)
                 stringBuilder.appendLine(it)
             }

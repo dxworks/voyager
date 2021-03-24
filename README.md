@@ -147,6 +147,7 @@ commands:
     environment:
 
     # The working directory for the command
+    # Default: ${instrument} the instrument's path
     dir:
 
 # A map of name to value that will be added to 
