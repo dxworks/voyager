@@ -49,7 +49,7 @@ instrumentsDir:
 Example
 
 ```yaml
-mission: Gi information gathering
+mission: Git information gathering
 target: /home/projects
 instruments:
   Git log:
@@ -123,7 +123,7 @@ run:
 # mission's data container 
 results:
 
-  # The path of the directory *required
+  # The path of the directory relative to . *required
   - dir:
 
     # The list of globs. Matching files are included in the data-container
@@ -159,7 +159,7 @@ environment:
 # Voyager defined parameters:
 #                   instrument: the path to the instrument's directory
 #                   repo: the path to the current analysis directory (target/project)
-#                   repoName: the name of the current analysis directory
+#                   repoName: the name of the current analysis directory (target/project)
 parameters:
 ```
 
@@ -181,10 +181,14 @@ commands:
 
 ## Running Dx-Voyager
 
+---
+
 If the mission is in the default location `./mission.yml` then you can run voyager with `java -jar dx-voyager.jar`
 
 Otherwise, run voyager using `java -jar dx-voyager.jar -mission="path to mission"`
 
 If the instruments are not in the default location `./instruments` then specify the instrumentsDir in mission.yml
 
-All commands are run from `.`, all paths are relative to `.`
+### Results
+
+The results declared by the instruments will be packaged in ./data-container.zip 
