@@ -11,8 +11,6 @@ import org.dxworks.voyager.utils.*
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileFilter
-import java.io.InputStreamReader
-import java.io.Reader
 import java.nio.file.FileSystems
 import java.nio.file.Path
 
@@ -71,14 +69,10 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
                 val start = System.currentTimeMillis()
                 try {
                     log.info("Running command $identifier")
-                    val process = getProcessForCommand(command,
-                        processTemplate(exec, repoFolder to repo.normalize().absolutePath, repoName to repo.name),
-                        Path.of(command.dir?.let { dir ->
-                            processTemplate(
-                                dir,
-                                repoFolder to repo.normalize().absolutePath, repoName to repo.name
-                            )
-                        } ?: path).toFile()
+                    val process = getProcessForCommand(
+                        command,
+                        exec,
+                        repo
                     )
                     val errorsBuilder = setupLogger(identifier, process)
                     val processExitValue = process.waitFor()
@@ -141,8 +135,22 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     private fun getCommandIdentifier(command: Command, index: Int) =
         "${command.name} (${index + 1} from $name)"
 
-    private fun getProcessForCommand(command: Command, exec: String, directory: File) =
-        missionControl.getProcessBuilder(this, command).directory(directory)
-            .command(commandInterpreterName, interpreterArg, exec)
+    private fun getProcessForCommand(command: Command, exec: String, repo: File): Process {
+        val repoFolderField = repoFolder to repo.absoluteFile.normalize().absolutePath
+        val repoNameField = repoName to repo.absoluteFile.normalize().name
+        val environment = command.environment.map { (k, v) -> k to processTemplate(v, repoFolderField, repoNameField) }
+            .toMap()
+            .toMutableMap()
+        configuration.environment.forEach { (k, v) ->
+            environment.putIfAbsent(k, processTemplate(v, repoFolderField, repoNameField))
+        }
+
+        return missionControl.getProcessBuilder(*environment.toList().toTypedArray())
+            .directory(
+                Path.of(command.dir?.let { dir -> processTemplate(dir, repoFolderField, repoNameField) } ?: path)
+                    .toFile()
+            )
+            .command(commandInterpreterName, interpreterArg, processTemplate(exec, repoFolderField, repoNameField))
             .start()
+    }
 }

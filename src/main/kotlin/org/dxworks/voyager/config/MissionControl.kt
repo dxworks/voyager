@@ -50,7 +50,11 @@ class MissionControl private constructor() {
     private fun getInstrumentFields(instrument: Instrument): MutableMap<String, String?> =
         missionConfig.instruments[instrument.name]?.parameters?.toMutableMap() ?: HashMap()
 
-    fun processTemplate(instrument: Instrument, parameter: String, vararg additionalFields: Pair<String, String>): String {
+    fun processTemplate(
+        instrument: Instrument,
+        parameter: String,
+        vararg additionalFields: Pair<String, String>
+    ): String {
         val data = getInstrumentFieldsWithDefaults(instrument) + additionalFields
         var processedTemplate = parameter
         data.forEach { (k, v) -> processedTemplate = processedTemplate.replace("\${$k}", v ?: "null") }
@@ -98,7 +102,7 @@ class MissionControl private constructor() {
         }
     }
 
-    fun getProcessBuilder(instrument: Instrument, command: Command) = ProcessBuilder().apply {
+    fun getProcessBuilder(vararg additionalEnvironment: Pair<String, String>) = ProcessBuilder().apply {
         val environment = environment()
         environment[pathEnv] =
             globalConfig.runtimes.values.joinToString(
@@ -110,7 +114,6 @@ class MissionControl private constructor() {
 
         globalConfig.environment.forEach { (k, v) -> environment[k] = v }
         missionConfig.environment.forEach { (k, v) -> environment[k] = v }
-        instrument.configuration.environment.forEach { (k, v) -> environment[k] = v }
-        command.environment.forEach { (k, v) -> environment[k] = v }
+        additionalEnvironment.forEach { environment[it.first] = it.second }
     }
 }
