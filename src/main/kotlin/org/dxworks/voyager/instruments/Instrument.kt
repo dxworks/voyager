@@ -13,6 +13,7 @@ import java.io.File
 import java.io.FileFilter
 import java.nio.file.FileSystems
 import java.nio.file.Path
+import kotlin.concurrent.thread
 
 data class Instrument(val path: String, val configuration: InstrumentConfiguration) {
     companion object {
@@ -123,10 +124,14 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     private fun setupLogger(identifier: String, process: Process): StringBuilder {
         val stringBuilder = StringBuilder()
         LoggerFactory.getLogger(identifier).apply {
-            process.inputStream.reader().forEachLine { info(it) }
-            process.errorStream.reader().forEachLine {
-                info(it)
-                stringBuilder.appendLine(it)
+            thread {
+                process.inputStream.reader().forEachLine { info(it) }
+            }
+            thread {
+                process.errorStream.reader().forEachLine {
+                    info(it)
+                    stringBuilder.appendLine(it)
+                }
             }
         }
         return stringBuilder
