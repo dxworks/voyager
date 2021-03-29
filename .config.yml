@@ -1,5 +1,0 @@
-runsAll: false
-environments:
-  java-11: environments/jdk-11.0.10/bin
-  python-3: environments/python-3.9.2-embed-amd64
-  node-14: environments/node-v14.16.0-win-x64
