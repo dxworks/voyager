@@ -22,7 +22,7 @@ jobs:
           cp README.md dx-voyager/README.md
           cp target/dx-voyager.jar dx-voyager/dx-voyager.jar
       - name: Create Archive
-        run: zip -r insider.zip dx-voyager
+        run: zip -r dx-voyager.zip dx-voyager
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
