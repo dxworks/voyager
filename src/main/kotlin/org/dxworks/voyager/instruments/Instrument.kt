@@ -143,11 +143,12 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     private fun getProcessForCommand(command: Command, exec: String, repo: File): Process {
         val repoFolderField = repoFolder to repo.absoluteFile.normalize().absolutePath
         val repoNameField = repoName to repo.absoluteFile.normalize().name
-        val environment = command.environment.map { (k, v) -> k to processTemplate(v, repoFolderField, repoNameField) }
-            .toMap()
-            .toMutableMap()
+        val environment =
+            command.environment.map { (k, v) -> k to processTemplate(v ?: "", repoFolderField, repoNameField) }
+                .toMap()
+                .toMutableMap()
         configuration.environment.forEach { (k, v) ->
-            environment.putIfAbsent(k, processTemplate(v, repoFolderField, repoNameField))
+            environment.putIfAbsent(k, processTemplate(v ?: "", repoFolderField, repoNameField))
         }
 
         return missionControl.getProcessBuilder(*environment.toList().toTypedArray())

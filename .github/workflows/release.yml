@@ -20,6 +20,11 @@ jobs:
         run: |
           mkdir dx-voyager
           cp README.md dx-voyager/README.md
+          cp .config.yml dx-voyager/.config.yml
+          cp mission.yml dx-voyager/mission.yml
+          cp bin/voyager.sh dx-voyager/voyager.sh
+          cp bin/voyager.bat dx-voyager/voyager.bat
+          cp -r instruments dx-voyager/instruments
           cp target/dx-voyager.jar dx-voyager/dx-voyager.jar
       - name: Create Archive
         run: zip -r dx-voyager.zip dx-voyager

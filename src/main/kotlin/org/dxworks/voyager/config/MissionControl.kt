@@ -42,7 +42,14 @@ class MissionControl private constructor() {
             missionConfig = yamlMapper.readValue(file)
             log.info("Starting mission ${missionConfig.mission}")
         } else {
-            log.error("Could not load mission config from $sourceFile")
+            log.error(
+                """
+                Could not load mission config from $sourceFile:
+                The mission config file at $sourceFile does not exist or could not be read
+                Please make sure this file exists or provide the path to a mission config file through
+                the mission argument. IE -mission=/home/my-mission.yml
+                """.trimMargin().trimIndent()
+            )
             exitProcess(0)
         }
     }
@@ -112,8 +119,8 @@ class MissionControl private constructor() {
                 Path.of(it).toAbsolutePath().toString()
             } + environment[pathEnv]
 
-        globalConfig.environment.forEach { (k, v) -> environment[k] = v }
-        missionConfig.environment.forEach { (k, v) -> environment[k] = v }
+        globalConfig.environment.forEach { (k, v) -> environment[k] = v ?: "" }
+        missionConfig.environment.forEach { (k, v) -> environment[k] = v ?: "" }
         additionalEnvironment.forEach { environment[it.first] = it.second }
     }
 }
