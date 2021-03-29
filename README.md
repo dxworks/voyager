@@ -1,7 +1,10 @@
 # Dx-Voyager
 
 ---
-Description...
+Voyager's main purpose is to help extract data from software systems in a unified way.
+It runs a suit of configurable instruments according to a mission configuration.
+
+Please take a look at how to configure and run Voyager below.
 
 ## Mission
 
