@@ -22,7 +22,7 @@ instruments:
       name: developer
       # A special parameter that overrides the instruments setting to run on the
       # target directory or on all the projects within the target
-      # Values: onEach, once
+      # Values: onEach, once, never
       run:
 
 # A map of environment variables, name to value, for voyager missions
