@@ -1,8 +1,8 @@
 # Dx-Voyager
 
 ---
-Voyager's main purpose is to help extract data from software systems in a unified way.
-It runs a suit of configurable instruments according to a mission configuration.
+Voyager's main purpose is to help extract data from software systems in a unified way. It runs a suit of configurable
+instruments according to a mission configuration.
 
 Please take a look at how to configure and run Voyager below.
 
@@ -37,7 +37,7 @@ instruments:
 
       # A special parameter that overrides the instruments setting to run on the 
       # target directory or on all the projects within the target
-      # Values: onEach, once
+      # Values: onEach, once, never
       run:
 
 # A map of environment variables, name to value, for voyager missions
@@ -118,7 +118,7 @@ located in the instrument's directory.
 name:
 
 # Specifies if the instrument should run on the target directory or 
-# on all the projects within the target (once / onEach)
+# on all the projects within the target (once / onEach / never)
 # Default: once
 run:
 
