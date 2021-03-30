@@ -3,6 +3,7 @@ package org.dxworks.voyager.instruments
 import org.dxworks.voyager.config.MissionControl
 import org.dxworks.voyager.instruments.config.Command
 import org.dxworks.voyager.instruments.config.InstrumentConfiguration
+import org.dxworks.voyager.instruments.config.InstrumentRunStrategy.*
 import org.dxworks.voyager.results.FileAndAlias
 import org.dxworks.voyager.results.InstrumentResult
 import org.dxworks.voyager.results.execution.CommandExecutionResult
@@ -38,10 +39,10 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         log.info("Started running $name")
         val results: MutableMap<String, List<CommandExecutionResult>> = HashMap()
 
-        if (MissionControl.get().runsOnEach(this)) {
-            target.listFiles(FileFilter { it.isDirectory })?.forEach { results[it.name] = internalRun(it) }
-        } else {
-            results[target.name] = internalRun(target)
+        when (MissionControl.get().runOption(this)) {
+            ON_EACH -> target.listFiles(FileFilter { it.isDirectory })?.forEach { results[it.name] = internalRun(it) }
+            ONCE -> results[target.name] = internalRun(target)
+            NEVER -> log.info("$name is deactivated")
         }
 
         log.info("Finished running $name")

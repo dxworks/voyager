@@ -68,9 +68,9 @@ class MissionControl private constructor() {
         return processedTemplate
     }
 
-    fun runsOnEach(instrument: Instrument): Boolean {
-        return (getInstrumentFields(instrument)[runFieldName]?.let(InstrumentRunStrategy.Companion::fromLabel)
-            ?: instrument.configuration.run) == InstrumentRunStrategy.ON_EACH
+    fun runOption(instrument: Instrument): InstrumentRunStrategy {
+        return getInstrumentFields(instrument)[runFieldName]?.let(InstrumentRunStrategy.Companion::fromLabel)
+            ?: instrument.configuration.run
     }
 
     private fun getInstrumentFieldsWithDefaults(instrument: Instrument): Map<String, String?> {
