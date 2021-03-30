@@ -1,7 +1,7 @@
 # Specifies if voyager should run the instruments and commands according to the mission
 # or should it run all found instruments with all commands
 # default true
-runsAll: false
+runsAll:
 
 # A map of runtime name to a path that will be added to the PATH env variable
 # for voyager missions
