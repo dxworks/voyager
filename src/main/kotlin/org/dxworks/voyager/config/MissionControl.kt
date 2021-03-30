@@ -120,7 +120,9 @@ class MissionControl private constructor() {
             } + environment[pathEnv]
 
         globalConfig.environment.forEach { (k, v) -> environment[k] = v ?: "" }
-        missionConfig.environment.forEach { (k, v) -> environment[k] = v ?: "" }
+        if (::missionConfig.isInitialized) {
+            missionConfig.environment.forEach { (k, v) -> environment[k] = v ?: "" }
+        }
         additionalEnvironment.forEach { environment[it.first] = it.second }
     }
 }

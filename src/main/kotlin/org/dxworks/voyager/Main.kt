@@ -5,14 +5,12 @@ import org.dxworks.argumenthor.config.ArgumenthorConfiguration
 import org.dxworks.argumenthor.config.fields.impl.StringField
 import org.dxworks.argumenthor.config.sources.impl.ArgsSource
 import org.dxworks.voyager.config.MissionControl
+import org.dxworks.voyager.doctor.doctor
 import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.instruments.InstrumentGatherer
 import org.dxworks.voyager.report.MissionSummary
 import org.dxworks.voyager.results.SampleContainer
-import org.dxworks.voyager.utils.defaultContainerName
-import org.dxworks.voyager.utils.defaultMissionConfig
-import org.dxworks.voyager.utils.mission
-import org.dxworks.voyager.utils.missionReport
+import org.dxworks.voyager.utils.*
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.system.exitProcess
@@ -20,6 +18,14 @@ import kotlin.system.exitProcess
 private val log = LoggerFactory.getLogger("Main")
 
 fun main(args: Array<String>) {
+    if (args.isNotEmpty())
+        if (args[0] == doctorCommandArg) {
+            doctor(
+                if (args.size == 2) args[1] else defaultDoctorFile
+            )
+            return
+        }
+
     val start = System.currentTimeMillis()
     val argumenthor = getArgumenthor(args)
     val missionControl = MissionControl.get()

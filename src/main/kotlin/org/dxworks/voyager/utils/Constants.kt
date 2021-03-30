@@ -17,3 +17,6 @@ const val defaultContainerName = "data-container.zip"
 const val missionReport = "mission-report"
 
 const val globalConfigName = ".config.yml"
+
+const val defaultDoctorFile = ".doctor.yml"
+const val doctorCommandArg = "doctor"

@@ -19,6 +19,7 @@ jobs:
           mkdir dx-voyager
           cp README.md dx-voyager/README.md
           cp .config.yml dx-voyager/.config.yml
+          cp .doctor.yml dx-voyager/.doctor.yml
           cp mission.yml dx-voyager/mission.yml
           cp bin/voyager.sh dx-voyager/voyager.sh
           cp bin/voyager.bat dx-voyager/voyager.bat
