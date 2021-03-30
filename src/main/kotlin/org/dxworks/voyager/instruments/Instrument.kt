@@ -40,9 +40,11 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
 
         when (MissionControl.get().runOption(this)) {
             ON_EACH -> {
+                log.info("\n")
                 log.info("Started running $name")
                 target.listFiles(FileFilter { it.isDirectory })?.forEach { results[it.name] = internalRun(it) }
                 log.info("Finished running $name")
+                log.info("\n")
             }
             ONCE -> {
                 log.info("Started running $name")
@@ -128,12 +130,12 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         val stringBuilder = StringBuilder()
         LoggerFactory.getLogger(identifier).apply {
             thread {
-                process.inputStream.reader().forEachLine { info(it) }
+                process.inputStream.reader().forEachLine { info("_${configuration.name}_ $it") }
             }
             thread {
                 process.errorStream.reader().forEachLine {
-                    info(it)
-                    stringBuilder.appendLine(it)
+                    info("_${configuration.name}_ $it")
+                    stringBuilder.appendLine("_${configuration.name}_ $it")
                 }
             }
         }
