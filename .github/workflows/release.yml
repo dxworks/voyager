@@ -12,8 +12,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Set Version
-        run: echo {{ github.ref }} > src/main/resources/insider-version
       - name: Build
         run: mvn package
       - name: Prepare Assets
