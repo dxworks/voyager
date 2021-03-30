@@ -23,7 +23,7 @@ instruments:
       # A special parameter that overrides the instruments setting to run on the
       # target directory or on all the projects within the target
       # Values: onEach, once
-      run:
+      run: never
 
 # A map of environment variables, name to value, for voyager missions
 # overwrites the variables from global config

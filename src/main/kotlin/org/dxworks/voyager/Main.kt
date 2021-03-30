@@ -41,7 +41,7 @@ fun main(args: Array<String>) {
         exitProcess(1)
     }
 
-    val results = instruments.map(Instrument::run)
+    val results = instruments.map(Instrument::run).filterNot { it.isEmpty() }
 
     val instrumentResults = results.mapNotNull { it.instrument.getResults() }
 

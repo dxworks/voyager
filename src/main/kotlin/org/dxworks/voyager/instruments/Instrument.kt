@@ -36,20 +36,22 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     fun run(): InstrumentExecutionResult {
         val start = System.currentTimeMillis()
         val target = missionControl.target
-        log.info("Started running $name")
         val results: MutableMap<String, List<CommandExecutionResult>> = HashMap()
 
         when (MissionControl.get().runOption(this)) {
-            ON_EACH -> target.listFiles(FileFilter { it.isDirectory })?.forEach { results[it.name] = internalRun(it) }
-            ONCE -> results[target.name] = internalRun(target)
+            ON_EACH -> {
+                log.info("Started running $name")
+                target.listFiles(FileFilter { it.isDirectory })?.forEach { results[it.name] = internalRun(it) }
+                log.info("Finished running $name")
+            }
+            ONCE -> {
+                log.info("Started running $name")
+                results[target.name] = internalRun(target)
+                log.info("Finished running $name")
+            }
             NEVER -> log.info("$name is deactivated")
         }
 
-        log.info("Finished running $name")
-
-        if (results.isEmpty()) {
-            log.warn("No projects found for running $name")
-        }
 
         return InstrumentExecutionResult(this, System.currentTimeMillis() - start)
             .also { it.results.putAll(results) }
