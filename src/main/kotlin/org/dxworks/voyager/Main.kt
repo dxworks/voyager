@@ -5,7 +5,7 @@ import org.dxworks.argumenthor.config.ArgumenthorConfiguration
 import org.dxworks.argumenthor.config.fields.impl.StringField
 import org.dxworks.argumenthor.config.sources.impl.ArgsSource
 import org.dxworks.voyager.config.MissionControl
-import org.dxworks.voyager.doctor.doctor
+import org.dxworks.voyager.doctor.versionDoctor
 import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.instruments.InstrumentGatherer
 import org.dxworks.voyager.report.MissionSummary
@@ -20,7 +20,7 @@ private val log = LoggerFactory.getLogger("Main")
 fun main(args: Array<String>) {
     if (args.isNotEmpty())
         if (args[0] == doctorCommandArg) {
-            doctor(
+            versionDoctor(
                 if (args.size == 2) args[1] else defaultDoctorFile
             )
             return

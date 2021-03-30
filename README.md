@@ -187,11 +187,58 @@ commands:
 ---
 
 If the mission is in the default location `./mission.yml` then you can run voyager with `java -jar dx-voyager.jar`
+, `voyager.sh` or `voyager.bat`
 
-Otherwise, run voyager using `java -jar dx-voyager.jar -mission="path to mission"`
+Otherwise, run voyager using `voyager.sh -mission="path to mission"`
 
 If the instruments are not in the default location `./instruments` then specify the instrumentsDir in mission.yml
 
 ### Results
 
-The results declared by the instruments will be packaged in ./data-container.zip 
+The results declared by the instruments will be packaged in ./data-container.zip
+
+## Version Doctor
+
+---
+
+`voyager.sh doctor` or `voyager.sh doctor /path/to/doctor.yml`
+
+This command is used to verify the versions for the needed runtimes.
+
+Example
+
+```yaml
+versions:
+  -
+  # The name of the runtime to be checked
+  - name: Java
+
+    # The minimum version required for the runtime
+    min: 15
+
+    # The command to get the response containing the version
+    win: java -version
+
+    # The command to get the response containing the version
+    unix: java -version
+
+    # The regex patterns containing the version group
+    # used to match the output of the command  
+    match:
+      - java version "(?<version>.+)".*
+      - (?i)openjdk(?-i) version "(?<version>.+)"
+
+  - name: Python
+    min: 3.8
+    win: python -V
+    unix: python -V
+    match:
+      - Python (?<version>.+)
+  - name: Node
+    min: 12
+    win: node -v
+    unix: node -v
+    match:
+      - v(?<version>.+)
+
+```

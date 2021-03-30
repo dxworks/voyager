@@ -1,21 +1,20 @@
-rules:
+versions:
   - name: Java
+    min: 15
     win: java -version
     unix: java -version
-    errorMessage: please install java version 11, 14, or 15
     match:
-      - java version "11"
-      - java version "15"
-      - java version "14"
+      - java version "(?<version>.+)".*
+      - (?i)openjdk(?-i) version "(?<version>.+)"
   - name: Python
-    win: python --version
-    unix: python --version
-    errorMessage: please install python 3
+    min: 3.8
+    win: python -V
+    unix: python -V
     match:
-      - Python 3\..*
+      - Python (?<version>.+)
   - name: Node
+    min: 12
     win: node -v
     unix: node -v
-    errorMessage: please install node v10 or above
     match:
-      - v1.\.
+      - v(?<version>.+)
