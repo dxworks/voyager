@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonValue
 
 enum class InstrumentRunStrategy(@get:JsonValue val label: String) {
     ON_EACH("onEach"),
-    ONCE("once");
+    ONCE("once"),
+    NEVER("never");
 
     companion object {
         @JsonCreator

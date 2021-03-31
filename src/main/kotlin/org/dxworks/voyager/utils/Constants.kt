@@ -13,7 +13,12 @@ const val repoName = "repoName"
 const val defaultInstrumentConfig = "instrument.yml"
 const val defaultMissionConfig = "mission.yml"
 
-const val defaultContainerName = "data-container.zip"
+const val defaultContainerName = "voyager-results.zip"
 const val missionReport = "mission-report"
 
 const val globalConfigName = ".config.yml"
+
+const val defaultDoctorFile = ".doctor.yml"
+const val doctorCommandArg = "doctor"
+
+const val versionGroupName = "version"

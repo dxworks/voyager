@@ -3,17 +3,18 @@ package org.dxworks.voyager.instruments
 import org.dxworks.voyager.config.MissionControl
 import org.dxworks.voyager.instruments.config.Command
 import org.dxworks.voyager.instruments.config.InstrumentConfiguration
+import org.dxworks.voyager.instruments.config.InstrumentRunStrategy.*
 import org.dxworks.voyager.results.FileAndAlias
 import org.dxworks.voyager.results.InstrumentResult
 import org.dxworks.voyager.results.execution.CommandExecutionResult
 import org.dxworks.voyager.results.execution.InstrumentExecutionResult
 import org.dxworks.voyager.utils.*
 import org.slf4j.LoggerFactory
-import java.io.BufferedReader
 import java.io.File
 import java.io.FileFilter
 import java.nio.file.FileSystems
 import java.nio.file.Path
+import kotlin.concurrent.thread
 
 data class Instrument(val path: String, val configuration: InstrumentConfiguration) {
     companion object {
@@ -35,20 +36,24 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     fun run(): InstrumentExecutionResult {
         val start = System.currentTimeMillis()
         val target = missionControl.target
-        log.info("Started running $name")
         val results: MutableMap<String, List<CommandExecutionResult>> = HashMap()
 
-        if (MissionControl.get().runsOnEach(this)) {
-            target.listFiles(FileFilter { it.isDirectory })?.forEach { results[it.name] = internalRun(it) }
-        } else {
-            results[target.name] = internalRun(target)
+        when (MissionControl.get().runOption(this)) {
+            ON_EACH -> {
+                log.info("\n")
+                log.info("Started running $name")
+                target.listFiles(FileFilter { it.isDirectory })?.forEach { results[it.name] = internalRun(it) }
+                log.info("Finished running $name")
+                log.info("\n")
+            }
+            ONCE -> {
+                log.info("Started running $name")
+                results[target.name] = internalRun(target)
+                log.info("Finished running $name")
+            }
+            NEVER -> log.info("$name is deactivated")
         }
 
-        log.info("Finished running $name")
-
-        if (results.isEmpty()) {
-            log.warn("No projects found for running $name")
-        }
 
         return InstrumentExecutionResult(this, System.currentTimeMillis() - start)
             .also { it.results.putAll(results) }
@@ -70,14 +75,10 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
                 val start = System.currentTimeMillis()
                 try {
                     log.info("Running command $identifier")
-                    val process = getProcessForCommand(command,
-                        processTemplate(exec, repoFolder to repo.normalize().absolutePath, repoName to repo.name),
-                        Path.of(command.dir?.let { dir ->
-                            processTemplate(
-                                dir,
-                                repoFolder to repo.normalize().absolutePath, repoName to repo.name
-                            )
-                        } ?: path).toFile()
+                    val process = getProcessForCommand(
+                        command,
+                        exec,
+                        repo
                     )
                     val errorsBuilder = setupLogger(identifier, process)
                     val processExitValue = process.waitFor()
@@ -128,10 +129,14 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     private fun setupLogger(identifier: String, process: Process): StringBuilder {
         val stringBuilder = StringBuilder()
         LoggerFactory.getLogger(identifier).apply {
-            BufferedReader(process.inputStream.reader()).forEachLine { info(it) }
-            BufferedReader(process.errorStream.reader()).forEachLine {
-                info(it)
-                stringBuilder.appendLine(it)
+            thread {
+                process.inputStream.reader().forEachLine { info("_${configuration.name}_ $it") }
+            }
+            thread {
+                process.errorStream.reader().forEachLine {
+                    info("_${configuration.name}_ $it")
+                    stringBuilder.appendLine("_${configuration.name}_ $it")
+                }
             }
         }
         return stringBuilder
@@ -140,8 +145,23 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     private fun getCommandIdentifier(command: Command, index: Int) =
         "${command.name} (${index + 1} from $name)"
 
-    private fun getProcessForCommand(command: Command, exec: String, directory: File) =
-        missionControl.getProcessBuilder(this, command).directory(directory)
-            .command(commandInterpreterName, interpreterArg, exec)
+    private fun getProcessForCommand(command: Command, exec: String, repo: File): Process {
+        val repoFolderField = repoFolder to repo.absoluteFile.normalize().absolutePath
+        val repoNameField = repoName to repo.absoluteFile.normalize().name
+        val environment =
+            command.environment.map { (k, v) -> k to processTemplate(v ?: "", repoFolderField, repoNameField) }
+                .toMap()
+                .toMutableMap()
+        configuration.environment.forEach { (k, v) ->
+            environment.putIfAbsent(k, processTemplate(v ?: "", repoFolderField, repoNameField))
+        }
+
+        return missionControl.getProcessBuilder(*environment.toList().toTypedArray())
+            .directory(
+                Path.of(command.dir?.let { dir -> processTemplate(dir, repoFolderField, repoNameField) } ?: path)
+                    .toFile()
+            )
+            .command(commandInterpreterName, interpreterArg, processTemplate(exec, repoFolderField, repoNameField))
             .start()
+    }
 }

@@ -1,8 +1,12 @@
 package org.dxworks.voyager.config.global
 
 class GlobalConfig(
-    val runsAll: Boolean = true,
+    runsAll: Boolean? = null,
+    environment: Map<String, String?>? = null,
+    runtimes: Map<String, String>? = null,
     val instrumentsDir: String? = null,
-    val environment: Map<String, String> = emptyMap(),
-    val runtimes: Map<String, String> = emptyMap()
-)
+) {
+    val runsAll: Boolean = runsAll ?: true
+    val environment: Map<String, String?> = environment ?: emptyMap()
+    val runtimes: Map<String, String> = runtimes ?: emptyMap()
+}

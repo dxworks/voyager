@@ -1,18 +1,12 @@
 package org.dxworks.voyager
 
-import org.dxworks.argumenthor.Argumenthor
-import org.dxworks.argumenthor.config.ArgumenthorConfiguration
-import org.dxworks.argumenthor.config.fields.impl.StringField
-import org.dxworks.argumenthor.config.sources.impl.ArgsSource
 import org.dxworks.voyager.config.MissionControl
+import org.dxworks.voyager.doctor.versionDoctor
 import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.instruments.InstrumentGatherer
 import org.dxworks.voyager.report.MissionSummary
 import org.dxworks.voyager.results.SampleContainer
-import org.dxworks.voyager.utils.defaultContainerName
-import org.dxworks.voyager.utils.defaultMissionConfig
-import org.dxworks.voyager.utils.mission
-import org.dxworks.voyager.utils.missionReport
+import org.dxworks.voyager.utils.*
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.system.exitProcess
@@ -20,11 +14,22 @@ import kotlin.system.exitProcess
 private val log = LoggerFactory.getLogger("Main")
 
 fun main(args: Array<String>) {
-    val start = System.currentTimeMillis()
-    val argumenthor = getArgumenthor(args)
-    val missionControl = MissionControl.get()
+    if (args.isNotEmpty())
+        if (args[0] == doctorCommandArg) {
+            versionDoctor(
+                if (args.size == 2) args[1] else defaultDoctorFile
+            )
+            return
+        }
 
-    missionControl.setMissionSource(getArg(argumenthor, mission)!!)
+    val missionControl = MissionControl.get()
+    if (args.size == 1) {
+        missionControl.setMissionSource(args[0])
+    } else if (args.isEmpty()) {
+        missionControl.setMissionSource(defaultMissionConfig)
+    }
+
+    val start = System.currentTimeMillis()
 
     val instrumentsDir = missionControl.instrumentsDir
 
@@ -35,7 +40,7 @@ fun main(args: Array<String>) {
         exitProcess(1)
     }
 
-    val results = instruments.map(Instrument::run)
+    val results = instruments.map(Instrument::run).filterNot { it.isEmpty() }
 
     val instrumentResults = results.mapNotNull { it.instrument.getResults() }
 
@@ -47,12 +52,3 @@ fun main(args: Array<String>) {
     MissionSummary(results, containerContent, System.currentTimeMillis() - start).toString().split("\n")
         .forEach(log::info)
 }
-
-private fun getArg(argumenthor: Argumenthor, arg: String) =
-    argumenthor.getValue<String>(arg)?.trim('\"', '\'')
-
-private fun getArgumenthor(args: Array<String>) = Argumenthor(ArgumenthorConfiguration(
-    StringField(mission, defaultMissionConfig)
-).apply {
-    addSource(ArgsSource().also { it.argsList = args.toList() })
-})

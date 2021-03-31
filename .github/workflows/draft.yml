@@ -1,0 +1,51 @@
+on:
+  push:
+    branches:
+      - release/*
+
+name: Create Draft
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build
+        run: mvn package
+      - name: Prepare Assets
+        run: |
+          mkdir dx-voyager
+          mkdir dx-voyager/runtimes
+          cp README.md dx-voyager/README.md
+          cp .config.yml dx-voyager/.config.yml
+          cp .doctor.yml dx-voyager/.doctor.yml
+          cp mission.yml dx-voyager/mission.yml
+          cp bin/voyager.sh dx-voyager/voyager.sh
+          chmod +x dx-voyager/voyager.sh
+          cp bin/voyager.bat dx-voyager/voyager.bat
+          cp -r instruments dx-voyager/instruments
+          cp target/dx-voyager.jar dx-voyager/dx-voyager.jar
+      - name: Create Archive
+        run: zip -r dx-voyager.zip dx-voyager
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${GITHUB_REF##*/}
+          release_name: dx-voyager draft ${GITHUB_REF##*/}
+          draft: true
+          prerelease: true
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dx-voyager.zip
+          asset_name: dx-voyager.zip
+          asset_content_type: application/zip

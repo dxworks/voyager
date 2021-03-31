@@ -42,7 +42,14 @@ class MissionControl private constructor() {
             missionConfig = yamlMapper.readValue(file)
             log.info("Starting mission ${missionConfig.mission}")
         } else {
-            log.error("Could not load mission config from $sourceFile")
+            log.error(
+                """
+                Could not load mission config from $sourceFile:
+                The mission config file at $sourceFile does not exist or could not be read
+                Please make sure this file exists or provide the path to a mission config file through
+                the mission argument. IE -mission=/home/my-mission.yml
+                """.trimMargin().trimIndent()
+            )
             exitProcess(0)
         }
     }
@@ -50,16 +57,20 @@ class MissionControl private constructor() {
     private fun getInstrumentFields(instrument: Instrument): MutableMap<String, String?> =
         missionConfig.instruments[instrument.name]?.parameters?.toMutableMap() ?: HashMap()
 
-    fun processTemplate(instrument: Instrument, parameter: String, vararg additionalFields: Pair<String, String>): String {
+    fun processTemplate(
+        instrument: Instrument,
+        parameter: String,
+        vararg additionalFields: Pair<String, String>
+    ): String {
         val data = getInstrumentFieldsWithDefaults(instrument) + additionalFields
         var processedTemplate = parameter
         data.forEach { (k, v) -> processedTemplate = processedTemplate.replace("\${$k}", v ?: "null") }
         return processedTemplate
     }
 
-    fun runsOnEach(instrument: Instrument): Boolean {
-        return (getInstrumentFields(instrument)[runFieldName]?.let(InstrumentRunStrategy.Companion::fromLabel)
-            ?: instrument.configuration.run) == InstrumentRunStrategy.ON_EACH
+    fun runOption(instrument: Instrument): InstrumentRunStrategy {
+        return getInstrumentFields(instrument)[runFieldName]?.let(InstrumentRunStrategy.Companion::fromLabel)
+            ?: instrument.configuration.run
     }
 
     private fun getInstrumentFieldsWithDefaults(instrument: Instrument): Map<String, String?> {
@@ -98,7 +109,7 @@ class MissionControl private constructor() {
         }
     }
 
-    fun getProcessBuilder(instrument: Instrument, command: Command) = ProcessBuilder().apply {
+    fun getProcessBuilder(vararg additionalEnvironment: Pair<String, String>) = ProcessBuilder().apply {
         val environment = environment()
         environment[pathEnv] =
             globalConfig.runtimes.values.joinToString(
@@ -108,9 +119,10 @@ class MissionControl private constructor() {
                 Path.of(it).toAbsolutePath().toString()
             } + environment[pathEnv]
 
-        globalConfig.environment.forEach { (k, v) -> environment[k] = v }
-        missionConfig.environment.forEach { (k, v) -> environment[k] = v }
-        instrument.configuration.environment.forEach { (k, v) -> environment[k] = v }
-        command.environment.forEach { (k, v) -> environment[k] = v }
+        globalConfig.environment.forEach { (k, v) -> environment[k] = v ?: "" }
+        if (::missionConfig.isInitialized) {
+            missionConfig.environment.forEach { (k, v) -> environment[k] = v ?: "" }
+        }
+        additionalEnvironment.forEach { environment[it.first] = it.second }
     }
 }

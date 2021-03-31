@@ -1,0 +1,35 @@
+# The name of the mission *required
+mission: My First Mission
+
+# The path to the target folder.
+# The target folder should contain all repositories *required
+target: .
+
+# A map of instrument names to commands and parameters.
+# When 'runsAll' is false the mission will run only the instruments
+# with the commands declared here, in this order.
+instruments:
+
+  # The name of the instrument as declared in instrument.yml
+  My Instrument:
+
+    # The list of commands to run. Names as declared in instrument.yml
+    # If empty or not specified, voyager will run all commands from the instrument
+    commands:
+      - greet
+    # A map of parameter name to value
+    parameters:
+      name: developer
+      # A special parameter that overrides the instruments setting to run on the
+      # target directory or on all the projects within the target
+      # Values: onEach, once, never
+      run:
+
+# A map of environment variables, name to value, for voyager missions
+# overwrites the variables from global config
+environment:
+  SMILEY: :-)
+
+# Path to the directory containing the instruments
+# Default: ./instruments
+instrumentsDir:

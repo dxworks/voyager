@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import kotlin.system.exitProcess
 
 
 inline fun <reified T : Any> logger(): Logger = LoggerFactory.getLogger(T::class.java)
@@ -29,3 +30,12 @@ inline fun <T> Iterable<T>.sumByLong(selector: (T) -> Long): Long {
     }
     return sum
 }
+
+val mainLogger = LoggerFactory.getLogger("Main")
+
+inline fun error(message: String) {
+    mainLogger.error(message)
+    exitProcess(1)
+}
+
+fun fieldMissingOrNull(field: String, source: String): String = "'$field' field is missing or null in $source"

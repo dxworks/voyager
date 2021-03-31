@@ -1,0 +1,20 @@
+versions:
+  - name: Java
+    min: 11
+    win: java -version
+    unix: java -version
+    match:
+      - java version "(?<version>.+)"
+      - (?i)openjdk(?-i) version "(?<version>.+)"
+  - name: Python
+    min: 3.8
+    win: python -V
+    unix: python -V
+    match:
+      - Python (?<version>.+)
+  - name: Node
+    min: 12
+    win: node -v
+    unix: node -v
+    match:
+      - v(?<version>.+)
