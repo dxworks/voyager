@@ -1,9 +1,5 @@
 package org.dxworks.voyager
 
-import org.dxworks.argumenthor.Argumenthor
-import org.dxworks.argumenthor.config.ArgumenthorConfiguration
-import org.dxworks.argumenthor.config.fields.impl.StringField
-import org.dxworks.argumenthor.config.sources.impl.ArgsSource
 import org.dxworks.voyager.config.MissionControl
 import org.dxworks.voyager.doctor.versionDoctor
 import org.dxworks.voyager.instruments.Instrument
@@ -26,11 +22,14 @@ fun main(args: Array<String>) {
             return
         }
 
-    val start = System.currentTimeMillis()
-    val argumenthor = getArgumenthor(args)
     val missionControl = MissionControl.get()
+    if (args.size == 1) {
+        missionControl.setMissionSource(args[0])
+    } else if (args.isEmpty()) {
+        missionControl.setMissionSource(defaultMissionConfig)
+    }
 
-    missionControl.setMissionSource(getArg(argumenthor, mission)!!)
+    val start = System.currentTimeMillis()
 
     val instrumentsDir = missionControl.instrumentsDir
 
@@ -53,12 +52,3 @@ fun main(args: Array<String>) {
     MissionSummary(results, containerContent, System.currentTimeMillis() - start).toString().split("\n")
         .forEach(log::info)
 }
-
-private fun getArg(argumenthor: Argumenthor, arg: String) =
-    argumenthor.getValue<String>(arg)?.trim('\"', '\'')
-
-private fun getArgumenthor(args: Array<String>) = Argumenthor(ArgumenthorConfiguration(
-    StringField(mission, defaultMissionConfig)
-).apply {
-    addSource(ArgsSource().also { it.argsList = args.toList() })
-})

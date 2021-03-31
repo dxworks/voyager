@@ -19,7 +19,7 @@ fun versionDoctor(doctorFile: String): Boolean {
         try {
             log.info("Checking ${rule.name}")
             val process = MissionControl.get().getProcessBuilder()
-                .directory(Path.of(rule.dir ?: ".").toAbsolutePath().normalize().toFile())
+                .directory(Path.of(rule.dir ?: ".").toFile())
                 .command(commandInterpreterName, interpreterArg, rule.exec)
                 .start()
             process.waitFor()
@@ -32,7 +32,7 @@ fun versionDoctor(doctorFile: String): Boolean {
             err.split("\n").forEach { log.info(it) }
 
             val version = rule.match.map { it.toRegex() }
-                .map { it.find(std) ?: it.find(err) }.firstOrNull()
+                .mapNotNull { it.find(std) ?: it.find(err) }.firstOrNull()
                 ?.let { it.groups[versionGroupName] }?.value
                 ?: run {
                     log.warn("${rule.name} version check failed because there was no match")
