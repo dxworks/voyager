@@ -29,14 +29,18 @@ jobs:
           cp target/dx-voyager.jar dx-voyager/dx-voyager.jar
       - name: Create Archive
         run: zip -r dx-voyager.zip dx-voyager
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref##*/ }}
-          release_name: dx-voyager draft ${{ github.ref##*/ }}
+          tag_name: ${{ steps.extract_branch.outputs.branch }}
+          release_name: dx-voyager draft ${{ steps.extract_branch.outputs.branch }}
           draft: true
           prerelease: true
       - name: Upload Release Asset
