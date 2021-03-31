@@ -1,5 +1,6 @@
 package org.dxworks.voyager
 
+import org.apache.commons.io.FileUtils
 import org.dxworks.voyager.config.MissionControl
 import org.dxworks.voyager.doctor.versionDoctor
 import org.dxworks.voyager.instruments.Instrument
@@ -48,6 +49,18 @@ fun main(args: Array<String>) {
 
     val containerContent =
         SampleContainer(defaultContainerName).fill(instrumentResults, Path.of(missionReport).toFile())
+
+    containerContent.map { it.file }
+        .forEach {
+            if (it.isDirectory)
+                try {
+                    FileUtils.cleanDirectory(it)
+                } catch (e: Exception) {
+                    log.error("Could not clean directory ${it.absolutePath} because ${e.message}")
+                }
+            else
+                it.delete()
+        }
 
     MissionSummary(results, containerContent, System.currentTimeMillis() - start).toString().split("\n")
         .forEach(log::info)
