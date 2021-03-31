@@ -1,6 +1,6 @@
 versions:
   - name: Java
-    min: 15
+    min: 11
     win: java -version
     unix: java -version
     match:
