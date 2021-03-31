@@ -8,7 +8,6 @@ class SampleContainer(private val containerName: String) {
     fun fill(instrumentResults: List<InstrumentResult>, missionReport: File? = null): List<FileAndAlias> {
         val entries = instrumentResults.flatMap { it.results }
         val files = fill(missionReport, entries)
-        files.forEach { it.file.delete() }
         return files
     }
 

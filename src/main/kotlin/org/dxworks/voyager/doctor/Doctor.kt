@@ -17,6 +17,9 @@ fun versionDoctor(doctorFile: String): Boolean {
     val config = readDoctorConfig(doctorFile)
     return config.versions.map { rule ->
         try {
+
+            log.info("")
+            log.info("---------------------------------------------")
             log.info("Checking ${rule.name}")
             val process = MissionControl.get().getProcessBuilder()
                 .directory(Path.of(rule.dir ?: ".").toFile())
