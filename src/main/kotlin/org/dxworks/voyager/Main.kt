@@ -7,8 +7,13 @@ import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.instruments.InstrumentGatherer
 import org.dxworks.voyager.report.MissionSummary
 import org.dxworks.voyager.results.SampleContainer
-import org.dxworks.voyager.utils.*
+import org.dxworks.voyager.utils.defaultContainerName
+import org.dxworks.voyager.utils.defaultDoctorFile
+import org.dxworks.voyager.utils.defaultMissionConfig
+import org.dxworks.voyager.utils.doctorCommandArg
 import org.slf4j.LoggerFactory
+import java.io.FileFilter
+import java.nio.file.FileSystems
 import java.nio.file.Path
 import kotlin.system.exitProcess
 
@@ -47,8 +52,12 @@ fun main(args: Array<String>) {
 
     log.info(if (instrumentResults.isEmpty()) "Nothing to package" else "Packaging results")
 
+    val reports = Path.of(".").toFile()
+        .listFiles(FileFilter { FileSystems.getDefault().getPathMatcher("glob:**.log").matches(it.toPath()) })
+        ?: emptyArray()
+
     val containerContent =
-        SampleContainer(defaultContainerName).fill(instrumentResults, Path.of(missionReport).toFile())
+        SampleContainer(defaultContainerName).fill(instrumentResults, *reports)
 
     containerContent.map { it.file }
         .forEach {

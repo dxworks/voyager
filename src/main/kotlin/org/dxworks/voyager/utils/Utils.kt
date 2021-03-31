@@ -33,9 +33,4 @@ inline fun <T> Iterable<T>.sumByLong(selector: (T) -> Long): Long {
 
 val mainLogger = LoggerFactory.getLogger("Main")
 
-inline fun error(message: String) {
-    mainLogger.error(message)
-    exitProcess(1)
-}
-
 fun fieldMissingOrNull(field: String, source: String): String = "'$field' field is missing or null in $source"
