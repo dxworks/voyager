@@ -40,23 +40,39 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
 
         when (MissionControl.get().runOption(this)) {
             ON_EACH -> {
-                log.info("\n")
-                log.info("Started running $name")
-                target.listFiles(FileFilter { it.isDirectory })?.forEach { results[it.name] = internalRun(it) }
-                log.info("Finished running $name")
-                log.info("\n")
+                runAndLog {
+                    target.listFiles(FileFilter { it.isDirectory })?.map { it.name to internalRun(it) }?.toMap()
+                }
             }
             ONCE -> {
-                log.info("Started running $name")
-                results[target.name] = internalRun(target)
-                log.info("Finished running $name")
+                runAndLog { mapOf(target.name to internalRun(target)) }
             }
-            NEVER -> log.info("$name is deactivated")
-        }
+            NEVER -> {
+                log.info("\n")
+                log.info("$name is deactivated")
+                null
+            }
+        }?.let { results.putAll(it) }
 
 
         return InstrumentExecutionResult(this, System.currentTimeMillis() - start)
             .also { it.results.putAll(results) }
+    }
+
+    private fun runAndLog(
+        runInstrument: () -> Map<String, List<CommandExecutionResult>>?,
+    ): Map<String, List<CommandExecutionResult>>? {
+        log.info("\n")
+        log.info("Started running $name")
+
+        return runInstrument.invoke()?.also { results ->
+            val status = if (results.any { (_, v) -> v.any { it.errors != null } })
+                "WITH ERRORS"
+            else
+                "SUCCESSFULLY"
+
+            log.info("Finished running $name $status")
+        }
     }
 
     private fun internalRun(repo: File): List<CommandExecutionResult> {
