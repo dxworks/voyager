@@ -35,8 +35,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${GITHUB_REF##*/}
-          release_name: dx-voyager draft ${GITHUB_REF##*/}
+          tag_name: ${{ github.ref##*/ }}
+          release_name: dx-voyager draft ${{ github.ref##*/ }}
           draft: true
           prerelease: true
       - name: Upload Release Asset
