@@ -17,25 +17,28 @@ Please take a look at how to configure and run Voyager below.
 mission:
 
 # The path to the target folder.
-# The target folder should contain all repositories *required 
+# The target folder should contain all repositories *required
 target:
 
 # A map of instrument names to commands and parameters.
-# When 'runsAll' is false the mission will run only the instruments 
+# When 'runsAll' is false the mission will run only the instruments
 # with the commands declared here, in this order.
 instruments:
 
   # The name of the instrument as declared in instrument.yml
-  Instrument Name:
+  My Instrument:
 
+    # The id of the thread on which to run the instrument
+    # Instruments on the same thread will run in the order they appear in this file
+    # instruments on the default thread, 0, will run separately after all other threads are completed
+    # Integer, defaults to 0
+    thread:
     # The list of commands to run. Names as declared in instrument.yml
-    # If empty or not specified, voyager will run all commands from the instrument 
+    # If empty or not specified, voyager will run all commands from the instrument
     commands:
-
     # A map of parameter name to value
     parameters:
-
-      # A special parameter that overrides the instruments setting to run on the 
+      # A special parameter that overrides the instruments setting to run on the
       # target directory or on all the projects within the target
       # Values: onEach, once, never
       run:
@@ -45,8 +48,9 @@ instruments:
 environment:
 
 # Path to the directory containing the instruments
-# Default: ./instruments 
+# Default: ./instruments
 instrumentsDir:
+
 ```
 
 Example
