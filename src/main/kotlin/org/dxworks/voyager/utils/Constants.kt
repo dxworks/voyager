@@ -22,3 +22,5 @@ const val defaultDoctorFile = ".doctor.yml"
 const val doctorCommandArg = "doctor"
 
 const val versionGroupName = "version"
+
+const val defaultThreadId = 0

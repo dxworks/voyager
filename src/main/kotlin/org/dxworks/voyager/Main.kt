@@ -1,5 +1,8 @@
 package org.dxworks.voyager
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.apache.commons.io.FileUtils
 import org.dxworks.voyager.config.MissionControl
 import org.dxworks.voyager.doctor.versionDoctor
@@ -7,10 +10,7 @@ import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.instruments.InstrumentGatherer
 import org.dxworks.voyager.report.MissionSummary
 import org.dxworks.voyager.results.SampleContainer
-import org.dxworks.voyager.utils.defaultContainerName
-import org.dxworks.voyager.utils.defaultDoctorFile
-import org.dxworks.voyager.utils.defaultMissionConfig
-import org.dxworks.voyager.utils.doctorCommandArg
+import org.dxworks.voyager.utils.*
 import org.slf4j.LoggerFactory
 import java.io.FileFilter
 import java.nio.file.FileSystems
@@ -39,14 +39,19 @@ fun main(args: Array<String>) {
 
     val instrumentsDir = missionControl.instrumentsDir
 
-    val instruments = missionControl.getMissionInstruments(InstrumentGatherer(instrumentsDir).instruments)
+    val instrumentsByThread =
+        missionControl.getMissionInstrumentsByThread(InstrumentGatherer(instrumentsDir).instruments)
 
-    if (instruments.isEmpty()) {
+    if (instrumentsByThread.isEmpty()) {
         log.warn("No instruments found at ${instrumentsDir}, nothing to run")
         exitProcess(1)
     }
 
-    val results = instruments.map(Instrument::run).filterNot { it.isEmpty() }
+
+    val (defaultThreadInstruments, threadedInstruments) = instrumentsByThread.entries.partition { it.key == defaultThreadId }
+    val deferred = threadedInstruments.map { GlobalScope.async { it.value.map(Instrument::run) } }
+    val results =
+        runBlocking { deferred.flatMap { it.await() } } + defaultThreadInstruments.flatMap { it.value.map(Instrument::run) }
 
     val instrumentResults = results.mapNotNull { it.instrument.getResults() }
 

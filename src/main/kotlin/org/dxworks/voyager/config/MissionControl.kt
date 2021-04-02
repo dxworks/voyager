@@ -95,7 +95,7 @@ class MissionControl private constructor() {
         }
     }
 
-    fun getMissionInstruments(instruments: List<Instrument>): List<Instrument> {
+    fun getMissionInstrumentsByThread(instruments: List<Instrument>): Map<Int, List<Instrument>> {
         return if (globalConfig.runsAll) {
             instruments
         } else {
@@ -106,7 +106,7 @@ class MissionControl private constructor() {
                 log.warn("Could not find instrument ${it.first}")
             }
             foundInstruments.map { it.second!! }
-        }
+        }.groupBy { missionConfig.instruments[it.name]?.thread ?: defaultThreadId }
     }
 
     fun getProcessBuilder(vararg additionalEnvironment: Pair<String, String>) = ProcessBuilder().apply {
