@@ -11,7 +11,7 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <kotlin.version>1.4.31</kotlin.version>
+        <kotlin.version>1.4.32</kotlin.version>
         <main.class>org.dxworks.voyager.MainKt</main.class>
         <jar.final.name>dx-voyager</jar.final.name>
     </properties>
