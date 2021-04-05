@@ -11,5 +11,4 @@ class SampleContainer(private val containerName: String) {
         Zipper().zipFiles(files, containerName)
         return files
     }
-
 }
