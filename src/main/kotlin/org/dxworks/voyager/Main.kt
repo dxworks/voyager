@@ -15,18 +15,28 @@ import org.slf4j.LoggerFactory
 import java.io.FileFilter
 import java.nio.file.FileSystems
 import java.nio.file.Path
+import java.util.*
+import kotlin.reflect.jvm.internal.impl.load.java.structure.JavaClass
 import kotlin.system.exitProcess
 
 private val log = LoggerFactory.getLogger("Main")
+val version by lazy {
+    Properties().apply { load(object{}::class.java.classLoader.getResourceAsStream("maven.properties")) }["version"]
+}
+
 
 fun main(args: Array<String>) {
-    if (args.isNotEmpty())
+    if (args.isNotEmpty()) {
         if (args[0] == doctorCommandArg) {
             versionDoctor(
                 if (args.size == 2) args[1] else defaultDoctorFile
             )
             return
+        } else if (versionCommandArgs.contains(args[0])) {
+            println("Dx-Voyager $version")
+            return
         }
+    }
 
     val missionControl = MissionControl.get()
     if (args.size == 1) {
@@ -48,10 +58,10 @@ fun main(args: Array<String>) {
     }
 
 
-    val (defaultThreadInstruments, threadedInstruments) = instrumentsByThread.entries.partition { it.key == defaultThreadId }
+    val (lonelyThreadInstruments, threadedInstruments) = instrumentsByThread.entries.partition { it.key == lonelyThreadId }
     val deferred = threadedInstruments.map { GlobalScope.async { it.value.map(Instrument::run) } }
     val results =
-        runBlocking { deferred.flatMap { it.await() } } + defaultThreadInstruments.flatMap { it.value.map(Instrument::run) }
+        runBlocking { deferred.flatMap { it.await() } } + lonelyThreadInstruments.flatMap { it.value.map(Instrument::run) }
 
     val instrumentResults = results.mapNotNull { it.instrument.getResults() }
 

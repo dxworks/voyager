@@ -17,12 +17,12 @@ data class MissionSummary(
         sb.appendLine()
         instrumentResults.forEach { instrumentResult ->
             sb.appendLine("-------- ${instrumentResult.instrument.name} --------")
-            val maxRepoLength = instrumentResult.results.maxOf { (k, _) -> k.length }
+            val maxRepoLength = instrumentResult.results.maxOfOrNull { (k, _) -> k.length } ?: 0
             instrumentResult.results.forEach { (repo, result) ->
                 if (result.isEmpty())
                     sb.appendLine("Nothing was run")
                 else {
-                    val maxCommandName = result.maxOf { c -> c.command.name.length }
+                    val maxCommandName = result.maxOfOrNull { c -> c.command.name.length } ?: 0
                     result.forEach {
                         sb.appendLine(getCommandSummary(it, maxCommandName, repo, maxRepoLength))
                     }
