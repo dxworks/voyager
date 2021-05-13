@@ -28,6 +28,7 @@ class MissionControl private constructor() {
 
     private lateinit var missionHome: File
     private lateinit var missionConfig: MissionConfig
+    val mission: String by lazy { missionConfig.mission }
 
     companion object {
         private val log = logger<MissionControl>()
@@ -40,7 +41,6 @@ class MissionControl private constructor() {
         if (file.exists()) {
             missionHome = file.absoluteFile.parentFile
             missionConfig = yamlMapper.readValue(file)
-            log.info("Starting mission ${missionConfig.mission}")
         } else {
             log.error(
                 """

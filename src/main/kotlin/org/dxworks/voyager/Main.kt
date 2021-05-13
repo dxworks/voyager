@@ -12,6 +12,7 @@ import org.dxworks.voyager.report.MissionSummary
 import org.dxworks.voyager.results.SampleContainer
 import org.dxworks.voyager.utils.*
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.io.FileFilter
 import java.nio.file.FileSystems
 import java.nio.file.Path
@@ -26,23 +27,35 @@ val version by lazy {
 
 fun main(args: Array<String>) {
     if (args.isNotEmpty()) {
-        if (args[0] == doctorCommandArg) {
-            versionDoctor(
-                if (args.size == 2) args[1] else defaultDoctorFile
-            )
-            return
-        } else if (versionCommandArgs.contains(args[0])) {
-            println("Dx-Voyager $version")
-            return
+        when {
+            args[0] == doctorCommandArg -> {
+                versionDoctor(
+                    if (args.size == 2) args[1] else defaultDoctorFile
+                )
+                return
+            }
+            versionCommandArgs.contains(args[0]) -> {
+                println("Dx-Voyager $version")
+                return
+            }
+            args[0] == "clean" -> {
+                clean(
+                    InstrumentGatherer(
+                        getInitialisedMissionControl(
+                            args.drop(1).toTypedArray()
+                        ).instrumentsDir
+                    ).instruments.mapNotNull { it.getResults()?.results }
+                        .flatten().map { it.file })
+                log.info("Site cleaned")
+                return
+            }
         }
     }
 
-    val missionControl = MissionControl.get()
-    if (args.size == 1) {
-        missionControl.setMissionSource(args[0])
-    } else if (args.isEmpty()) {
-        missionControl.setMissionSource(defaultMissionConfig)
-    }
+    val missionControl = getInitialisedMissionControl(args)
+
+    log.info("Starting mission ${missionControl.mission}")
+
 
     val start = System.currentTimeMillis()
 
@@ -77,15 +90,32 @@ fun main(args: Array<String>) {
         }
 
 
-    containerContent.map { it.file }
+    clean(containerContent.map { it.file })
+}
+
+private fun getInitialisedMissionControl(args: Array<String>): MissionControl {
+    val missionControl = MissionControl.get()
+    if (args.size == 1) {
+        missionControl.setMissionSource(args[0])
+    } else if (args.isEmpty()) {
+        missionControl.setMissionSource(defaultMissionConfig)
+    }
+    return missionControl
+}
+
+private fun clean(filesToClean: List<File>) {
+    filesToClean
         .forEach {
-            if (it.isDirectory)
+            if (it.isDirectory) {
                 try {
                     FileUtils.cleanDirectory(it)
+                    log.info("cleaned " + it.absolutePath)
                 } catch (e: Exception) {
                     log.error("Could not clean directory ${it.absolutePath} because ${e.message}")
                 }
-            else
+            } else {
                 it.delete()
+                log.info("deleted " + it.absolutePath)
+            }
         }
 }
