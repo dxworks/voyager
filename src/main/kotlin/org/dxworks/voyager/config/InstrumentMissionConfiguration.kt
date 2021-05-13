@@ -1,6 +1,11 @@
 package org.dxworks.voyager.config
 
-data class InstrumentMissionConfiguration(
+import org.dxworks.voyager.utils.defaultThreadId
+
+class InstrumentMissionConfiguration(
     val commands: List<String>?,
-    val parameters: Map<String, String> = emptyMap()
-)
+    val parameters: Map<String, String> = emptyMap(),
+    thread: Int? = null
+) {
+    val thread = thread ?: defaultThreadId
+}

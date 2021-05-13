@@ -144,13 +144,18 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
 
     private fun setupLogger(identifier: String, process: Process): StringBuilder {
         val stringBuilder = StringBuilder()
+        val instrumentLogger = InstrumentLogger(configuration.name)
         LoggerFactory.getLogger(identifier).apply {
             thread {
-                process.inputStream.reader().forEachLine { info("_${configuration.name}_ $it") }
+                process.inputStream.reader().forEachLine {
+                    info("_${configuration.name}_ $it")
+                    instrumentLogger.logger.info(it)
+                }
             }
             thread {
                 process.errorStream.reader().forEachLine {
                     info("_${configuration.name}_ $it")
+                    instrumentLogger.logger.info(it)
                     stringBuilder.appendLine("_${configuration.name}_ $it")
                 }
             }

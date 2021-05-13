@@ -5,21 +5,10 @@ import java.io.File
 
 
 class SampleContainer(private val containerName: String) {
-    fun fill(instrumentResults: List<InstrumentResult>, missionReport: File? = null): List<FileAndAlias> {
+    fun fill(instrumentResults: List<InstrumentResult>, vararg reports: File): List<FileAndAlias> {
         val entries = instrumentResults.flatMap { it.results }
-        val files = fill(missionReport, entries)
-        return files
-    }
-
-    private fun fill(
-        missionReport: File?,
-        entries: List<FileAndAlias>
-    ) = if (missionReport?.exists() == true) {
-        val files = entries + FileAndAlias(missionReport, missionReport.name)
+        val files = entries + reports.map { FileAndAlias(it, it.name) }
         Zipper().zipFiles(files, containerName)
-        files
-    } else {
-        Zipper().zipFiles(entries, containerName)
-        entries
+        return files
     }
 }
