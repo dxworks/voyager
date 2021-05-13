@@ -13,6 +13,11 @@ instruments:
   # The name of the instrument as declared in instrument.yml
   My Instrument:
 
+    # The id of the thread on which to run the instrument
+    # Instruments on the same thread will run in the order they appear in this file
+    # instruments on the default thread, 0, will run separately after all other threads are completed
+    # Integer, defaults to 0
+    thread: 0
     # The list of commands to run. Names as declared in instrument.yml
     # If empty or not specified, voyager will run all commands from the instrument
     commands:
