@@ -16,12 +16,11 @@ import java.io.FileFilter
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.util.*
-import kotlin.reflect.jvm.internal.impl.load.java.structure.JavaClass
 import kotlin.system.exitProcess
 
 private val log = LoggerFactory.getLogger("Main")
 val version by lazy {
-    Properties().apply { load(object{}::class.java.classLoader.getResourceAsStream("maven.properties")) }["version"]
+    Properties().apply { load(object {}::class.java.classLoader.getResourceAsStream("maven.properties")) }["version"]
 }
 
 
@@ -72,7 +71,11 @@ fun main(args: Array<String>) {
         ?: emptyArray()
 
     val containerContent =
-        SampleContainer(defaultContainerName).fill(instrumentResults, *reports)
+        SampleContainer(defaultContainerName).fill(instrumentResults, *reports) {
+            MissionSummary(results, it, System.currentTimeMillis() - start).toString().split("\n")
+                .forEach(log::info)
+        }
+
 
     containerContent.map { it.file }
         .forEach {
@@ -85,7 +88,4 @@ fun main(args: Array<String>) {
             else
                 it.delete()
         }
-
-    MissionSummary(results, containerContent, System.currentTimeMillis() - start).toString().split("\n")
-        .forEach(log::info)
 }

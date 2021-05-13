@@ -5,9 +5,14 @@ import java.io.File
 
 
 class SampleContainer(private val containerName: String) {
-    fun fill(instrumentResults: List<InstrumentResult>, vararg reports: File): List<FileAndAlias> {
+    fun fill(
+        instrumentResults: List<InstrumentResult>,
+        vararg reports: File,
+        beforeZip: (containerContent: List<FileAndAlias>) -> Unit
+    ): List<FileAndAlias> {
         val entries = instrumentResults.flatMap { it.results }
         val files = entries + reports.map { FileAndAlias(it, it.name) }
+        beforeZip(files)
         Zipper().zipFiles(files, containerName)
         return files
     }
