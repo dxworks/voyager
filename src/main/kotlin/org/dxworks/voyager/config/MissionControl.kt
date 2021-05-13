@@ -125,4 +125,8 @@ class MissionControl private constructor() {
         }
         additionalEnvironment.forEach { environment[it.first] = it.second }
     }
+
+    fun getThread(name: String): Int {
+        return missionConfig.instruments[name]?.thread ?: defaultThreadId
+    }
 }

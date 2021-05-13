@@ -23,6 +23,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
 
     private val missionControl = MissionControl.get()
     val name = configuration.name
+    private val thread: Int by lazy { missionControl.getThread(name) }
 
 
     private fun processTemplate(
@@ -49,7 +50,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
             }
             NEVER -> {
                 log.info("\n")
-                log.info("$name is deactivated")
+                log.info("thread $thread $name is deactivated")
                 null
             }
         }?.let { results.putAll(it) }
@@ -63,7 +64,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         runInstrument: () -> Map<String, List<CommandExecutionResult>>?,
     ): Map<String, List<CommandExecutionResult>>? {
         log.info("\n")
-        log.info("Started running $name")
+        log.info("thread $thread Started running $name")
 
         return runInstrument.invoke()?.also { results ->
             val status = if (results.any { (_, v) -> v.any { it.errors != null } })
@@ -78,7 +79,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     private fun internalRun(repo: File): List<CommandExecutionResult> {
         val commands = MissionControl.get().getOrderedCommands(this)
         if (commands == null || commands.isEmpty()) {
-            log.warn("$name does not have anything to run")
+            log.warn("thread $thread $name does not have anything to run")
             return emptyList()
         }
 
@@ -90,7 +91,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
             } else {
                 val start = System.currentTimeMillis()
                 try {
-                    log.info("Running command $identifier")
+                    log.info("thread $thread Running command $identifier on thread $thread")
                     val process = getProcessForCommand(
                         command,
                         exec,
@@ -100,19 +101,19 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
                     val processExitValue = process.waitFor()
                     val stop = System.currentTimeMillis()
                     if (processExitValue == 0) {
-                        log.info("Command $identifier completed")
+                        log.info("thread $thread Command $identifier completed")
                         CommandExecutionResult(command, stop - start)
                     } else {
                         val errors = errorsBuilder.toString()
-                        log.error("Command $identifier failed with errors:\n$errors")
+                        log.error("thread $thread Command $identifier failed with errors:\n$errors")
                         CommandExecutionResult(command, stop - start, errors)
                     }
                 } catch (e: Exception) {
-                    log.error("Command $identifier could not be run:\n${e.message}")
+                    log.error("thread $thread Command $identifier could not be run:\n${e.message}")
                     CommandExecutionResult(
                         command,
                         System.currentTimeMillis() - start,
-                        "Command could not be run:\n${e.message}"
+                        "thread $thread Command could not be run:\n${e.message}"
                     )
                 }
             }
@@ -148,15 +149,15 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         LoggerFactory.getLogger(identifier).apply {
             thread {
                 process.inputStream.reader().forEachLine {
-                    info("_${configuration.name}_ $it")
-                    instrumentLogger.logger.info(it)
+                    info("thread $thread _${configuration.name}_ $it")
+                    instrumentLogger.logger.info("thread $thread $it")
                 }
             }
             thread {
                 process.errorStream.reader().forEachLine {
-                    info("_${configuration.name}_ $it")
-                    instrumentLogger.logger.info(it)
-                    stringBuilder.appendLine("_${configuration.name}_ $it")
+                    info("thread $thread _${configuration.name}_ $it")
+                    instrumentLogger.logger.info("thread $thread $it")
+                    stringBuilder.appendLine("thread $thread _${configuration.name}_ $it")
                 }
             }
         }
