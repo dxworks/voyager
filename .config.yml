@@ -6,7 +6,7 @@ runsAll:
 # A map of runtime name to a path that will be added to the PATH env variable
 # for voyager missions
 runtimes:
-  java11: C:\Users\dnagy\Documents\Endava\voyager test site\runtimes\jdk-11.0.2\bin
+
 # A map of environment variables, name to value, for voyager missions
 environment:
 

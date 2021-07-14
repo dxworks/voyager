@@ -9,7 +9,7 @@ versions:
   - name: Python
     min: 3.8
     win: python -V
-    unix: python -V
+    unix: python3 -V
     match:
       - Python (?<version>.+)
   - name: Node
