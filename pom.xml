@@ -7,7 +7,7 @@
     <groupId>org.dxworks.voyager</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>1.4.0-SNAPSHOT</version>
     <modules>
         <module>api</module>
         <module>dx-voyager</module>
@@ -47,6 +47,20 @@
         </repository>
     </distributionManagement>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test</artifactId>
+            <version>${kotlin.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>
@@ -75,6 +89,7 @@
             </plugin>
         </plugins>
     </build>
+
     <repositories>
         <repository>
             <id>ossrh</id>
