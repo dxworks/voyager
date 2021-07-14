@@ -4,9 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.dxworks</groupId>
+    <groupId>org.dxworks.voyager</groupId>
     <artifactId>dx-voyager</artifactId>
+    <packaging>pom</packaging>
     <version>1.2.0-SNAPSHOT</version>
+    <modules>
+        <module>api</module>
+    </modules>
 
     <properties>
         <version>${project.version}</version>
@@ -71,7 +75,11 @@
             <version>1.4.3</version>
             <type>pom</type>
         </dependency>
-
+        <dependency>
+            <groupId>org.dxworks.voyager</groupId>
+            <artifactId>api</artifactId>
+            <version>1.2.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <licenses>

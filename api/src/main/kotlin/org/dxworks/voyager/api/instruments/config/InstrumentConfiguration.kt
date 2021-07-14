@@ -1,8 +1,6 @@
-package org.dxworks.voyager.instruments.config
+package org.dxworks.voyager.api.instruments.config
 
-import org.dxworks.voyager.utils.fieldMissingOrNull
-import org.dxworks.voyager.utils.logger
-import kotlin.system.exitProcess
+import org.dxworks.voyager.api.utils.fieldMissingOrNull
 
 class InstrumentConfiguration(
     name: String? = null,
@@ -12,14 +10,11 @@ class InstrumentConfiguration(
     run: InstrumentRunStrategy? = null,
     val results: List<ResultsDir>? = null
 ) {
-    private val log = logger<InstrumentConfiguration>()
     val name: String = name ?: run {
-        log.error(fieldMissingOrNull("name", "instrument configuration"))
-        exitProcess(1)
+        throw IllegalStateException(fieldMissingOrNull("name", "instrument configuration"))
     }
     val commands: List<Command> = commands ?: emptyList()
     val environment: Map<String, String?> = environment ?: emptyMap()
     val parameters: Map<String, String?> = parameters ?: emptyMap()
     val run: InstrumentRunStrategy = run ?: InstrumentRunStrategy.ONCE
 }
-

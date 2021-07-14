@@ -1,4 +1,4 @@
-package org.dxworks.voyager.doctor.config
+package org.dxworks.voyager.api.doctor
 
 class DoctorConfig(versions: List<VersionRule>? = null) {
     val versions = versions ?: emptyList()

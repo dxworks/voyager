@@ -1,9 +1,7 @@
-package org.dxworks.voyager.instruments.config
+package org.dxworks.voyager.api.instruments.config
 
-import org.dxworks.voyager.utils.fieldMissingOrNull
-import org.dxworks.voyager.utils.isUnix
-import org.dxworks.voyager.utils.logger
-import kotlin.system.exitProcess
+import org.dxworks.voyager.api.utils.fieldMissingOrNull
+import org.dxworks.voyager.api.utils.isUnix
 
 class Command(
     name: String? = null,
@@ -12,10 +10,8 @@ class Command(
     val unix: String? = null,
     val dir: String? = null
 ) {
-    private val log = logger<Command>()
     val name: String = name ?: run {
-        log.error(fieldMissingOrNull("name", "command"))
-        exitProcess(1)
+        throw IllegalStateException(fieldMissingOrNull("name", "command"))
     }
     val environment: Map<String, String?> = environment ?: emptyMap()
 

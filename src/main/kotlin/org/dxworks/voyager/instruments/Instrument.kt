@@ -1,14 +1,19 @@
 package org.dxworks.voyager.instruments
 
+import org.dxworks.voyager.api.instruments.config.Command
+import org.dxworks.voyager.api.instruments.config.InstrumentConfiguration
+import org.dxworks.voyager.api.instruments.config.InstrumentRunStrategy.*
+import org.dxworks.voyager.api.utils.commandInterpreterName
+import org.dxworks.voyager.api.utils.interpreterArg
 import org.dxworks.voyager.config.MissionControl
-import org.dxworks.voyager.instruments.config.Command
-import org.dxworks.voyager.instruments.config.InstrumentConfiguration
-import org.dxworks.voyager.instruments.config.InstrumentRunStrategy.*
 import org.dxworks.voyager.results.FileAndAlias
 import org.dxworks.voyager.results.InstrumentResult
 import org.dxworks.voyager.results.execution.CommandExecutionResult
 import org.dxworks.voyager.results.execution.InstrumentExecutionResult
-import org.dxworks.voyager.utils.*
+import org.dxworks.voyager.utils.instrumentHome
+import org.dxworks.voyager.utils.logger
+import org.dxworks.voyager.utils.repoFolder
+import org.dxworks.voyager.utils.repoName
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileFilter

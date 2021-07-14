@@ -1,8 +1,6 @@
-package org.dxworks.voyager.config
+package org.dxworks.voyager.api.mission
 
-import org.dxworks.voyager.utils.fieldMissingOrNull
-import org.dxworks.voyager.utils.logger
-import kotlin.system.exitProcess
+import org.dxworks.voyager.api.utils.fieldMissingOrNull
 
 class MissionConfig(
     mission: String? = null,
@@ -11,14 +9,11 @@ class MissionConfig(
     environment: Map<String, String?>? = null,
     val instrumentsDir: String? = null
 ) {
-    private val log = logger<MissionConfig>()
     val mission: String = mission ?: run {
-        log.error(fieldMissingOrNull("mission", "mission config"))
-        exitProcess(1)
+        throw IllegalStateException(fieldMissingOrNull("mission", "mission config"))
     }
     val target: String = target ?: run {
-        log.error(fieldMissingOrNull("target", "mission config"))
-        exitProcess(1)
+        throw IllegalStateException(fieldMissingOrNull("target", "mission config"))
     }
     val environment: Map<String, String?> = environment ?: emptyMap()
     val instruments: Map<String, InstrumentMissionConfiguration> = instruments ?: emptyMap()

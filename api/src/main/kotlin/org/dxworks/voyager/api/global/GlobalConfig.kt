@@ -1,4 +1,4 @@
-package org.dxworks.voyager.config.global
+package org.dxworks.voyager.api.global
 
 class GlobalConfig(
     runsAll: Boolean? = null,

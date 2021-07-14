@@ -1,4 +1,4 @@
-package org.dxworks.voyager.instruments.config
+package org.dxworks.voyager.api.instruments.config
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue

@@ -10,27 +10,3 @@ import kotlin.system.exitProcess
 
 inline fun <reified T : Any> logger(): Logger = LoggerFactory.getLogger(T::class.java)
 val yamlMapper = ObjectMapper(YAMLFactory()).registerKotlinModule()
-
-private val osName by lazy { System.getProperty("os.name") }
-val isWindows by lazy { osName.contains("win", ignoreCase = true) }
-val isLinux by lazy { osName.contains("nux", ignoreCase = true) || osName.contains("nix", ignoreCase = true) }
-val isMac by lazy { osName.contains("mac", ignoreCase = true) }
-val isUnix by lazy { isLinux || isMac }
-val commandInterpreterName by lazy { if (isUnix) "bash" else "cmd.exe" }
-val interpreterArg by lazy { if (isUnix) "-c" else "/C" }
-val pathEnvSeparator by lazy { if (isUnix) ":" else ";" }
-
-val pathEnv by lazy { if (isUnix) "PATH" else "Path" }
-
-
-inline fun <T> Iterable<T>.sumByLong(selector: (T) -> Long): Long {
-    var sum = 0L
-    for (element in this) {
-        sum += selector(element)
-    }
-    return sum
-}
-
-val mainLogger = LoggerFactory.getLogger("Main")
-
-fun fieldMissingOrNull(field: String, source: String): String = "'$field' field is missing or null in $source"
