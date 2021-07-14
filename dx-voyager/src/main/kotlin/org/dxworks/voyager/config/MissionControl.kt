@@ -31,6 +31,7 @@ class MissionControl private constructor() {
 
     private lateinit var missionHome: File
     private lateinit var missionConfig: MissionConfig
+    val mission: String by lazy { missionConfig.mission }
 
     companion object {
         private val log = logger<MissionControl>()
@@ -43,7 +44,6 @@ class MissionControl private constructor() {
         if (file.exists()) {
             missionHome = file.absoluteFile.parentFile
             missionConfig = yamlMapper.readValue(file)
-            log.info("Starting mission ${missionConfig.mission}")
         } else {
             log.error(
                 """
@@ -127,5 +127,9 @@ class MissionControl private constructor() {
             missionConfig.environment.forEach { (k, v) -> environment[k] = v ?: "" }
         }
         additionalEnvironment.forEach { environment[it.first] = it.second }
+    }
+
+    fun getThread(name: String): Int {
+        return missionConfig.instruments[name]?.thread ?: defaultThreadId
     }
 }

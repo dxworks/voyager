@@ -246,3 +246,17 @@ versions:
       - v(?<version>.+)
 
 ```
+
+## Voyager version
+
+---
+
+`voyager.sh version`
+
+## Clean
+
+---
+
+`voyager.sh clean` or `voyager.sh clean my-mission.yml`
+
+This command is used to clean the results from previous runs, in case of an interrupted mission
