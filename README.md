@@ -193,7 +193,7 @@ commands:
 If the mission is in the default location `./mission.yml` then you can run voyager with `java -jar dx-voyager.jar`
 , `voyager.sh` or `voyager.bat`
 
-Otherwise, run voyager using `voyager.sh -mission="path to mission"`
+Otherwise, run voyager using `voyager.sh <path/to/mission/file>`
 
 If the instruments are not in the default location `./instruments` then specify the instrumentsDir in mission.yml
 
