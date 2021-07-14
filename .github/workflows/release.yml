@@ -16,19 +16,19 @@ jobs:
         run: mvn package
       - name: Prepare Assets
         run: |
-          mkdir dx-voyager
-          mkdir dx-voyager/runtimes
-          cp README.md dx-voyager/README.md
-          cp .config.yml dx-voyager/.config.yml
-          cp .doctor.yml dx-voyager/.doctor.yml
-          cp mission.yml dx-voyager/mission.yml
-          cp bin/voyager.sh dx-voyager/voyager.sh
-          chmod +x dx-voyager/voyager.sh
-          cp bin/voyager.bat dx-voyager/voyager.bat
-          cp -r instruments dx-voyager/instruments
-          cp target/dx-voyager.jar dx-voyager/dx-voyager.jar
+          mkdir voyager
+          mkdir voyager/runtimes
+          cp README.md voyager/README.md
+          cp .config.yml voyager/.config.yml
+          cp .doctor.yml voyager/.doctor.yml
+          cp mission.yml voyager/mission.yml
+          cp bin/voyager.sh voyager/voyager.sh
+          chmod +x voyager/voyager.sh
+          cp bin/voyager.bat voyager/voyager.bat
+          cp -r instruments voyager/instruments
+          cp dx-voyager/target/dx-voyager.jar voyager/dx-voyager.jar
       - name: Create Archive
-        run: zip -r dx-voyager.zip dx-voyager
+        run: zip -r dx-voyager.zip voyager
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
