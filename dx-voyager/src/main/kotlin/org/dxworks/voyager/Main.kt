@@ -4,7 +4,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.io.FileUtils
-import org.dxworks.voyager.config.MissionControl
+import org.dxworks.voyager.mission.MissionControl
 import org.dxworks.voyager.doctor.versionDoctor
 import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.instruments.InstrumentGatherer

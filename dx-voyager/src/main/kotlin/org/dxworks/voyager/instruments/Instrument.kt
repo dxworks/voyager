@@ -5,7 +5,7 @@ import org.dxworks.voyager.api.instruments.config.InstrumentConfiguration
 import org.dxworks.voyager.api.instruments.config.InstrumentRunStrategy.*
 import org.dxworks.voyager.api.utils.commandInterpreterName
 import org.dxworks.voyager.api.utils.interpreterArg
-import org.dxworks.voyager.config.MissionControl
+import org.dxworks.voyager.mission.MissionControl
 import org.dxworks.voyager.results.FileAndAlias
 import org.dxworks.voyager.results.InstrumentResult
 import org.dxworks.voyager.results.execution.CommandExecutionResult
@@ -30,7 +30,6 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     val name = configuration.name
     private val thread: Int by lazy { missionControl.getThread(name) }
 
-
     private fun processTemplate(
         template: String,
         vararg additionalFields: Pair<String, String>
@@ -44,7 +43,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         val target = missionControl.target
         val results: MutableMap<String, List<CommandExecutionResult>> = HashMap()
 
-        when (MissionControl.get().runOption(this)) {
+        when (missionControl.runOption(this)) {
             ON_EACH -> {
                 runAndLog {
                     target.listFiles(FileFilter { it.isDirectory })?.map { it.name to internalRun(it) }?.toMap()
@@ -83,7 +82,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
 
     private fun internalRun(repo: File): List<CommandExecutionResult> {
         val commands = MissionControl.get().getOrderedCommands(this)
-        if (commands == null || commands.isEmpty()) {
+        if (commands.isEmpty()) {
             log.warn("thread $thread $name does not have anything to run")
             return emptyList()
         }
@@ -183,7 +182,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
             environment.putIfAbsent(k, processTemplate(v ?: "", repoFolderField, repoNameField))
         }
 
-        return missionControl.getProcessBuilder(*environment.toList().toTypedArray())
+        return missionControl.getProcessBuilder(this, command)
             .directory(
                 Path.of(command.dir?.let { dir -> processTemplate(dir, repoFolderField, repoNameField) } ?: path)
                     .toFile()

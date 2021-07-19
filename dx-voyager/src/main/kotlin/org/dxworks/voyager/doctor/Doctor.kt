@@ -5,7 +5,7 @@ import com.vdurmont.semver4j.Semver
 import org.dxworks.voyager.api.doctor.DoctorConfig
 import org.dxworks.voyager.api.utils.commandInterpreterName
 import org.dxworks.voyager.api.utils.interpreterArg
-import org.dxworks.voyager.config.MissionControl
+import org.dxworks.voyager.mission.MissionControl
 import org.dxworks.voyager.utils.versionGroupName
 import org.dxworks.voyager.utils.yamlMapper
 import org.slf4j.LoggerFactory
