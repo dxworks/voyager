@@ -5,7 +5,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>org.dxworks.voyager</groupId>
-        <version>1.4.0-SNAPSHOT</version>
+        <version>1.4.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -65,7 +65,7 @@
         <dependency>
             <groupId>org.dxworks.voyager</groupId>
             <artifactId>api</artifactId>
-            <version>1.4.0-SNAPSHOT</version>
+            <version>1.4.1</version>
         </dependency>
     </dependencies>
 
