@@ -47,8 +47,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
             ON_EACH -> {
                 runAndLog {
                     target.listFiles(FileFilter { it.isDirectory })
-                        ?.onEach { log.info("thread $thread prepared to run $name on ${it.name}") }
-                        ?.associate { it.name to internalRun(it) }
+                        ?.associate { it.name to internalRun(it, true) }
                 }
             }
             ONCE -> {
@@ -82,7 +81,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         }
     }
 
-    private fun internalRun(repo: File): List<CommandExecutionResult> {
+    private fun internalRun(repo: File, printRepo: Boolean = false): List<CommandExecutionResult> {
         val commands = MissionControl.get().getOrderedCommands(this)
         if (commands.isEmpty()) {
             log.warn("thread $thread $name does not have anything to run")
@@ -97,11 +96,16 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
             } else {
                 val start = System.currentTimeMillis()
                 try {
-                    log.info("thread $thread Running command $identifier: $exec")
+                    if (printRepo) {
+                        log.info("thread $thread Running command $identifier on ${repo.name}")
+                    } else {
+                        log.info("thread $thread Running command $identifier")
+                    }
                     val process = getProcessForCommand(
                         command,
                         exec,
-                        repo
+                        repo,
+                        identifier
                     )
                     val errorsBuilder = setupLogger(identifier, process)
                     val processExitValue = process.waitFor()
@@ -173,7 +177,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     private fun getCommandIdentifier(command: Command, index: Int) =
         "${command.name} (${index + 1} from $name)"
 
-    private fun getProcessForCommand(command: Command, exec: String, repo: File): Process {
+    private fun getProcessForCommand(command: Command, exec: String, repo: File, identifier: String): Process {
         val repoFolderField = repoFolder to repo.absoluteFile.normalize().absolutePath
         val repoNameField = repoName to repo.absoluteFile.normalize().name
         val environment =
@@ -184,12 +188,16 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
             environment.putIfAbsent(k, processTemplate(v ?: "", repoFolderField, repoNameField))
         }
 
+        val processTemplate = processTemplate(exec, repoFolderField, repoNameField)
+        val dir = Path.of(command.dir?.let { dir -> processTemplate(dir, repoFolderField, repoNameField) } ?: path)
+            .toFile()
+        log.info("thread $thread Running command $identifier: $processTemplate in ${dir.path}")
+
         return missionControl.getProcessBuilder(this, command)
             .directory(
-                Path.of(command.dir?.let { dir -> processTemplate(dir, repoFolderField, repoNameField) } ?: path)
-                    .toFile()
+                dir
             )
-            .command(commandInterpreterName, interpreterArg, processTemplate(exec, repoFolderField, repoNameField))
+            .command(commandInterpreterName, interpreterArg, processTemplate)
             .start()
     }
 }
