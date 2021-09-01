@@ -84,7 +84,11 @@ fun main(args: Array<String>) {
         ?: emptyArray()
 
     val containerContent =
-        SampleContainer("${missionControl.mission}-${defaultContainerName}").fill(instrumentResults, *reports) {
+        SampleContainer("${missionControl.mission}-${defaultContainerName}").fill(
+            instrumentResults,
+            *reports,
+            missionControl.missionFile
+        ) {
             MissionSummary(results, it, System.currentTimeMillis() - start).toString().split("\n")
                 .forEach(log::info)
         }

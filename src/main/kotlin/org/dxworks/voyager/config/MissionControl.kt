@@ -28,6 +28,7 @@ class MissionControl private constructor() {
 
     private lateinit var missionHome: File
     private lateinit var missionConfig: MissionConfig
+    lateinit var missionFile: File
     val mission: String by lazy { missionConfig.mission }
 
     companion object {
@@ -39,7 +40,8 @@ class MissionControl private constructor() {
     fun setMissionSource(sourceFile: String) {
         val file = Path.of(sourceFile).toFile()
         if (file.exists()) {
-            missionHome = file.absoluteFile.parentFile
+            missionFile = file.absoluteFile
+            missionHome = missionFile.parentFile
             missionConfig = yamlMapper.readValue(file)
         } else {
             log.error(
