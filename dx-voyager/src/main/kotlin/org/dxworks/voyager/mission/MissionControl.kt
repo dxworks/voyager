@@ -5,8 +5,6 @@ import org.dxworks.voyager.api.global.GlobalConfig
 import org.dxworks.voyager.api.instruments.config.Command
 import org.dxworks.voyager.api.instruments.config.InstrumentRunStrategy
 import org.dxworks.voyager.api.mission.MissionConfig
-import org.dxworks.voyager.api.utils.pathEnv
-import org.dxworks.voyager.api.utils.pathEnvSeparator
 import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.utils.*
 import java.io.File
@@ -32,8 +30,13 @@ class MissionControl private constructor() {
     private lateinit var missionHome: File
     private lateinit var missionConfig: MissionConfig
     lateinit var missionFile: File
-    lateinit var environmentManager: EnvironmentManager
-        private set
+    private val environmentManager: EnvironmentManager by lazy {
+        if (this::missionConfig.isInitialized) {
+            EnvironmentManager(globalConfig, missionConfig)
+        } else {
+            EnvironmentManager(globalConfig)
+        }
+    }
 
     val mission: String by lazy { missionConfig.mission }
 
@@ -49,7 +52,6 @@ class MissionControl private constructor() {
             missionFile = file.absoluteFile
             missionHome = missionFile.parentFile
             missionConfig = yamlMapper.readValue(file)
-            environmentManager = EnvironmentManager(globalConfig, missionConfig)
             log.info("Starting mission ${missionConfig.mission}")
         } else {
             log.error(
