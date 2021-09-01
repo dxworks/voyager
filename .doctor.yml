@@ -12,9 +12,3 @@ versions:
     unix: python3 -V
     match:
       - Python (?<version>.+)
-  - name: Node
-    min: 12
-    win: node -v
-    unix: node -v
-    match:
-      - v(?<version>.+)

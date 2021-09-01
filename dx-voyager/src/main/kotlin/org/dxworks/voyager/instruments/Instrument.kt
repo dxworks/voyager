@@ -180,20 +180,17 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     private fun getProcessForCommand(command: Command, exec: String, repo: File, identifier: String): Process {
         val repoFolderField = repoFolder to repo.absoluteFile.normalize().absolutePath
         val repoNameField = repoName to repo.absoluteFile.normalize().name
-        val environment =
-            command.environment.map { (k, v) -> k to processTemplate(v ?: "", repoFolderField, repoNameField) }
-                .toMap()
-                .toMutableMap()
-        configuration.environment.forEach { (k, v) ->
-            environment.putIfAbsent(k, processTemplate(v ?: "", repoFolderField, repoNameField))
-        }
+        val commandEnv =
+            command.environment.map { (k, v) -> k to processTemplate(v ?: "", repoFolderField, repoNameField) }.toMap()
+
+        val instrumentEnv = configuration.environment.map { (k, v) -> k to processTemplate(v ?: "", repoFolderField, repoNameField) }.toMap()
 
         val processTemplate = processTemplate(exec, repoFolderField, repoNameField)
         val dir = Path.of(command.dir?.let { dir -> processTemplate(dir, repoFolderField, repoNameField) } ?: path)
             .toFile()
         log.info("thread $thread Running command $identifier: $processTemplate in ${dir.path}")
 
-        return missionControl.getProcessBuilder(this, command)
+        return missionControl.getProcessBuilder(instrumentEnv , commandEnv)
             .directory(
                 dir
             )

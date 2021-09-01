@@ -125,8 +125,8 @@ class MissionControl private constructor() {
         environmentManager.populatePathEnv(environment())
     }
 
-    fun getProcessBuilder(instrument: Instrument, command: Command) = ProcessBuilder().apply {
-        environmentManager.populateEnv(instrument, command, environment())
+    fun getProcessBuilder(instrumentEnv: Map<String, String>, commandEnv: Map<String, String>) = ProcessBuilder().apply {
+        environmentManager.populateEnv(instrumentEnv, commandEnv, environment())
     }
 
     fun getThread(name: String): Int {

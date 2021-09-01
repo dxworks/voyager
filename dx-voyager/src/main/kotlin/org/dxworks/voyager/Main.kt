@@ -9,7 +9,7 @@ import org.dxworks.voyager.doctor.versionDoctor
 import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.instruments.InstrumentGatherer
 import org.dxworks.voyager.report.MissionSummary
-import org.dxworks.voyager.results.SampleContainer
+import org.dxworks.voyager.results.ResultsContainer
 import org.dxworks.voyager.utils.*
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -84,7 +84,7 @@ fun main(args: Array<String>) {
         ?: emptyArray()
 
     val containerContent =
-        SampleContainer("${missionControl.mission}-${defaultContainerName}").fill(
+        ResultsContainer("${missionControl.mission}-${defaultContainerName}").fill(
             instrumentResults,
             *reports,
             missionControl.missionFile
@@ -94,7 +94,7 @@ fun main(args: Array<String>) {
         }
 
 
-    clean(containerContent.map { it.file })
+    clean(containerContent.map { it.file }.filter { it != missionControl.missionFile && it.nameWithoutExtension != missionReport })
 }
 
 private fun getInitialisedMissionControl(args: Array<String>): MissionControl {

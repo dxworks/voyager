@@ -1,11 +1,9 @@
 package org.dxworks.voyager.mission
 
 import org.dxworks.voyager.api.global.GlobalConfig
-import org.dxworks.voyager.api.instruments.config.Command
 import org.dxworks.voyager.api.mission.MissionConfig
 import org.dxworks.voyager.api.utils.pathEnv
 import org.dxworks.voyager.api.utils.pathEnvSeparator
-import org.dxworks.voyager.instruments.Instrument
 import java.nio.file.Path
 
 class EnvironmentManager(private val globalConfig: GlobalConfig, private val missionConfig: MissionConfig? = null) {
@@ -17,10 +15,10 @@ class EnvironmentManager(private val globalConfig: GlobalConfig, private val mis
         Path.of(it).toAbsolutePath().toString()
     }
 
-    fun populateEnv(instrument: Instrument, command: Command, env: MutableMap<String, String>) {
+    fun populateEnv(instrumentEnv: Map<String, String>, commandEnv: Map<String, String>, env: MutableMap<String, String>) {
         populatePathEnv(env)
-        env.putAll(instrument.configuration.environment.filterNotNullValues())
-        env.putAll(command.environment.filterNotNullValues())
+        env.putAll(instrumentEnv.filterNotNullValues())
+        env.putAll(commandEnv.filterNotNullValues())
         env.putAll(globalConfig.environment.filterNotNullValues())
         missionConfig?.let { env.putAll(it.environment.filterNotNullValues()) }
     }

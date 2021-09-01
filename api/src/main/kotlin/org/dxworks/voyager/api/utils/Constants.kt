@@ -12,6 +12,7 @@ const val repoName = "repoName"
 
 const val defaultInstrumentConfig = "instrument.yml"
 const val defaultMissionConfig = "mission.yml"
+const val missionReport = "mission-report"
 
 const val defaultContainerName = "voyager-results.zip"
 
