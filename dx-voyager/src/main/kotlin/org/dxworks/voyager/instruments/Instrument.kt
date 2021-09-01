@@ -46,7 +46,9 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         when (missionControl.runOption(this)) {
             ON_EACH -> {
                 runAndLog {
-                    target.listFiles(FileFilter { it.isDirectory })?.map { it.name to internalRun(it) }?.toMap()
+                    target.listFiles(FileFilter { it.isDirectory })
+                        ?.onEach { log.info("thread $thread prepared to run $name on ${it.name}") }
+                        ?.associate { it.name to internalRun(it) }
                 }
             }
             ONCE -> {
@@ -95,7 +97,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
             } else {
                 val start = System.currentTimeMillis()
                 try {
-                    log.info("thread $thread Running command $identifier on thread $thread")
+                    log.info("thread $thread Running command $identifier: $exec")
                     val process = getProcessForCommand(
                         command,
                         exec,

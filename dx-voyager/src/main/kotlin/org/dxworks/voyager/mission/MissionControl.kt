@@ -31,6 +31,7 @@ class MissionControl private constructor() {
 
     private lateinit var missionHome: File
     private lateinit var missionConfig: MissionConfig
+    lateinit var missionFile: File
     lateinit var environmentManager: EnvironmentManager
         private set
 
@@ -45,7 +46,8 @@ class MissionControl private constructor() {
     fun setMissionSource(sourceFile: String) {
         val file = Path.of(sourceFile).toFile()
         if (file.exists()) {
-            missionHome = file.absoluteFile.parentFile
+            missionFile = file.absoluteFile
+            missionHome = missionFile.parentFile
             missionConfig = yamlMapper.readValue(file)
             environmentManager = EnvironmentManager(globalConfig, missionConfig)
             log.info("Starting mission ${missionConfig.mission}")
