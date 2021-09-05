@@ -5,14 +5,14 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>org.dxworks.voyager</groupId>
-        <version>1.4.1</version>
+        <version>1.4.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>dx-voyager</artifactId>
 
     <properties>
-        <version>${project.version}</version>
+        <version>1.4.1</version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <main.class>org.dxworks.voyager.MainKt</main.class>
@@ -65,7 +65,7 @@
         <dependency>
             <groupId>org.dxworks.voyager</groupId>
             <artifactId>api</artifactId>
-            <version>1.4.1</version>
+            <version>1.4.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

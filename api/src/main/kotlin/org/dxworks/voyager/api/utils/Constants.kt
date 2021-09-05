@@ -20,7 +20,7 @@ const val globalConfigName = ".config.yml"
 
 const val defaultDoctorFile = ".doctor.yml"
 const val doctorCommandArg = "doctor"
-val versionCommandArgs = setOf("-v", "version", "--version")
+val versionCommandArgs = setOf("-v", "version", "--version", "-version", "-V")
 
 const val versionGroupName = "version"
 

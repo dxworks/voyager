@@ -9,6 +9,6 @@ versions:
   - name: Python
     min: 3.8
     win: python -V
-    unix: python3 -V
+    unix: python -V
     match:
       - Python (?<version>.+)
