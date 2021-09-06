@@ -4,7 +4,7 @@ import org.dxworks.voyager.zip.Zipper
 import java.io.File
 
 
-class SampleContainer(private val containerName: String) {
+class ResultsContainer(private val containerName: String) {
     fun fill(
         instrumentResults: List<InstrumentResult>,
         vararg reports: File,

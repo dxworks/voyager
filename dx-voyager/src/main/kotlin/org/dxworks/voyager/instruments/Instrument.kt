@@ -5,7 +5,7 @@ import org.dxworks.voyager.api.instruments.config.InstrumentConfiguration
 import org.dxworks.voyager.api.instruments.config.InstrumentRunStrategy.*
 import org.dxworks.voyager.api.utils.commandInterpreterName
 import org.dxworks.voyager.api.utils.interpreterArg
-import org.dxworks.voyager.config.MissionControl
+import org.dxworks.voyager.mission.MissionControl
 import org.dxworks.voyager.results.FileAndAlias
 import org.dxworks.voyager.results.InstrumentResult
 import org.dxworks.voyager.results.execution.CommandExecutionResult
@@ -30,7 +30,6 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     val name = configuration.name
     private val thread: Int by lazy { missionControl.getThread(name) }
 
-
     private fun processTemplate(
         template: String,
         vararg additionalFields: Pair<String, String>
@@ -44,10 +43,11 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         val target = missionControl.target
         val results: MutableMap<String, List<CommandExecutionResult>> = HashMap()
 
-        when (MissionControl.get().runOption(this)) {
+        when (missionControl.runOption(this)) {
             ON_EACH -> {
                 runAndLog {
-                    target.listFiles(FileFilter { it.isDirectory })?.map { it.name to internalRun(it) }?.toMap()
+                    target.listFiles(FileFilter { it.isDirectory })
+                        ?.associate { it.name to internalRun(it, true) }
                 }
             }
             ONCE -> {
@@ -81,9 +81,9 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         }
     }
 
-    private fun internalRun(repo: File): List<CommandExecutionResult> {
+    private fun internalRun(repo: File, printRepo: Boolean = false): List<CommandExecutionResult> {
         val commands = MissionControl.get().getOrderedCommands(this)
-        if (commands == null || commands.isEmpty()) {
+        if (commands.isEmpty()) {
             log.warn("thread $thread $name does not have anything to run")
             return emptyList()
         }
@@ -96,11 +96,16 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
             } else {
                 val start = System.currentTimeMillis()
                 try {
-                    log.info("thread $thread Running command $identifier on thread $thread")
+                    if (printRepo) {
+                        log.info("thread $thread Running command $identifier on ${repo.name}")
+                    } else {
+                        log.info("thread $thread Running command $identifier")
+                    }
                     val process = getProcessForCommand(
                         command,
                         exec,
-                        repo
+                        repo,
+                        identifier
                     )
                     val errorsBuilder = setupLogger(identifier, process)
                     val processExitValue = process.waitFor()
@@ -172,23 +177,24 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     private fun getCommandIdentifier(command: Command, index: Int) =
         "${command.name} (${index + 1} from $name)"
 
-    private fun getProcessForCommand(command: Command, exec: String, repo: File): Process {
+    private fun getProcessForCommand(command: Command, exec: String, repo: File, identifier: String): Process {
         val repoFolderField = repoFolder to repo.absoluteFile.normalize().absolutePath
         val repoNameField = repoName to repo.absoluteFile.normalize().name
-        val environment =
-            command.environment.map { (k, v) -> k to processTemplate(v ?: "", repoFolderField, repoNameField) }
-                .toMap()
-                .toMutableMap()
-        configuration.environment.forEach { (k, v) ->
-            environment.putIfAbsent(k, processTemplate(v ?: "", repoFolderField, repoNameField))
-        }
+        val commandEnv =
+            command.environment.map { (k, v) -> k to processTemplate(v ?: "", repoFolderField, repoNameField) }.toMap()
 
-        return missionControl.getProcessBuilder(*environment.toList().toTypedArray())
+        val instrumentEnv = configuration.environment.map { (k, v) -> k to processTemplate(v ?: "", repoFolderField, repoNameField) }.toMap()
+
+        val processTemplate = processTemplate(exec, repoFolderField, repoNameField)
+        val dir = Path.of(command.dir?.let { dir -> processTemplate(dir, repoFolderField, repoNameField) } ?: path)
+            .toFile()
+        log.info("thread $thread Running command $identifier: $processTemplate in ${dir.path}")
+
+        return missionControl.getProcessBuilder(instrumentEnv , commandEnv)
             .directory(
-                Path.of(command.dir?.let { dir -> processTemplate(dir, repoFolderField, repoNameField) } ?: path)
-                    .toFile()
+                dir
             )
-            .command(commandInterpreterName, interpreterArg, processTemplate(exec, repoFolderField, repoNameField))
+            .command(commandInterpreterName, interpreterArg, processTemplate)
             .start()
     }
 }

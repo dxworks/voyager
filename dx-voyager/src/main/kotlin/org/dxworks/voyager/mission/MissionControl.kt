@@ -1,13 +1,11 @@
-package org.dxworks.voyager.config
+package org.dxworks.voyager.mission
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.dxworks.voyager.api.global.GlobalConfig
-import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.api.instruments.config.Command
 import org.dxworks.voyager.api.instruments.config.InstrumentRunStrategy
 import org.dxworks.voyager.api.mission.MissionConfig
-import org.dxworks.voyager.api.utils.pathEnv
-import org.dxworks.voyager.api.utils.pathEnvSeparator
+import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.utils.*
 import java.io.File
 import java.nio.file.Path
@@ -31,6 +29,15 @@ class MissionControl private constructor() {
 
     private lateinit var missionHome: File
     private lateinit var missionConfig: MissionConfig
+    lateinit var missionFile: File
+    private val environmentManager: EnvironmentManager by lazy {
+        if (this::missionConfig.isInitialized) {
+            EnvironmentManager(globalConfig, missionConfig)
+        } else {
+            EnvironmentManager(globalConfig)
+        }
+    }
+
     val mission: String by lazy { missionConfig.mission }
 
     companion object {
@@ -42,8 +49,10 @@ class MissionControl private constructor() {
     fun setMissionSource(sourceFile: String) {
         val file = Path.of(sourceFile).toFile()
         if (file.exists()) {
-            missionHome = file.absoluteFile.parentFile
+            missionFile = file.absoluteFile
+            missionHome = missionFile.parentFile
             missionConfig = yamlMapper.readValue(file)
+            log.info("Starting mission ${missionConfig.mission}")
         } else {
             log.error(
                 """
@@ -83,13 +92,13 @@ class MissionControl private constructor() {
         }
     }
 
-    fun getOrderedCommands(instrument: Instrument): List<Command>? {
+    fun getOrderedCommands(instrument: Instrument): List<Command> {
         val commands = missionConfig.instruments[instrument.name]?.commands
         return if (globalConfig.runsAll || commands == null) {
             instrument.configuration.commands
         } else {
             val commandNameToCommand =
-                commands.map { name -> name to instrument.configuration.commands?.find { it.name == name } }
+                commands.map { name -> name to instrument.configuration.commands.find { it.name == name } }
             val (foundCommands, notFoundCommands) = commandNameToCommand.partition { it.second != null }
             notFoundCommands.forEach {
                 log.warn("Could not find command ${it.first} for ${instrument.name}")
@@ -112,21 +121,12 @@ class MissionControl private constructor() {
         }.groupBy { missionConfig.instruments[it.name]?.thread ?: defaultThreadId }
     }
 
-    fun getProcessBuilder(vararg additionalEnvironment: Pair<String, String>) = ProcessBuilder().apply {
-        val environment = environment()
-        environment[pathEnv] =
-            globalConfig.runtimes.values.joinToString(
-                separator = pathEnvSeparator,
-                postfix = pathEnvSeparator
-            ) {
-                Path.of(it).toAbsolutePath().toString()
-            } + environment[pathEnv]
+    fun getProcessBuilder() = ProcessBuilder().apply {
+        environmentManager.populatePathEnv(environment())
+    }
 
-        globalConfig.environment.forEach { (k, v) -> environment[k] = v ?: "" }
-        if (::missionConfig.isInitialized) {
-            missionConfig.environment.forEach { (k, v) -> environment[k] = v ?: "" }
-        }
-        additionalEnvironment.forEach { environment[it.first] = it.second }
+    fun getProcessBuilder(instrumentEnv: Map<String, String>, commandEnv: Map<String, String>) = ProcessBuilder().apply {
+        environmentManager.populateEnv(instrumentEnv, commandEnv, environment())
     }
 
     fun getThread(name: String): Int {
