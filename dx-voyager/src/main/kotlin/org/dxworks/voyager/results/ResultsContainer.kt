@@ -13,7 +13,6 @@ class ResultsContainer(private val containerName: String) {
         val entries = instrumentResults.flatMap { it.results }
         val files = entries + reports.map { FileAndAlias(it, it.name) }
         beforeZip(files)
-        Zipper().zipFiles(files, containerName)
-        return files
+        return Zipper().zipFiles(files, containerName)
     }
 }
