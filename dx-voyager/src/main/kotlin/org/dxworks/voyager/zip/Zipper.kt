@@ -1,11 +1,15 @@
 package org.dxworks.voyager.zip
 
+import org.apache.commons.compress.archivers.ArchiveOutputStream
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
+import org.apache.commons.compress.utils.IOUtils
 import org.dxworks.voyager.results.FileAndAlias
 import org.dxworks.voyager.utils.logger
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
+import java.io.IOException
 
 
 class Zipper {
@@ -13,42 +17,37 @@ class Zipper {
         private val log = logger<Zipper>()
     }
 
-    fun zipFiles(files: List<FileAndAlias>, zipPath: String) {
-        val fos = FileOutputStream(zipPath)
-        val zipOut = ZipOutputStream(fos)
-        files.forEach {
-            zipFile(it.file, it.alias, zipOut)
+    fun zipFiles(files: List<FileAndAlias>, zipPath: String): List<FileAndAlias> {
+        return ZipArchiveOutputStream(FileOutputStream(zipPath)).use { archive ->
+            files.filter {
+                zipFile(it.file, it.alias, archive)
+            }
         }
-        zipOut.close()
-        fos.close()
     }
 
-    private fun zipFile(fileToZip: File, fileName: String, zipOut: ZipOutputStream) {
-        if (fileToZip.isDirectory) {
-            zipOut.putNextEntry(
-                ZipEntry(
-                    if (fileName.endsWith("/")) {
-                        fileName
-                    } else {
-                        "$fileName/"
-                    }
-                )
-            )
-            zipOut.closeEntry()
-
-            fileToZip.listFiles()?.forEach {
-                zipFile(it, fileName + "/" + it.name, zipOut)
-            }
-
-            return
+    private fun zipFile(file: File, fileName: String, archive: ArchiveOutputStream): Boolean {
+        if (file.isDirectory) {
+            return file.listFiles()?.all {
+                zipFile(it, fileName + "/" + it.name, archive)
+            } ?: true
         }
-        if (!fileToZip.exists()) {
-            log.warn("File ${fileToZip.path} does not exist")
+        if (!file.exists()) {
+            log.warn("File ${file.path} does not exist")
+            return false
         } else {
-            val zipEntry = ZipEntry(fileName)
-            zipOut.putNextEntry(zipEntry)
-            val bytes = fileToZip.readBytes()
-            zipOut.write(bytes, 0, bytes.size)
+            val entry = ZipArchiveEntry(file, fileName)
+            return try {
+                FileInputStream(file).use { fis ->
+                    archive.putArchiveEntry(entry)
+                    IOUtils.copy(fis, archive)
+                    archive.closeArchiveEntry()
+                }
+                true
+            } catch (e: IOException) {
+                log.error("Could not zip file ${file.absolutePath}", e)
+                false
+            }
         }
     }
 }
+

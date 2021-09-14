@@ -1,1 +1,1 @@
-java -jar dx-voyager.jar %*
+java -Xmx8g -jar dx-voyager.jar %*

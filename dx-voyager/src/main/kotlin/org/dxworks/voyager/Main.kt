@@ -80,7 +80,7 @@ fun main(args: Array<String>) {
     log.info(if (instrumentResults.isEmpty()) "Nothing to package" else "Packaging results")
 
     val reports = Path.of(".").toFile()
-        .listFiles(FileFilter { FileSystems.getDefault().getPathMatcher("glob:**.log").matches(it.toPath()) })
+        .listFiles(FileFilter { FileSystems.getDefault().getPathMatcher("glob:**/*.log").matches(it.toPath()) })
         ?: emptyArray()
 
     val containerContent =
