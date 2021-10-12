@@ -4,7 +4,7 @@
 Download a Voyager archive and unzip it to a folder of your choosing. We will call this folder `VOYAGER_HOME`.
 
 ## Prepare TARGET Folder
-The `TARGET` folder is the folder that Voyager will analyze. The target folder should only contain child folders that are git repositories.
+The `TARGET` folder is the folder that Voyager will analyze. The children of the `TARGET` folder should be folders that are git repositories.
 
 To create a correct configuration for voyager, open a terminal window in a folder of your choosing and run the following steps:
 
@@ -19,11 +19,11 @@ Clone all repositories you want to analyze in the voyager-repos folder. Make sur
 ```shell
 git clone <repo1-url>
 cd <repo1>
-git checkout <repo1-url-main-branch>
+git checkout <repo1-main-branch>
 
 git clone <repo2-url>
 cd <repo2>
-git checkout <repo2-url-main-branch>
+git checkout <repo2-main-branch>
 ```
 
 ### Final Structure:
