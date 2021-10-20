@@ -25,7 +25,7 @@ jobs:
       - name: Fill Version
         run: |
           tag=${{ steps.semver_parser.outputs.semver }}
-          sed -i "s/\$tag_version/$tag/" pom.xml
+          sed -i "s/\$tag_version/$tag/" dx-voyager/pom.xml
 
       - name: Build
         run: mvn package
