@@ -1,20 +1,31 @@
-name: Build
-
 on:
   push:
+    branches:
+      - "*"
+
+name: Build & Test
 
 jobs:
-  build:
-    runs-on: ubuntu-18.04
+  release:
+    name: Build And Test
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: Set up Java for publishing to GitHub Packages
-        uses: actions/setup-java@v1
+      - name: Setup Node
+        uses: actions/setup-node@v2
         with:
-          java-version: 11
+          node-version: '16.x'
+          cache: 'npm'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@dxworks'
 
-      - name: Maven Install
-        run: mvn clean package
+      - name: Build Node App
+        run: |
+          npm install
+          npm run create
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+

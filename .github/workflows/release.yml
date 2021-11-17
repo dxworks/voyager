@@ -9,6 +9,9 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -22,30 +25,29 @@ jobs:
         env:
           TAG: ${{ github.ref }}
 
-      - name: Fill Version
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+          cache: 'npm'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@dxworks'
+
+      - name: Prepare Node App
         run: |
-          tag=${{ steps.semver_parser.outputs.semver }}
-          sed -i "s/\$tag_version/$tag/" dx-voyager/pom.xml
-
-      - name: Build
-        run: mvn package
-
-      - name: Prepare Assets
+          npm install
+          npm run build
+      - name: Setup Version
         run: |
-          mkdir voyager
-          mkdir voyager/runtimes
-          cp README.md voyager/README.md
-          cp .config.yml voyager/.config.yml
-          cp .doctor.yml voyager/.doctor.yml
-          cp mission.yml voyager/mission.yml
-          cp bin/voyager.sh voyager/voyager.sh
-          chmod +x voyager/voyager.sh
-          cp bin/voyager.bat voyager/voyager.bat
-          cp -r instruments voyager/instruments
-          cp dx-voyager/target/dx-voyager.jar voyager/dx-voyager.jar
+          node_modules/.bin/json -I -f package.json -e "this.version='$VERSION'"
+        env:
+          VERSION: ${{ steps.semver_parser.outputs.semver }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create Archive
-        run: zip -r dx-voyager.zip voyager
+      - name: Publish NPM
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prepare Release Notes
         run: touch ${{ github.workspace }}/releaseNotes/v${{ steps.semver_parser.outputs.semver }}.md
@@ -54,10 +56,9 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          name: Voyager ${{ steps.semver_parser.outputs.semver }}
+          name: DxWorks Voyager ${{ steps.semver_parser.outputs.semver }}
           body_path: ${{ github.workspace }}/releaseNotes/v${{ steps.semver_parser.outputs.semver }}.md
           body: ""
           prerelease: false
           draft: false
           fail_on_unmatched_files: true
-          files: dx-voyager.zip
