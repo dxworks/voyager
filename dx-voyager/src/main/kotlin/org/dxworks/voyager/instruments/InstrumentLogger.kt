@@ -29,6 +29,15 @@ class InstrumentLogger(
         addAppender(fileAppender)
         level = Level.DEBUG
         isAdditive = false
+    }
 
+    val loggerName = name
+
+    fun stop() {
+        try {
+            fileAppender.stop()
+        } catch (e: Exception) {
+            println("Could not close logger file appender $loggerName!")
+        }
     }
 }

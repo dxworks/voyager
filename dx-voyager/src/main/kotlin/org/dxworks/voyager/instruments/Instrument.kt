@@ -95,6 +95,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
                 CommandExecutionResult(command, 0, "Nothing to run")
             } else {
                 val start = System.currentTimeMillis()
+                var instrumentLogger: InstrumentLogger? = null
                 try {
                     if (printRepo) {
                         log.info("thread $thread Running command $identifier on ${repo.name}")
@@ -107,7 +108,8 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
                         repo,
                         identifier
                     )
-                    val errorsBuilder = setupLogger(identifier, process)
+                    val (errorsBuilder, logger) = setupLogger(identifier, process)
+                    instrumentLogger = logger
                     val processExitValue = process.waitFor()
                     val stop = System.currentTimeMillis()
                     if (processExitValue == 0) {
@@ -125,6 +127,8 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
                         System.currentTimeMillis() - start,
                         "thread $thread Command could not be run:\n${e.message}"
                     )
+                } finally {
+                    instrumentLogger?.stop()
                 }
             }
         }
@@ -153,7 +157,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         }
     }
 
-    private fun setupLogger(identifier: String, process: Process): StringBuilder {
+    private fun setupLogger(identifier: String, process: Process): Pair<StringBuilder, InstrumentLogger> {
         val stringBuilder = StringBuilder()
         val instrumentLogger = InstrumentLogger(configuration.name)
         LoggerFactory.getLogger(identifier).apply {
@@ -171,7 +175,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
                 }
             }
         }
-        return stringBuilder
+        return stringBuilder to instrumentLogger
     }
 
     private fun getCommandIdentifier(command: Command, index: Int) =
@@ -183,14 +187,16 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         val commandEnv =
             command.environment.map { (k, v) -> k to processTemplate(v ?: "", repoFolderField, repoNameField) }.toMap()
 
-        val instrumentEnv = configuration.environment.map { (k, v) -> k to processTemplate(v ?: "", repoFolderField, repoNameField) }.toMap()
+        val instrumentEnv =
+            configuration.environment.map { (k, v) -> k to processTemplate(v ?: "", repoFolderField, repoNameField) }
+                .toMap()
 
         val processTemplate = processTemplate(exec, repoFolderField, repoNameField)
         val dir = Path.of(command.dir?.let { dir -> processTemplate(dir, repoFolderField, repoNameField) } ?: path)
             .toFile()
         log.info("thread $thread Running command $identifier: $processTemplate in ${dir.path}")
 
-        return missionControl.getProcessBuilder(instrumentEnv , commandEnv)
+        return missionControl.getProcessBuilder(instrumentEnv, commandEnv)
             .directory(
                 dir
             )
