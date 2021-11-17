@@ -1,10 +1,4 @@
-site_name: Voyager
-
-repo_url: https://github.com/dxworks/voyager
-repo_name: dxworks/voyager
-edit_uri: edit/docs/docs/
-
-copyright: Copyright &copy; 2021 Dxworks
+site_name: DxWorks Voyager
 
 theme:
   name: material
@@ -17,27 +11,24 @@ theme:
     - navigation.indexes
     - search.suggest
     - search.highlight
+    - toc.integrate
 
   palette:
     # Toggle light mode
     - scheme: default
-      media: "(prefers-color-scheme: light)"
-      primary: teal
-      accent: teal
+      primary: indigo
+      accent: indigo
       toggle:
-        icon: material/toggle-switch-off-outline
+        icon: material/weather-sunny
         name: Switch to light mode
 
     # Toggle dark mode
     - scheme: slate
-      media: "(prefers-color-scheme: dark)"
-      primary: teal
-      accent: teal
+      primary: indigo
+      accent: indigo
       toggle:
-        icon: material/toggle-switch
+        icon: material/weather-night
         name: Switch to dark mode
-
-  logo: assets/icons/dxworks-white-square-thick.png
 
 plugins:
   - search:
@@ -50,7 +41,6 @@ markdown_extensions:
   - attr_list
   - admonition
   - pymdownx.details
-  - pymdownx.tabbed
   - pymdownx.superfences
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
@@ -61,16 +51,9 @@ extra_css:
 
 extra:
   generator: false
-  version:
-    provider: mike
 
 use_directory_urls: false
 
 nav:
-#  - Home:
-#      - 'index.md'
-#      - Installing: 'installing.md'
-#      - Configuration: 'configuration.md'
-#      - Instruments: 'instruments.md'
-#      - Runtimes: 'runtimes.md'
-  - Quick Start: 'quickstart.md'
+  - Home: 'index.md'
+
