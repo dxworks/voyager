@@ -44,7 +44,7 @@ instruments:
       run:
 
 # A map of environment variables, name to value, for voyager missions
-# overwrites the variables from global config
+# overwrites the variables from global config, instrument and command
 environment:
 
 # Path to the directory containing the instruments
@@ -82,6 +82,7 @@ runsAll:
 runtimes:
 
 # A map of environment variables, name to value, for voyager missions
+# overrides values defined in instrument and command environments
 environment:
 
 # A default value for the instruments directory
@@ -150,7 +151,7 @@ commands:
 
     # A map of name to value that will be added to 
     # the environment variables for this command
-    # overwrites all other environment variables
+    # overrides instrument environment variables
     environment:
 
     # The working directory for the command
@@ -159,7 +160,6 @@ commands:
 
 # A map of name to value that will be added to 
 # the environment variables for all commands of this instrument
-# overwrites environment variables from mission
 environment:
 
 # The map of parameters to be used in the configuration
@@ -246,3 +246,17 @@ versions:
       - v(?<version>.+)
 
 ```
+
+## Voyager version
+
+---
+
+`voyager.sh version`
+
+## Clean
+
+---
+
+`voyager.sh clean` or `voyager.sh clean my-mission.yml`
+
+This command is used to clean the results from previous runs, in case of an interrupted mission

@@ -1,0 +1,76 @@
+site_name: Voyager
+
+repo_url: https://github.com/dxworks/voyager
+repo_name: dxworks/voyager
+edit_uri: edit/docs/docs/
+
+copyright: Copyright &copy; 2021 Dxworks
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+
+  palette:
+    # Toggle light mode
+    - scheme: default
+      media: "(prefers-color-scheme: light)"
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to light mode
+
+    # Toggle dark mode
+    - scheme: slate
+      media: "(prefers-color-scheme: dark)"
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+
+  logo: assets/icons/dxworks-white-square-thick.png
+
+plugins:
+  - search:
+      prebuild_index: true
+
+markdown_extensions:
+  - toc:
+      permalink: true
+      toc_depth: 10
+  - attr_list
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed
+  - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+extra_css:
+  - stylesheets/styles.css
+
+extra:
+  generator: false
+  version:
+    provider: mike
+
+use_directory_urls: false
+
+nav:
+#  - Home:
+#      - 'index.md'
+#      - Installing: 'installing.md'
+#      - Configuration: 'configuration.md'
+#      - Instruments: 'instruments.md'
+#      - Runtimes: 'runtimes.md'
+  - Quick Start: 'quickstart.md'
