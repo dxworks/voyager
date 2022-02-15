@@ -7,8 +7,8 @@ versions:
       - java version "(?<version>.+)"
       - (?i)openjdk(?-i) version "(?<version>.+)"
   - name: Python
-    min: 3.8
+    min: 3.9
     win: python -V
-    unix: python -V
+    unix: python3 -V
     match:
       - Python (?<version>.+)

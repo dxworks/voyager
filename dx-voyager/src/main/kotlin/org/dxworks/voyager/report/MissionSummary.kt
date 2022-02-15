@@ -71,16 +71,16 @@ data class MissionSummary(
     private fun formatElapsedTime(millis: Long): String {
         val duration = Duration.ofMillis(millis)
         val sb = StringBuilder()
-        val days = duration.toDaysPart()
-        val hours = duration.toHoursPart()
-        val minutes = duration.toMinutesPart()
+        val days = duration.toDays()
+        val hours = duration.toHours()
+        val minutes = duration.toMinutes()
         if (days > 0)
             sb.append("$days d ")
         if (hours > 0)
             sb.append("$hours h ")
         if (minutes > 0)
             sb.append("$minutes m ")
-        sb.append("${duration.toSecondsPart()}.${duration.toMillis()} s")
+        sb.append("${duration.seconds}.${duration.toMillis()} s")
         return sb.toString()
     }
 }

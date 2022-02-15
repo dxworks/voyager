@@ -9,7 +9,7 @@ import org.dxworks.voyager.mission.MissionControl
 import org.dxworks.voyager.utils.versionGroupName
 import org.dxworks.voyager.utils.yamlMapper
 import org.slf4j.LoggerFactory
-import java.nio.file.Path
+import java.nio.file.Paths
 
 
 fun versionDoctor(doctorFile: String): Boolean {
@@ -22,13 +22,13 @@ fun versionDoctor(doctorFile: String): Boolean {
             log.info("---------------------------------------------")
             log.info("Checking ${rule.name}")
             val process = MissionControl.get().getProcessBuilder()
-                .directory(Path.of(rule.dir ?: ".").toFile())
+                .directory(Paths.get(rule.dir ?: ".").toFile())
                 .command(commandInterpreterName, interpreterArg, rule.exec)
                 .start()
             process.waitFor()
 
-            val std = String(process.inputStream.readAllBytes())
-            val err = String(process.errorStream.readAllBytes())
+            val std = String(process.inputStream.readBytes())
+            val err = String(process.errorStream.readBytes())
 
             log.info(rule.exec)
             std.split("\n").forEach { log.info(it) }
@@ -61,4 +61,4 @@ fun versionDoctor(doctorFile: String): Boolean {
 }
 
 private fun readDoctorConfig(doctorFile: String) =
-    yamlMapper.readValue<DoctorConfig>(Path.of(doctorFile).toFile())
+    yamlMapper.readValue<DoctorConfig>(Paths.get(doctorFile).toFile())

@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileFilter
 import java.nio.file.FileSystems
-import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.concurrent.thread
 
 data class Instrument(val path: String, val configuration: InstrumentConfiguration) {
@@ -138,9 +138,9 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
     fun getResults(): InstrumentResult? {
         return configuration.results?.let { results ->
             InstrumentResult(this, results.flatMap { resultDir ->
-                val dir = Path.of(processTemplate(resultDir.dir)).toFile()
+                val dir = Paths.get(processTemplate(resultDir.dir)).toFile()
                 if (resultDir.files.isEmpty()) {
-                    listOf(FileAndAlias(dir, Path.of(name, dir.name).toString()))
+                    listOf(FileAndAlias(dir, Paths.get(name, dir.name).toString()))
                 } else {
                     val pathMatchers = resultDir.files.map { "glob:$it" }.map(FileSystems.getDefault()::getPathMatcher)
                     dir.walkTopDown().filter { file ->
@@ -148,7 +148,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
                     }.map {
                         FileAndAlias(
                             it,
-                            Path.of(name, dir.name, dir.toPath().relativize(it.toPath()).toString())
+                            Paths.get(name, dir.name, dir.toPath().relativize(it.toPath()).toString())
                                 .toString()
                         )
                     }.toList()
@@ -192,7 +192,7 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
                 .toMap()
 
         val processTemplate = processTemplate(exec, repoFolderField, repoNameField)
-        val dir = Path.of(command.dir?.let { dir -> processTemplate(dir, repoFolderField, repoNameField) } ?: path)
+        val dir = Paths.get(command.dir?.let { dir -> processTemplate(dir, repoFolderField, repoNameField) } ?: path)
             .toFile()
         log.info("thread $thread Running command $identifier: $processTemplate in ${dir.path}")
 
