@@ -1,7 +1,7 @@
 ## Download Assets
 
 #### VOYAGER_HOME Folder
-Download a Voyager archive and unzip it to a folder of your choosing. We will call this folder `VOYAGER_HOME`. The latest voyager archive with all instruments is avaibale [here](https://github.com/dxworks/voyager/releases/download/v1.5.1/voyager-full.zip).
+Download a Voyager archive and unzip it to a folder of your choosing. We will call this folder `VOYAGER_HOME`. The latest voyager archive with all instruments is avaibale [here](https://github.com/dxworks/voyager/releases/download/v1.5.2/voyager-full.zip).
 
 ## Prepare TARGET Folder
 The `TARGET` folder is the folder that Voyager will analyze. The children of the `TARGET` folder should be folders that are git repositories.
