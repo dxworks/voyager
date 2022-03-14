@@ -1,8 +1,8 @@
 name: Full Instrument Release
 
 on:
-  workflow_dispatch:
-
+  - workflow_dispatch
+  - repository_dispatch
 
 jobs:
   full-realease:
