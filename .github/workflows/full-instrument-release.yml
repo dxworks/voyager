@@ -1,0 +1,49 @@
+name: Full Instrument Release
+
+on:
+  - workflow_dispatch
+  - repository_dispatch
+
+jobs:
+  full-realease:
+    name: Create Full Instruments Release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@dxworks'
+
+      - name: Setup Voyenv
+        run: | 
+          npm i -g @dxworks/voyenv
+          voyenv -v
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare Voyager release
+        run: |
+          voyenv init -cir release
+          cd release
+          voyenv install
+          zip -r voyager-full.zip voyager
+
+      - id: latest_release
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          repository: ${{ github.repository }}
+
+      - name: Upload New Release Asset
+        run: |
+          gh release upload ${{ steps.latest_release.outputs.release }} release/voyager-full.zip --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
