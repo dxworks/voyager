@@ -31,16 +31,27 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Init Voyenv file
+      - name: Prepare Voyager release
         run: |
-          voyenv init -cir release
-          cat release/voyenv.yml
+          voyenv init -ir release
+          cd release
+          voyenv install
+          zip -r voyager-full.zip voyager
 
       - id: latest_release
         uses: pozetroninc/github-action-get-latest-release@master
         with:
           repository: ${{ github.repository }}
 
-      - name: Print Last Release
-        run: | 
-          echo Latest release name ${{ steps.latest_release.outputs.release }}
+      - name: Delete Previous Release Asset
+        continue-on-error: true
+        run: |
+          gh release delete-asset ${{ steps.latest_release.outputs.release }} voyager-full.zip -y
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload New Release Asset
+        run: |
+          gh release upload ${{ steps.latest_release.outputs.release }} release/voyager-full.zip -y
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
