@@ -33,7 +33,7 @@ jobs:
 
       - name: Prepare Voyager release
         run: |
-          voyenv init -ir release
+          voyenv init -cir release
           cd release
           voyenv install
           zip -r voyager-full.zip voyager
