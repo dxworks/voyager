@@ -1,0 +1,41 @@
+name: Full Instrument Release
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+
+jobs:
+  full-realease:
+    name: Create Full Instruments Release
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+          cache: 'npm'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@dxworks'
+
+      - name: Setup Voyenv
+        run: | 
+          npm i -g @dxworks/voyenv
+          voyenv -v
+
+      - name: Init Voyenv file
+        run: |
+          voyenv init -cir release
+          cat release/voyenv.yml
+
+      - id: latest_release
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          repository: ${{ github.repository }}
+
+      - name: Print Last Release
+        run: | 
+          echo Latest release name ${{ steps.latest_release.outputs.release }}
