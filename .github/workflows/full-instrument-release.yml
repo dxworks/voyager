@@ -3,6 +3,9 @@ name: Full Instrument Release
 on:
   repository_dispatch:
   workflow_dispatch:
+  push:
+    branches:
+      - full-instrument-release
 
 jobs:
   full-realease:
