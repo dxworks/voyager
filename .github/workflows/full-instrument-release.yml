@@ -1,11 +1,7 @@
 name: Full Instrument Release
 
-on:
-  repository_dispatch:
-  workflow_dispatch:
-  push:
-    branches:
-      - full-instrument-release
+on: [workflow_dispatch, repository_dispatch]
+
 
 jobs:
   full-realease:
@@ -17,6 +13,8 @@ jobs:
       packages: write
 
     steps:
+      - uses: actions/checkout@v2
+
       - name: Setup Node
         uses: actions/setup-node@v2
         with:
