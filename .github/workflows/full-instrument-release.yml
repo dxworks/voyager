@@ -10,11 +10,12 @@ on:
 jobs:
   full-realease:
     name: Create Full Instruments Release
-
     runs-on: ubuntu-latest
+
     permissions:
       contents: write
       packages: write
+
     steps:
       - name: Setup Node
         uses: actions/setup-node@v2
@@ -27,6 +28,8 @@ jobs:
         run: | 
           npm i -g @dxworks/voyenv
           voyenv -v
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Init Voyenv file
         run: |
