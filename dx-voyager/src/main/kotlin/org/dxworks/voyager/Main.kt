@@ -4,10 +4,10 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.io.FileUtils
-import org.dxworks.voyager.mission.MissionControl
 import org.dxworks.voyager.doctor.versionDoctor
 import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.instruments.InstrumentGatherer
+import org.dxworks.voyager.mission.MissionControl
 import org.dxworks.voyager.report.MissionSummary
 import org.dxworks.voyager.results.ResultsContainer
 import org.dxworks.voyager.utils.*
@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileFilter
 import java.nio.file.FileSystems
-import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.*
 import kotlin.system.exitProcess
 
@@ -79,12 +79,13 @@ fun main(args: Array<String>) {
 
     log.info(if (instrumentResults.isEmpty()) "Nothing to package" else "Packaging results")
 
-    val reports = Path.of(".").toFile()
-        .listFiles(FileFilter { FileSystems.getDefault().getPathMatcher("glob:**.log").matches(it.toPath()) })
+    val reports = Paths.get(".").toFile()
+        .listFiles(FileFilter { FileSystems.getDefault().getPathMatcher("glob:**/*.log").matches(it.toPath()) })
         ?: emptyArray()
 
+    File(missionControl.resultsPath).parentFile.mkdirs()
     val containerContent =
-        ResultsContainer("${missionControl.mission}-${defaultContainerName}").fill(
+        ResultsContainer(missionControl.resultsPath).fill(
             instrumentResults,
             *reports,
             missionControl.missionFile
@@ -93,8 +94,10 @@ fun main(args: Array<String>) {
                 .forEach(log::info)
         }
 
+    clean(containerContent.map { it.file }
+        .filter { it != missionControl.missionFile && it.nameWithoutExtension != missionReport })
 
-    clean(containerContent.map { it.file }.filter { it != missionControl.missionFile && it.nameWithoutExtension != missionReport })
+    log.info("Results written to ${missionControl.resultsPath}")
 }
 
 private fun getInitialisedMissionControl(args: Array<String>): MissionControl {

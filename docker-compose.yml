@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  voyager:
+    image: dxworks/voyager
+    volumes:
+      - ./results:/usr/voyager/results # please mount a new folder where the result archive will be added
+      - .:/usr/project # please input the target folder you want to analyse
+#      - ${custom-mission-path}: /usr/voyager/mission.yml
+
+#    Add any environment variables you would pass to the mission.yml. For example:
+#    environment:
+#      IG_INCOGNITO: true
+#      DUDE_LANGUAGES: typescript,kotlin
+

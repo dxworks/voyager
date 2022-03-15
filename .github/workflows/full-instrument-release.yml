@@ -1,0 +1,84 @@
+name: Full Instrument Release
+
+on:
+  - workflow_dispatch
+  - repository_dispatch
+
+jobs:
+  full-realease:
+    name: Create Full Instruments Release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set variables
+        id: set_variables
+        run: |
+          currentDate=$(date +"%Y-%m-%d")
+          echo ::set-output name=currentDate::$currentDate
+
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@dxworks'
+
+      - name: Setup Voyenv
+        run: | 
+          npm i -g @dxworks/voyenv
+          voyenv -v
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare Voyager release
+        run: |
+          voyenv init -cir release
+          cd release
+          voyenv install
+          zip -r voyager-full.zip voyager
+
+      - id: latest_release
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          repository: ${{ github.repository }}
+
+      - name: Upload New Release Asset
+        run: |
+          gh release upload ${{ steps.latest_release.outputs.release }} release/voyager-full.zip --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: name/app
+          labels: |
+            releaseDate=${{ steps.set_variables.outputs.currentDate }}
+            version=${{ steps.latest_release.outputs.release }}
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: dxworks/voyager:latest,dxworks/voyager:${{ steps.semver_parser.outputs.semver }},dxworks/voyager:${{ steps.set_variables.outputs.currentDate }}
+          labels: ${{ steps.meta.outputs.labels }}

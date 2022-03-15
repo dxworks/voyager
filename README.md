@@ -51,6 +51,9 @@ environment:
 # Default: ./instruments
 instrumentsDir:
 
+# Path to the result archive file
+# Default: ./${mission}-voyager-results.zip
+resultsPath:
 ```
 
 Example

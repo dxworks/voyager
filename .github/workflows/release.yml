@@ -12,8 +12,30 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'maven'
+
+      - name: Extract Semver
+        id: semver_parser
+        run: |
+          semver=${TAG#"refs/tags/v"}
+          semver=${semver%"-voyager"}
+          echo ::set-output name=semver::$semver
+        env:
+          TAG: ${{ github.ref }}
+
+      - name: Fill Version
+        run: |
+          tag=${{ steps.semver_parser.outputs.semver }}
+          sed -i "s/\$tag_version/$tag/" dx-voyager/pom.xml
+
       - name: Build
         run: mvn package
+
       - name: Prepare Assets
         run: |
           mkdir voyager
@@ -27,25 +49,28 @@ jobs:
           cp bin/voyager.bat voyager/voyager.bat
           cp -r instruments voyager/instruments
           cp dx-voyager/target/dx-voyager.jar voyager/dx-voyager.jar
+
       - name: Create Archive
         run: zip -r dx-voyager.zip voyager
+
+      - name: Prepare Release Notes
+        run: touch ${{ github.workspace }}/releaseNotes/v${{ steps.semver_parser.outputs.semver }}.md
+
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: dx-voyager ${{ github.ref }}
-          draft: false
+          name: Voyager ${{ steps.semver_parser.outputs.semver }}
+          body_path: ${{ github.workspace }}/releaseNotes/v${{ steps.semver_parser.outputs.semver }}.md
+          body: ""
           prerelease: false
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          draft: false
+          fail_on_unmatched_files: true
+          files: dx-voyager.zip
+
+      - name: Trigger Repository Dispatch Voyager Full Instrument Build
+        uses: peter-evans/repository-dispatch@v1
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dx-voyager.zip
-          asset_name: dx-voyager.zip
-          asset_content_type: application/zip
+          repository: dxworks/voyager
+          token: ${{ secrets.GH_TOKEN }}
+          event-type: voyager-release

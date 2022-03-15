@@ -8,20 +8,20 @@ import org.dxworks.voyager.api.mission.MissionConfig
 import org.dxworks.voyager.instruments.Instrument
 import org.dxworks.voyager.utils.*
 import java.io.File
-import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 class MissionControl private constructor() {
-    private val globalConfigFile = Path.of(globalConfigName).toFile()
+    private val globalConfigFile = Paths.get(globalConfigName).toFile()
     private val globalConfig: GlobalConfig = if (globalConfigFile.exists()) {
         yamlMapper.readValue(globalConfigFile)
     } else {
         GlobalConfig()
     }
     val target: File
-        get() = Path.of(missionConfig.target).toFile()
+        get() = Paths.get(missionConfig.target).toFile()
     val instrumentsDir: File
-        get() = (missionConfig.instrumentsDir ?: globalConfig.instrumentsDir)?.let { Path.of(it).toFile() }
+        get() = (missionConfig.instrumentsDir ?: globalConfig.instrumentsDir)?.let { Paths.get(it).toFile() }
             ?: defaultInstrumentsDir()
 
     private fun defaultInstrumentsDir() =
@@ -39,6 +39,7 @@ class MissionControl private constructor() {
     }
 
     val mission: String by lazy { missionConfig.mission }
+    val resultsPath: String by lazy { missionConfig.resultsPath }
 
     companion object {
         private val log = logger<MissionControl>()
@@ -47,7 +48,7 @@ class MissionControl private constructor() {
     }
 
     fun setMissionSource(sourceFile: String) {
-        val file = Path.of(sourceFile).toFile()
+        val file = Paths.get(sourceFile).toFile()
         if (file.exists()) {
             missionFile = file.absoluteFile
             missionHome = missionFile.parentFile
@@ -125,9 +126,10 @@ class MissionControl private constructor() {
         environmentManager.populatePathEnv(environment())
     }
 
-    fun getProcessBuilder(instrumentEnv: Map<String, String>, commandEnv: Map<String, String>) = ProcessBuilder().apply {
-        environmentManager.populateEnv(instrumentEnv, commandEnv, environment())
-    }
+    fun getProcessBuilder(instrumentEnv: Map<String, String>, commandEnv: Map<String, String>) =
+        ProcessBuilder().apply {
+            environmentManager.populateEnv(instrumentEnv, commandEnv, environment())
+        }
 
     fun getThread(name: String): Int {
         return missionConfig.instruments[name]?.thread ?: defaultThreadId
