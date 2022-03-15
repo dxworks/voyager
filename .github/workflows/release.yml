@@ -67,3 +67,10 @@ jobs:
           draft: false
           fail_on_unmatched_files: true
           files: dx-voyager.zip
+
+      - name: Trigger Repository Dispatch Voyager Full Instrument Build
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          repository: dxworks/voyager
+          token: ${{ secrets.GH_TOKEN }}
+          event-type: voyager-release

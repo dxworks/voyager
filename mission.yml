@@ -38,3 +38,7 @@ environment:
 # Path to the directory containing the instruments
 # Default: ./instruments
 instrumentsDir:
+
+# Path to the result archive file
+# Default: ./${mission}-voyager-results.zip
+resultsPath:

@@ -39,6 +39,7 @@ class MissionControl private constructor() {
     }
 
     val mission: String by lazy { missionConfig.mission }
+    val resultsPath: String by lazy { missionConfig.resultsPath }
 
     companion object {
         private val log = logger<MissionControl>()

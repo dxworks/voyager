@@ -1,0 +1,16 @@
+name: My Instrument
+run: once
+
+results:
+  - dir: ${instrument}/results
+    files:
+      - "*-result.txt"
+
+commands:
+  - name: greet
+    win: echo Hello ${name}! %SMILEY% && echo Hello ${name}! %SMILEY% > "${instrument}/results/greet-result.txt" && echo not packaged > "${instrument}/results/aux-file.txt"
+    unix: echo Hello ${name}! $SMILEY > "${instrument}/results/greet-result.txt" && echo not packaged > "${instrument}/results/aux-file.txt"
+    dir: .
+
+parameters:
+  name:
