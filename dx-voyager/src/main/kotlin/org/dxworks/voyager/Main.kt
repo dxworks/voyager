@@ -83,8 +83,9 @@ fun main(args: Array<String>) {
         .listFiles(FileFilter { FileSystems.getDefault().getPathMatcher("glob:**/*.log").matches(it.toPath()) })
         ?: emptyArray()
 
+    File(missionControl.resultsPath).parentFile.mkdirs()
     val containerContent =
-        ResultsContainer("${missionControl.mission}-${defaultContainerName}").fill(
+        ResultsContainer(missionControl.resultsPath).fill(
             instrumentResults,
             *reports,
             missionControl.missionFile
@@ -93,9 +94,10 @@ fun main(args: Array<String>) {
                 .forEach(log::info)
         }
 
-
     clean(containerContent.map { it.file }
         .filter { it != missionControl.missionFile && it.nameWithoutExtension != missionReport })
+
+    log.info("Results written to ${missionControl.resultsPath}")
 }
 
 private fun getInitialisedMissionControl(args: Array<String>): MissionControl {

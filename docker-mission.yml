@@ -1,0 +1,23 @@
+# The name of the mission *required
+mission: docker
+
+# The path to the target folder.
+# The target folder should contain all repositories *required
+target: /usr/project
+
+# A map of instrument names to commands and parameters.
+# When 'runsAll' is false the mission will run only the instruments
+# with the commands declared here, in this order.
+instruments:
+
+# A map of environment variables, name to value, for voyager missions
+# overwrites the variables from global config
+environment:
+
+# Path to the directory containing the instruments
+# Default: ./instruments
+instrumentsDir:
+
+# Path to the result archive file
+# Default: ./${mission}-voyager-results.zip
+resultsPath: results/voyager-results.zip
