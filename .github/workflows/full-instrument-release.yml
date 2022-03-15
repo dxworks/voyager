@@ -80,5 +80,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: dxworks/voyager:latest,dxworks/voyager:${{ steps.set_variables.outputs.semver }},dxworks/voyager:${{ steps.set_variables.outputs.currentDate }}
+          tags: dxworks/voyager:latest,dxworks/voyager:${{ steps.latest_release.outputs.release }},dxworks/voyager:${{ steps.set_variables.outputs.currentDate }}
           labels: ${{ steps.meta.outputs.labels }}
