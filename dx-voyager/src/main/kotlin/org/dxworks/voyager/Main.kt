@@ -83,7 +83,7 @@ fun main(args: Array<String>) {
         .listFiles(FileFilter { FileSystems.getDefault().getPathMatcher("glob:**/*.log").matches(it.toPath()) })
         ?: emptyArray()
 
-    File(missionControl.resultsPath).parentFile.mkdirs()
+    File(missionControl.resultsPath).absoluteFile.parentFile?.mkdirs()
     val containerContent =
         ResultsContainer(missionControl.resultsPath).fill(
             instrumentResults,
