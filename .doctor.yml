@@ -21,7 +21,7 @@ versions:
     match:
       - (?<version>.+)
   - name: git
-    min: 1
+    min: 2.12
     win: git --version
     unix: git --version
     match:
