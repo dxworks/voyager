@@ -20,3 +20,9 @@ versions:
     unix: dotnet --version
     match:
       - (?<version>.+)
+  - name: git
+    min: 1
+    win: git --version
+    unix: git --version
+    match:
+      - version (?<version>.+)
