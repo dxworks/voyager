@@ -26,3 +26,4 @@ versions:
     unix: git --version
     match:
       - version (?<version>.+)
+
