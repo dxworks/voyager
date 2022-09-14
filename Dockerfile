@@ -3,7 +3,7 @@ FROM openjdk:11
 RUN apt-get update
 
 # Install python 3
-RUN apt-get install python3 wget unzip dpkg
+RUN apt-get -y install python3 wget unzip dpkg
 
 # Install dotnet sdk 6
 RUN wget https://packages.microsoft.com/config/ubuntu/21.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
