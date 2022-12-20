@@ -1,10 +1,10 @@
 import {variableProvider, VariableProvider} from './variable-provider'
-import {CommandVariablesProvider} from './command-variables-provider'
+import {CommandParametersProvider} from './command-parameters-provider'
 
 export class VariableHandler {
     private static instance: VariableHandler
     public variableProvider: VariableProvider
-    private commandVariablesProviders: CommandVariablesProvider[]
+    private commandVariablesProviders: CommandParametersProvider[]
 
     private constructor() {
         this.variableProvider = variableProvider
@@ -19,13 +19,13 @@ export class VariableHandler {
         return VariableHandler.instance
     }
 
-    public addCommandVariableProvider(commandVariablesProvider: CommandVariablesProvider): void {
+    public addCommandVariableProvider(commandVariablesProvider: CommandParametersProvider): void {
         this.commandVariablesProviders.push(commandVariablesProvider)
     }
 
     public getCommandVariable(instrumentKey: string, actionKey: string, commandKey: string): string | null {
         this.commandVariablesProviders.forEach((commandVariablesProvider) => {
-            const value = commandVariablesProvider.getVariable(instrumentKey, actionKey, commandKey)
+            const value = commandVariablesProvider.getParameter(instrumentKey, actionKey, commandKey)
             if (value)
                 return value
         })

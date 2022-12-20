@@ -8,10 +8,10 @@ import {variableHandler} from '../variable/variable-handler'
 import {MissionContext} from '../model/MissionContext'
 import path from 'node:path'
 import {INSTRUMENTS_DIR, VOYAGER_DIR} from '../variable/key-constants'
-import {CommandVariablesProvider} from '../variable/command-variables-provider'
+import {CommandParametersProvider} from '../variable/command-parameters-provider'
 
 const instrumentYml = 'instrument.yml'
-const missionVariableProvider = new CommandVariablesProvider()
+const missionVariableProvider = new CommandParametersProvider()
 
 const getDirectories = (source: any) =>
     readdirSync(source, {withFileTypes: true})

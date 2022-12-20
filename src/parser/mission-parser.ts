@@ -1,43 +1,42 @@
 import {Mission} from '../model/Mission'
 import {parseIntoMap} from './data-parser'
-import {BaseInstrument} from '../model/Instrument'
-import {BaseAction} from '../model/Action'
 import {variableHandler} from '../variable/variable-handler'
-import {CommandVariablesProvider} from '../variable/command-variables-provider'
+import {CommandParametersProvider} from '../variable/command-parameters-provider'
+
+const missionVariableProvider = new CommandParametersProvider()
 
 export function parseMission(file: any): Mission {
-    variableHandler.addCommandVariableProvider(new CommandVariablesProvider())
+    variableHandler.addCommandVariableProvider(missionVariableProvider)
+    parseMissionInstruments(file.instruments)
     return {
-        variables: parseIntoMap(file.variables),
-        instruments: parseMissionInstruments(file.instruments),
-        environment: parseIntoMap(file.environment),
-        instrumentsDir: file.instrumentsDir,
+        environment: parseIntoMap(file.environment), //TODO: remove this and manage global the environment variables
     }
 }
 
-function parseMissionInstruments(instrumentsObject: any): BaseInstrument[] {
-    const instruments: BaseInstrument[] = []
+function parseMissionInstruments(instrumentsObject: any): void {
     const instrumentsMap = parseIntoMap(instrumentsObject)
     instrumentsMap.forEach((value, key) => {
-        instruments.push({
-            id: key,
-            actions: parseMissionActions(value),
-        })
+        parseMissionActions(value.actions, key)
     })
-    return instruments
 }
 
-function parseMissionActions(actionsObject: any): BaseAction[] {
-    const actions: BaseAction[] = []
-    const actionsMap = parseIntoMap(actionsObject)
-    actionsMap.forEach((value) => {
-        console.log(value)
-        actions.push({
-            id: value.id,
-            parameters: parseIntoMap(value.parameters),
-            commandsContext: value.commands,
-            environment: parseIntoMap(value.environment),
+function parseMissionActions(actionsObject: any, instrumentName: string): void {
+    const actionMap = parseIntoMap(actionsObject)
+    actionMap.forEach((value, key) => {
+        const actionName = key
+        parseIntoMap(value.parameters).forEach((value, key) => {
+            missionVariableProvider.setParameter(value, key, instrumentName, actionName)
+        })
+        parseMissionCommands(value.commands, instrumentName, actionName)
+    })
+}
+
+function parseMissionCommands(commandsObject: any, instrumentName: string, actionName: string): void {
+    const commandsMap = parseIntoMap(commandsObject)
+    commandsMap.forEach((value, key) => {
+        const commandName = key
+        parseIntoMap(value.parameters).forEach((value, key) => {
+            missionVariableProvider.setParameter(value, key, instrumentName, actionName, commandName)
         })
     })
-    return actions
 }
