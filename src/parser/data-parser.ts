@@ -5,37 +5,30 @@ import {Mission} from '../model/Mission'
 import {parseInstrument} from './instrument-parser'
 import {parseMission} from './mission-parser'
 import {variableHandler} from '../variable/variable-handler'
-import {MissionContext} from '../model/MissionContext'
 import path from 'node:path'
 import {INSTRUMENTS_DIR, VOYAGER_DIR} from '../variable/key-constants'
-import {CommandParametersProvider} from '../variable/command-parameters-provider'
 
 const instrumentYml = 'instrument.yml'
-const missionVariableProvider = new CommandParametersProvider()
 
-const getDirectories = (source: any) =>
+const getDirectories = (source: any): string[] =>
     readdirSync(source, {withFileTypes: true})
         .filter(dirent => dirent.isDirectory())
         .map(dirent => dirent.name)
 
-export function loadAndParseData(filePath: string): MissionContext {
-    variableHandler.addCommandVariableProvider(missionVariableProvider)
+export function loadAndParseData(filePath: string): void {
     const voyagerDir: string = path.dirname(filePath)
     variableHandler.variableProvider.addVariable(VOYAGER_DIR, voyagerDir)
     const mission: Mission = loadAndParseMission(filePath)
     const instruments: Instrument[] = []
-    // const instrumentDirectories = getDirectories(variableHandler.variableProvider.getVariable(INSTRUMENTS_DIR))
-    // instrumentDirectories.forEach((instrumentDir) => {
-    //     instruments.push(loadAndParseInstrument(path.resolve(<string>variableHandler.variableProvider.getVariable(VOYAGER_DIR), instrumentDir, instrumentYml)))
-    // })
-    // console.log({
-    //     mission,
-    //     instruments
-    // });
-    return {
+    const instrumentsDir = path.resolve(<string>variableHandler.variableProvider.getVariable(VOYAGER_DIR), <string>variableHandler.variableProvider.getVariable(INSTRUMENTS_DIR))
+    const instrumentDirectories = getDirectories(instrumentsDir)
+    instrumentDirectories.forEach((instrumentDir) => {
+        instruments.push(loadAndParseInstrument(path.resolve(instrumentsDir, instrumentDir, instrumentYml)))
+    })
+    console.log({
         mission,
         instruments,
-    }
+    })
 }
 
 export function loadAndParseMission(filePath: string): Mission {

@@ -1,9 +1,4 @@
-import {Action, BaseAction} from './Action'
-
-export interface BaseInstrument {
-    id: string;
-    actions: BaseAction[];
-}
+import {Action} from './Action'
 
 export interface Instrument {
     id: string;

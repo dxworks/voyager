@@ -23,13 +23,21 @@ export class VariableHandler {
         this.commandVariablesProviders.push(commandVariablesProvider)
     }
 
-    public getCommandVariable(instrumentKey: string, actionKey: string, commandKey: string): string | null {
-        this.commandVariablesProviders.forEach((commandVariablesProvider) => {
-            const value = commandVariablesProvider.getParameter(instrumentKey, actionKey, commandKey)
+    public deleteCommandVariableProvider(): void {
+        this.commandVariablesProviders.pop()
+    }
+
+    public getCommandVariable(variableKey: string, instrumentKey: string, actionKey: string, commandKey: string): string | null {
+        let value = null
+        for(const commandVariablesProvider of this.commandVariablesProviders){
+            value = commandVariablesProvider.getParameter(variableKey, instrumentKey, actionKey, commandKey)
+            if(value != null)
+                break
+            value = commandVariablesProvider.getParameter(variableKey, instrumentKey, actionKey)
             if (value)
-                return value
-        })
-        return null
+                break
+        }
+        return value
     }
 }
 

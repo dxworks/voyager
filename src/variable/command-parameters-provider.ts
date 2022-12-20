@@ -3,7 +3,7 @@ import {Variable, variablesEquals} from '../model/Variable'
 export class CommandParametersProvider {
     public variables: Variable[] = []
 
-    public setParameter(variableKey: string, variableValue: string, instrumentKey: string, actionKey: string, commandKey?: string): void {
+    public setParameter(variableValue: string, variableKey: string, instrumentKey: string, actionKey: string, commandKey?: string): void {
         const variable = {
             instrumentKey,
             actionKey,
