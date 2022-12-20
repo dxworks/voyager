@@ -1,23 +1,29 @@
-import {Mission} from '../model/Mission'
 import {parseIntoMap} from './data-parser'
 import {variableHandler} from '../variable/variable-handler'
 import {CommandParametersProvider} from '../variable/command-parameters-provider'
+import {missionContext} from '../context/mission-context'
 
 const missionVariableProvider = new CommandParametersProvider()
 
-export function parseMission(file: any): Mission {
+export function parseMission(file: any): void {
     variableHandler.addCommandVariableProvider(missionVariableProvider)
-    parseMissionInstruments(file.instruments)
-    return {
-        environment: parseIntoMap(file.environment), //TODO: remove this and manage global the environment variables
+    const instruments = parseMissionInstruments(file.instruments)
+    if (!missionContext.runAll) {
+        missionContext.setRunnableInstruments(instruments)
     }
+    // return {
+    //     environment: parseIntoMap(file.environment), //TODO: remove this and manage global the environment variables
+    // }
 }
 
-function parseMissionInstruments(instrumentsObject: any): void {
+function parseMissionInstruments(instrumentsObject: any): string[] {
+    const instruments: string[] = []
     const instrumentsMap = parseIntoMap(instrumentsObject)
-    instrumentsMap.forEach((value, key) => {
-        parseMissionActions(value.actions, key)
+    instrumentsMap.forEach((value, instrumentId) => {
+        parseMissionActions(value.actions, instrumentId)
+        instruments.push(instrumentId)
     })
+    return instruments
 }
 
 function parseMissionActions(actionsObject: any, instrumentName: string): void {
