@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
-import {mainCommand} from './voyager'
+import path from 'node:path'
+import {loadAndParseData} from './parser/data-parser'
 
-mainCommand
-  .parse(process.argv)
+loadAndParseData('C:\\Users\\noprut\\voyager2\\unpack-mission.yml')
+
+console.log(path.resolve('C:\\Users\\noprut\\voyager2', './instruments', 'instrument.yml'))
