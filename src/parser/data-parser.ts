@@ -25,9 +25,6 @@ export function loadAndParseData(filePath: string): void {
         instruments.push(loadAndParseInstrument(path.resolve(instrumentsDir, instrumentDir, instrumentYml)))
     })
     missionContext.setInstruments(instruments)
-    console.log({
-        instruments,
-    })
 }
 
 export function loadAndParseMission(filePath: string): void {

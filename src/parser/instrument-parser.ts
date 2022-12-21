@@ -4,12 +4,16 @@ import {Action} from '../model/Action'
 import {CommandContext} from '../model/Command'
 import {ParametersProvider} from '../variable/parameters-provider'
 import {variableHandler} from '../variable/variable-handler'
-import {replaceParameters} from '../variable/variable-replacer'
+import {
+    getEnvironmentVariables,
+    replaceMissionContextVariables,
+    replaceParameters,
+} from '../variable/variable-operations'
 
 let actionVarProvider: ParametersProvider
 let commandVarProvider: ParametersProvider
-let actionEnvVarProvider: ParametersProvider
 let commandEnvVarProvider: ParametersProvider
+let actionEnvVarProvider: ParametersProvider
 
 export function parseInstrument(file: any): Instrument {
     variableProviderInit()
@@ -34,7 +38,6 @@ function parseInstrumentActions(actionObject: any, instrumentKey: string): Actio
         actions.push({
             id: actionKey,
             commandsContext: parseInstrumentCommands(value.commands, instrumentKey, actionKey),
-            environment: parseIntoMap(value.environment),
         })
     })
     return actions
@@ -47,7 +50,7 @@ function parseInstrumentCommands(commandsObject: any, instrumentKey: string, act
         parseIntoMap(value.parameters).forEach((value, variableKey) =>
             commandVarProvider.addVariables({instrumentKey, actionKey, commandKey, variableKey, value}))
         parseIntoMap(value.environment).forEach((value, variableKey) =>
-            actionEnvVarProvider.addVariables({instrumentKey, actionKey, commandKey, variableKey, value}))
+            commandEnvVarProvider.addVariables({instrumentKey, actionKey, commandKey, variableKey, value}))
         let commandType
         if (typeof value.command === 'string')
             commandType = replaceParameters(value.command, instrumentKey, actionKey, commandKey)
@@ -61,6 +64,7 @@ function parseInstrumentCommands(commandsObject: any, instrumentKey: string, act
         commands.push({
             id: commandKey,
             command: commandType,
+            environment: getEnvironmentVariables({instrumentKey, actionKey, commandKey}),
         })
     })
     return commands
@@ -68,20 +72,19 @@ function parseInstrumentCommands(commandsObject: any, instrumentKey: string, act
 
 function parseProduces(producesObject: any): Map<string, string> {
     const produces: Map<string, string> = new Map()
-    Array.from(parseIntoMap(producesObject)).forEach(([key, value]) => {
-        produces.set(key, value)
+    parseIntoMap(producesObject).forEach((value, key) => {
+        produces.set(key, replaceMissionContextVariables(value))
     })
     return produces
 }
 
 function variableProviderInit(): void {
-    actionVarProvider = new ParametersProvider()
     commandVarProvider = new ParametersProvider()
-    actionEnvVarProvider = new ParametersProvider()
+    actionVarProvider = new ParametersProvider()
     commandEnvVarProvider = new ParametersProvider()
+    actionEnvVarProvider = new ParametersProvider()
     variableHandler.addParametersProvider(commandVarProvider, actionVarProvider)
     variableHandler.addEnvironmentVariablesProviders(commandEnvVarProvider, actionEnvVarProvider)
-
 }
 
 function variableProviderCleanUp(): void {

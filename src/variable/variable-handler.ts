@@ -1,5 +1,5 @@
 import {ParametersProvider} from './parameters-provider'
-import {VariableContext} from '../model/Variable'
+import {ExtendedVariableContext, VariableContext} from '../model/Variable'
 
 export class VariableHandler {
     private static instance: VariableHandler
@@ -31,8 +31,7 @@ export class VariableHandler {
             this.parametersProvider.pop()
     }
 
-    public getParameter(variableContext: VariableContext): string | null {
-
+    public getParameter(variableContext: ExtendedVariableContext): string | null {
         for (const parametersProvider of this.parametersProvider) {
             parametersProvider.getVariables().find((variable) => {
                 if (variable.instrumentKey == variableContext.instrumentKey && variable.actionKey == variableContext.actionKey) {
@@ -69,12 +68,12 @@ export class VariableHandler {
                 if (variable.instrumentKey && variable.actionKey) {
                     if (variable.instrumentKey == variableContext.instrumentKey && variable.actionKey == variableContext.actionKey) {
                         if (variable.commandKey) {
-                            if (variable.commandKey == variableContext.commandKey && variable.variableKey == variableContext.variableKey && !alreadyExisting(variable.variableKey))
+                            if (variable.commandKey == variableContext.commandKey && !alreadyExisting(variable.variableKey))
                                 envVar.set(variable.variableKey, variable.value)
-                        } else if (variable.variableKey == variableContext.variableKey && !alreadyExisting(variable.variableKey))
+                        } else if (!alreadyExisting(variable.variableKey))
                             envVar.set(variable.variableKey, variable.value)
                     }
-                } else if (variable.variableKey == variableContext.variableKey && !alreadyExisting(variable.variableKey))
+                } else if (!alreadyExisting(variable.variableKey))
                     envVar.set(variable.variableKey, variable.value)
             })
         }
