@@ -1,19 +1,23 @@
 import {parseIntoMap} from './data-parser'
 import {variableHandler} from '../variable/variable-handler'
-import {CommandParametersProvider} from '../variable/command-parameters-provider'
+import {ParametersProvider} from '../variable/parameters-provider'
 import {missionContext} from '../context/mission-context'
 
-const missionVariableProvider = new CommandParametersProvider()
+const commandVarProvider = new ParametersProvider()
+const actionVarProvider = new ParametersProvider()
+const commandEnvVarProvider = new ParametersProvider()
+const actionEnvVarProvider = new ParametersProvider()
+const missionEnvVarProvider = new ParametersProvider()
 
 export function parseMission(file: any): void {
-    variableHandler.addCommandVariableProvider(missionVariableProvider)
+    variableHandler.addParametersProvider(commandVarProvider, actionVarProvider)
+    variableHandler.addEnvironmentVariablesProviders(commandEnvVarProvider, actionEnvVarProvider, missionEnvVarProvider)
+    parseIntoMap(file.environment).forEach((value, variableKey) =>
+        missionEnvVarProvider.addVariables({variableKey, value}))
     const instruments = parseMissionInstruments(file.instruments)
     if (!missionContext.runAll) {
         missionContext.setRunnableInstruments(instruments)
     }
-    // return {
-    //     environment: parseIntoMap(file.environment), //TODO: remove this and manage global the environment variables
-    // }
 }
 
 function parseMissionInstruments(instrumentsObject: any): string[] {
@@ -26,23 +30,25 @@ function parseMissionInstruments(instrumentsObject: any): string[] {
     return instruments
 }
 
-function parseMissionActions(actionsObject: any, instrumentName: string): void {
+function parseMissionActions(actionsObject: any, instrumentKey: string): void {
     const actionMap = parseIntoMap(actionsObject)
     actionMap.forEach((value, key) => {
-        const actionName = key
-        parseIntoMap(value.parameters).forEach((value, key) => {
-            missionVariableProvider.setParameter(value, key, instrumentName, actionName)
-        })
-        parseMissionCommands(value.commands, instrumentName, actionName)
+        const actionKey = key
+        parseIntoMap(value.parameters).forEach((value, variableKey) =>
+            actionVarProvider.addVariables({instrumentKey, actionKey, variableKey, value}))
+        parseIntoMap(value.environment).forEach((value, variableKey) =>
+            actionEnvVarProvider.addVariables({instrumentKey, actionKey, variableKey, value}))
+        parseMissionCommands(value.commands, instrumentKey, actionKey)
     })
 }
 
-function parseMissionCommands(commandsObject: any, instrumentName: string, actionName: string): void {
+function parseMissionCommands(commandsObject: any, instrumentKey: string, actionKey: string): void {
     const commandsMap = parseIntoMap(commandsObject)
     commandsMap.forEach((value, key) => {
-        const commandName = key
-        parseIntoMap(value.parameters).forEach((value, key) => {
-            missionVariableProvider.setParameter(value, key, instrumentName, actionName, commandName)
-        })
+        const commandKey = key
+        parseIntoMap(value.parameters).forEach((value, variableKey) =>
+            commandVarProvider.addVariables({instrumentKey, actionKey, commandKey, variableKey, value}))
+        parseIntoMap(value.environment).forEach((value, variableKey) =>
+            commandEnvVarProvider.addVariables({instrumentKey, actionKey, commandKey, variableKey, value}))
     })
 }

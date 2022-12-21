@@ -1,4 +1,4 @@
-import {INSTRUMENTS_DIR} from './key-constants'
+import {INSTRUMENTS_DIR} from '../variable/key-constants'
 
 const defaultVariables = new Map([[INSTRUMENTS_DIR, './instrument']])
 
@@ -9,13 +9,6 @@ export class VariableProvider {
 
     private constructor() {
         this.variables = defaultVariables
-    }
-
-    public addVariables(variables: Map<string, string>): void {
-        if (this.variables)
-            this.variables = new Map([...Array.from(this.variables.entries()), ...Array.from(variables.entries())])
-        else
-            this.variables = variables
     }
 
     public addVariable(key: string, value: string): void {
@@ -40,5 +33,3 @@ export class VariableProvider {
     }
 
 }
-
-export const variableProvider: VariableProvider = VariableProvider.getInstance()

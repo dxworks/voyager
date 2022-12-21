@@ -3,7 +3,6 @@ import yaml from 'js-yaml'
 import fs, {readdirSync} from 'fs'
 import {parseInstrument} from './instrument-parser'
 import {parseMission} from './mission-parser'
-import {variableHandler} from '../variable/variable-handler'
 import path from 'node:path'
 import {INSTRUMENTS_DIR, VOYAGER_DIR} from '../variable/key-constants'
 import {missionContext} from '../context/mission-context'
@@ -17,10 +16,10 @@ const getDirectories = (source: any): string[] =>
 
 export function loadAndParseData(filePath: string): void {
     const voyagerDir: string = path.dirname(filePath)
-    variableHandler.variableProvider.addVariable(VOYAGER_DIR, voyagerDir) //TODO move variable provider to missionContext
+    missionContext.addVariable(VOYAGER_DIR, voyagerDir)
     loadAndParseMission(filePath)
     const instruments: Instrument[] = []
-    const instrumentsDir = path.resolve(<string>variableHandler.variableProvider.getVariable(VOYAGER_DIR), <string>variableHandler.variableProvider.getVariable(INSTRUMENTS_DIR))
+    const instrumentsDir = path.resolve(<string>missionContext.getVariable(VOYAGER_DIR), <string>missionContext.getVariable(INSTRUMENTS_DIR))
     const instrumentDirectories = getDirectories(instrumentsDir)
     instrumentDirectories.forEach((instrumentDir) => {
         instruments.push(loadAndParseInstrument(path.resolve(instrumentsDir, instrumentDir, instrumentYml)))
@@ -33,9 +32,9 @@ export function loadAndParseData(filePath: string): void {
 
 export function loadAndParseMission(filePath: string): void {
     const file: any = yaml.load(fs.readFileSync(filePath).toString())
-    variableHandler.variableProvider.addVariables(parseIntoMap(file.variables))
+    parseIntoMap(file.variables).forEach((value, key) => missionContext.addVariable(key, value))
     if (file.instrumentsDir)
-        variableHandler.variableProvider.addVariable(INSTRUMENTS_DIR, file.instrumentsDir)
+        missionContext.addVariable(INSTRUMENTS_DIR, file.instrumentsDir)
     if (file.runAll) {
         missionContext.runAll = file.runAll
     }

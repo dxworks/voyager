@@ -1,14 +1,14 @@
-import {variableProvider, VariableProvider} from './variable-provider'
-import {CommandParametersProvider} from './command-parameters-provider'
+import {ParametersProvider} from './parameters-provider'
+import {VariableContext} from '../model/Variable'
 
 export class VariableHandler {
     private static instance: VariableHandler
-    public variableProvider: VariableProvider
-    private commandVariablesProviders: CommandParametersProvider[]
+    private parametersProvider: ParametersProvider[]
+    private environmentVariablesProvider: ParametersProvider[]
 
     private constructor() {
-        this.variableProvider = variableProvider
-        this.commandVariablesProviders = []
+        this.parametersProvider = []
+        this.environmentVariablesProvider = []
     }
 
     public static getInstance(): VariableHandler {
@@ -19,26 +19,68 @@ export class VariableHandler {
         return VariableHandler.instance
     }
 
-    public addCommandVariableProvider(commandVariablesProvider: CommandParametersProvider): void {
-        this.commandVariablesProviders.push(commandVariablesProvider)
+    public addParametersProvider(...parametersProvider: ParametersProvider[]): void {
+        this.parametersProvider.push(...parametersProvider)
     }
 
-    public deleteCommandVariableProvider(): void {
-        this.commandVariablesProviders.pop()
+    public popParameterProvider(number?: number): void {
+        if (number)
+            for (let i = 0; i < number; i++)
+                this.parametersProvider.pop()
+        else
+            this.parametersProvider.pop()
     }
 
-    public getCommandVariable(variableKey: string, instrumentKey: string, actionKey: string, commandKey: string): string | null {
-        let value = null
-        for(const commandVariablesProvider of this.commandVariablesProviders){
-            value = commandVariablesProvider.getParameter(variableKey, instrumentKey, actionKey, commandKey)
-            if(value != null)
-                break
-            value = commandVariablesProvider.getParameter(variableKey, instrumentKey, actionKey)
-            if (value)
-                break
+    public getParameter(variableContext: VariableContext): string | null {
+
+        for (const parametersProvider of this.parametersProvider) {
+            parametersProvider.getVariables().find((variable) => {
+                if (variable.instrumentKey == variableContext.instrumentKey && variable.actionKey == variableContext.actionKey) {
+                    if (variable.commandKey)
+                        if (variable.commandKey == variableContext.commandKey && variable.variableKey == variableContext.variableKey)
+                            return variable.value
+                        else if (variable.variableKey == variableContext.variableKey)
+                            return variable.value
+                }
+            })
         }
-        return value
+        return null
     }
+
+    public addEnvironmentVariablesProviders(...envVarProvider: ParametersProvider[]): void {
+        this.environmentVariablesProvider.push(...envVarProvider)
+    }
+
+    public popEnvironmentVariablesProvider(number?: number): void {
+        if (number)
+            for (let i = 0; i < number; i++)
+                this.environmentVariablesProvider.pop()
+        else
+            this.environmentVariablesProvider.pop()
+    }
+
+    public getEnvironmentVariables(variableContext: VariableContext): Map<string, string> {
+        const envVar = new Map()
+        const alreadyExisting = (variableKey: string): boolean => {
+            return envVar.get(variableKey)
+        }
+        for (const envVarProvider of this.environmentVariablesProvider) {
+            envVarProvider.getVariables().find((variable) => {
+                if (variable.instrumentKey && variable.actionKey) {
+                    if (variable.instrumentKey == variableContext.instrumentKey && variable.actionKey == variableContext.actionKey) {
+                        if (variable.commandKey) {
+                            if (variable.commandKey == variableContext.commandKey && variable.variableKey == variableContext.variableKey && !alreadyExisting(variable.variableKey))
+                                envVar.set(variable.variableKey, variable.value)
+                        } else if (variable.variableKey == variableContext.variableKey && !alreadyExisting(variable.variableKey))
+                            envVar.set(variable.variableKey, variable.value)
+                    }
+                } else if (variable.variableKey == variableContext.variableKey && !alreadyExisting(variable.variableKey))
+                    envVar.set(variable.variableKey, variable.value)
+            })
+        }
+        return envVar
+    }
+
 }
 
 export const variableHandler: VariableHandler = VariableHandler.getInstance()
