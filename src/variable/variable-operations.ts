@@ -33,5 +33,5 @@ export function replaceParameters(targetString: string, instrumentKey: string, a
 }
 
 export function getEnvironmentVariables(envContext: VariableContext): Map<string, string> {
-    return variableHandler.getEnvironmentVariables(envContext)
+    return variableHandler.getEnvironmentVariables(envContext) //TODO: replace variables form environment
 }

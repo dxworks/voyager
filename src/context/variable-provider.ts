@@ -3,6 +3,7 @@ import {INSTRUMENTS_DIR} from '../variable/key-constants'
 const defaultVariables = new Map([[INSTRUMENTS_DIR, './instrument']])
 
 export class VariableProvider {
+
     private static instance: VariableProvider
 
     private variables: Map<string, string>
@@ -17,18 +18,13 @@ export class VariableProvider {
 
     public getVariable(key: string): string | null {
         const value: string | undefined = this.variables.get(key)
-        if (value)
-            return value
-        else
-            return null
-
+        return value ? value : null
     }
 
     public static getInstance(): VariableProvider {
         if (!VariableProvider.instance) {
             VariableProvider.instance = new VariableProvider()
         }
-
         return VariableProvider.instance
     }
 

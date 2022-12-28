@@ -1,10 +1,16 @@
 import {Variable} from '../model/Variable'
 
 export class ParametersProvider {
-    private variables: Variable[] = []
+    private readonly variables: Variable[] = []
 
-    public addVariables(...environments: Variable[]): void {
-        this.variables.push(...environments)
+
+    constructor(variables?: Variable[]) {
+        if (variables)
+            this.variables = variables
+    }
+
+    public addVariables(...variables: Variable[]): void {
+        this.variables.push(...variables)
     }
 
     public getVariables(): Variable[] {

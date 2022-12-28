@@ -1,85 +1,88 @@
 import {ParametersProvider} from './parameters-provider'
-import {ExtendedVariableContext, VariableContext} from '../model/Variable'
+import {ExtendedVariableContext, Variable, VariableContext} from '../model/Variable'
 
 export class VariableHandler {
+
     private static instance: VariableHandler
-    private parametersProvider: ParametersProvider[]
-    private environmentVariablesProvider: ParametersProvider[]
+
+    private readonly parametersProviders: ParametersProvider[]
+
+    private readonly environmentVariablesProviders: ParametersProvider[]
 
     private constructor() {
-        this.parametersProvider = []
-        this.environmentVariablesProvider = []
+        this.parametersProviders = []
+        this.environmentVariablesProviders = []
     }
 
     public static getInstance(): VariableHandler {
         if (!VariableHandler.instance) {
             VariableHandler.instance = new VariableHandler()
         }
-
         return VariableHandler.instance
     }
 
     public addParametersProvider(...parametersProvider: ParametersProvider[]): void {
-        this.parametersProvider.push(...parametersProvider)
+        this.parametersProviders.push(...parametersProvider)
     }
 
     public popParameterProvider(number?: number): void {
         if (number)
             for (let i = 0; i < number; i++)
-                this.parametersProvider.pop()
+                this.parametersProviders.pop()
         else
-            this.parametersProvider.pop()
+            this.parametersProviders.pop()
     }
 
     public getParameter(variableContext: ExtendedVariableContext): string | null {
-        for (const parametersProvider of this.parametersProvider) {
-            parametersProvider.getVariables().find((variable) => {
-                if (variable.instrumentKey == variableContext.instrumentKey && variable.actionKey == variableContext.actionKey) {
-                    if (variable.commandKey)
-                        if (variable.commandKey == variableContext.commandKey && variable.variableKey == variableContext.variableKey)
-                            return variable.value
-                        else if (variable.variableKey == variableContext.variableKey)
-                            return variable.value
-                }
-            })
+        for (const parametersProvider of this.parametersProviders) {
+            const matchingVariable = parametersProvider.getVariables().filter((variable) => this.isVariableInContext(variable, variableContext))
+                .find((variable) => variable.variableKey == variableContext.variableKey)
+            if (matchingVariable && matchingVariable.value) {
+                return matchingVariable.value
+            }
         }
         return null
     }
 
     public addEnvironmentVariablesProviders(...envVarProvider: ParametersProvider[]): void {
-        this.environmentVariablesProvider.push(...envVarProvider)
+        this.environmentVariablesProviders.push(...envVarProvider)
     }
 
     public popEnvironmentVariablesProvider(number?: number): void {
         if (number)
             for (let i = 0; i < number; i++)
-                this.environmentVariablesProvider.pop()
+                this.environmentVariablesProviders.pop()
         else
-            this.environmentVariablesProvider.pop()
+            this.environmentVariablesProviders.pop()
     }
 
     public getEnvironmentVariables(variableContext: VariableContext): Map<string, string> {
         const envVar = new Map()
         const alreadyExisting = (variableKey: string): boolean => {
-            return envVar.get(variableKey)
+            return !!envVar.get(variableKey)
         }
-        for (const envVarProvider of this.environmentVariablesProvider) {
-            envVarProvider.getVariables().find((variable) => {
-                if (variable.instrumentKey && variable.actionKey) {
-                    if (variable.instrumentKey == variableContext.instrumentKey && variable.actionKey == variableContext.actionKey) {
-                        if (variable.commandKey) {
-                            if (variable.commandKey == variableContext.commandKey && !alreadyExisting(variable.variableKey))
-                                envVar.set(variable.variableKey, variable.value)
-                        } else if (!alreadyExisting(variable.variableKey))
-                            envVar.set(variable.variableKey, variable.value)
-                    }
-                } else if (!alreadyExisting(variable.variableKey))
-                    envVar.set(variable.variableKey, variable.value)
-            })
+        for (const envVarProvider of this.environmentVariablesProviders) {
+            envVarProvider.getVariables().filter((variable) => this.isVariableInContext(variable, variableContext))
+                .filter((variable) => !alreadyExisting(variable.variableKey))
+                .forEach((variable) => envVar.set(variable.variableKey, variable.value))
         }
         return envVar
     }
 
+    private isVariableInContext(variable: Variable, context: VariableContext): boolean {
+        const checkKey = (variableKey: string | undefined, contextKey: string): boolean => {
+            return !!variableKey && variableKey == contextKey
+        }
+        if (!variable.instrumentKey && !variable.actionKey)
+            return true
+        if (checkKey(variable.instrumentKey, context.instrumentKey!) && checkKey(variable.actionKey, context.actionKey!)) {
+            if (!variable.commandKey)
+                return true
+            if (checkKey(variable.commandKey, context.commandKey!))
+                return true
+        }
+        return false
+    }
 }
 
 export const variableHandler: VariableHandler = VariableHandler.getInstance()

@@ -16,9 +16,9 @@ let commandEnvVarProvider: ParametersProvider
 let actionEnvVarProvider: ParametersProvider
 
 export function parseInstrument(file: any): Instrument {
-    variableProviderInit()
+    initVariableProvider()
     const actions = parseInstrumentActions(file.actions, file.id)
-    variableProviderCleanUp()
+    cleanUpVariableProvider()
     return {
         id: file.id,
         name: file.name,
@@ -78,7 +78,7 @@ function parseProduces(producesObject: any): Map<string, string> {
     return produces
 }
 
-function variableProviderInit(): void {
+function initVariableProvider(): void {
     commandVarProvider = new ParametersProvider()
     actionVarProvider = new ParametersProvider()
     commandEnvVarProvider = new ParametersProvider()
@@ -87,7 +87,7 @@ function variableProviderInit(): void {
     variableHandler.addEnvironmentVariablesProviders(commandEnvVarProvider, actionEnvVarProvider)
 }
 
-function variableProviderCleanUp(): void {
+function cleanUpVariableProvider(): void {
     variableHandler.popParameterProvider()
     variableHandler.popEnvironmentVariablesProvider(2)
 }

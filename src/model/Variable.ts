@@ -9,5 +9,5 @@ export interface ExtendedVariableContext extends VariableContext {
 }
 
 export interface Variable extends ExtendedVariableContext {
-    value: Map<string, string>;
+    value: string;
 }

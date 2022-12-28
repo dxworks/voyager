@@ -16,7 +16,7 @@ export function parseMission(file: any): void {
         missionEnvVarProvider.addVariables({variableKey, value}))
     const instruments = parseMissionInstruments(file.instruments)
     if (!missionContext.runAll) {
-        missionContext.setRunnableInstruments(instruments)
+        missionContext.runnableInstruments = instruments
     }
 }
 

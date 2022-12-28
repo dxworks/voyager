@@ -5,8 +5,10 @@ export class MissionContext {
 
     private static instance: MissionContext
 
-    private instruments: Instrument[]
-    private runnableInstruments: string[]
+    public instruments: Instrument[]
+
+    public runnableInstruments: string[]
+
     private variableProvider: VariableProvider
 
     runAll = true
@@ -22,22 +24,6 @@ export class MissionContext {
             MissionContext.instance = new MissionContext()
         }
         return MissionContext.instance
-    }
-
-    public setInstruments(instruments: Instrument[]): void {
-        this.instruments = instruments
-    }
-
-    public getInstruments(): Instrument[] {
-        return this.instruments
-    }
-
-    public setRunnableInstruments(instruments: string[]): void {
-        this.runnableInstruments = instruments
-    }
-
-    public getRunnableInstruments(): string[] {
-        return this.runnableInstruments
     }
 
     public getVariable(key: string): string | null {

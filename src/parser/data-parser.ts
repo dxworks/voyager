@@ -24,7 +24,7 @@ export function loadAndParseData(filePath: string): void {
     instrumentDirectories.forEach((instrumentDir) => {
         instruments.push(loadAndParseInstrument(path.resolve(instrumentsDir, instrumentDir, instrumentYml)))
     })
-    missionContext.setInstruments(instruments)
+    missionContext.instruments = instruments
 }
 
 export function loadAndParseMission(filePath: string): void {

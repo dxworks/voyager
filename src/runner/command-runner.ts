@@ -4,36 +4,33 @@ import {osType} from '@dxworks/cli-common'
 
 export function runCommand(commandContext: CommandContext): void {
 
+    function runWithFallback(initialCommand?: string, fallbackCommand?: string) {
+        executeCommand(initialCommand ? initialCommand : fallbackCommand)
+    }
+
     if (!instanceOfCommand(commandContext.command)) {
         executeCommand(<string>commandContext.command)
     } else {
         const command = <Command>commandContext.command
         switch (osType) {
             case 'windows':
-                if (command.windows)
-                    executeCommand(command.windows)
+                executeCommand(command.windows)
                 break
             case 'linux':
-                if (command.linux) {
-                    executeCommand(command.linux)
-                    break
-                }
-                if (command.unix)
-                    executeCommand(command.unix)
+                runWithFallback(command.linux, command.unix)
                 break
             case 'mac':
-                if (command.mac) {
-                    executeCommand(command.mac)
-                    break
-                }
-                if (command.unix)
-                    executeCommand(command.unix)
+                runWithFallback(command.mac, command.unix)
                 break
         }
     }
 }
 
-function executeCommand(command: string): void {
+function executeCommand(command?: string): void {
+    if (!command) {
+        console.warn('warn: No command defined for platform')
+        return
+    }
     exec(command, (error, stdout, stderr) => {
         if (error) {
             console.log(`error: ${error.message}`)
