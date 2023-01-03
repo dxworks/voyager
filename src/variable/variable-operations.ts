@@ -5,20 +5,18 @@ import {missionContext} from '../context/mission-context'
 const variableRegex = /\${[^}]*}/g
 
 export function replaceMissionContextVariables(targetString: string): string {
-    const replaceFunction = (variableKey: string): string | null => {
-        return missionContext.getVariable(variableKey)
-    }
-    return applyRegex(targetString, replaceFunction)
+    const replaceFunction = (variableKey: string): string | null =>
+        missionContext.getVariable(variableKey)
+    return replaceRegex(targetString, replaceFunction)
 }
 
 export function replaceParameters(targetString: string, instrumentKey: string, actionKey: string, commandKey: string): string {
-    const replaceFunction = (variableKey: string): string | null => {
-        return variableHandler.getParameter({instrumentKey, actionKey, commandKey, variableKey})
-    }
-    return applyRegex(targetString, replaceFunction)
+    const replaceFunction = (variableKey: string): string | null =>
+        variableHandler.getParameter({instrumentKey, actionKey, commandKey, variableKey})
+    return replaceRegex(targetString, replaceFunction)
 }
 
-function applyRegex(targetString: string, replaceFunction: (variableKey: string) => string | null) {
+function replaceRegex(targetString: string, replaceFunction: (variableKey: string) => string | null) {
     if (targetString) {
         let match = variableRegex.exec(targetString)
         while (match) {
@@ -35,8 +33,6 @@ function applyRegex(targetString: string, replaceFunction: (variableKey: string)
 
 export function getEnvironmentVariables(envContext: VariableContext): Map<string, string> {
     const environmentVariables = new Map()
-    variableHandler.getEnvironmentVariables(envContext).forEach((value, key) => {
-        environmentVariables.set(key, replaceMissionContextVariables(value))
-    })
+    variableHandler.getEnvironmentVariables(envContext).forEach((value, key) => environmentVariables.set(key, replaceMissionContextVariables(value)))
     return environmentVariables
 }
