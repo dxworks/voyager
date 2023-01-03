@@ -1,5 +1,5 @@
 import {VariableHandler} from '../../src/variable/variable-handler'
-import {ParametersProvider} from '../../src/variable/parameters-provider'
+import {VariableProvider} from '../../src/variable/variable-provider'
 import {
     instrumentActionEnvProvider,
     instrumentCommandEnvProvider,
@@ -19,27 +19,23 @@ export function mapsAreEqual(m1: Map<string, string>, m2: Map<string, string>): 
     return m1.size === m2.size && Array.from(m1.keys()).every((key) => m1.get(key) === m2.get(key))
 }
 
-const variableHandler = VariableHandler.getInstance()
-
 export function getDefaultVariableHandler(): VariableHandler {
+    const variableHandler = new VariableHandler()
     variableHandler.addParametersProvider(missionCommandParameterProvider, missionActionParameterProvider, instrumentCommandParameterProvider, instrumentActionParameterProvider)
     variableHandler.addEnvironmentVariablesProviders(missionCommandEnvProvider, missionActionEnvProvider, missionEnvProvider, instrumentCommandEnvProvider, instrumentActionEnvProvider)
     return variableHandler
 }
 
-export function getCustomEnvHandler(...environmentProviders: ParametersProvider[]): VariableHandler {
+export function getCustomEnvHandler(...environmentProviders: VariableProvider[]): VariableHandler {
+    const variableHandler = new VariableHandler()
     if (environmentProviders)
         variableHandler.addEnvironmentVariablesProviders(...environmentProviders)
     return variableHandler
 }
 
-export function getCustomParametersHandler(...parameterProviders: ParametersProvider[]): VariableHandler {
+export function getCustomParametersHandler(...parameterProviders: VariableProvider[]): VariableHandler {
+    const variableHandler = new VariableHandler()
     if (parameterProviders)
         variableHandler.addParametersProvider(...parameterProviders)
     return variableHandler
-}
-
-export function cleanVariableHandler(): void {
-    variableHandler.popEnvironmentVariablesProvider(5)
-    variableHandler.popParameterProvider(4)
 }

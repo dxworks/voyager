@@ -1,5 +1,5 @@
 import {Instrument} from '../model/Instrument'
-import {VariableProvider} from './variable-provider'
+import {ContextVariableProvider} from './context-variable-provider'
 
 export class MissionContext {
 
@@ -9,14 +9,14 @@ export class MissionContext {
 
     public runnableInstruments: string[]
 
-    private variableProvider: VariableProvider
+    private variableProvider: ContextVariableProvider
 
     runAll = true
 
     private constructor() {
         this.instruments = []
         this.runnableInstruments = []
-        this.variableProvider = VariableProvider.getInstance()
+        this.variableProvider = new ContextVariableProvider()
     }
 
     public static getInstance(): MissionContext {

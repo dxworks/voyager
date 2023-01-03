@@ -4,7 +4,6 @@ import {
     missionEnvProvider,
 } from '../utils/environment-variables.utils'
 import {
-    cleanVariableHandler,
     getCustomEnvHandler,
     getCustomParametersHandler,
     getDefaultVariableHandler,
@@ -19,9 +18,6 @@ import {
 
 
 describe('testing getting environments variables from context', () => {
-    afterEach(() => {
-        cleanVariableHandler()
-    })
     test('default handler should pass', () => {
         const actualEnvironments = getDefaultVariableHandler().getEnvironmentVariables(environmentContext)
         const expectedEnvironments = new Map([['test', '10'], ['missionCommand', '10'], ['missionAction', '9'], ['mission', '8'], ['instrumentCommand', '7'], ['instrumentAction', '6']])
@@ -40,9 +36,6 @@ describe('testing getting environments variables from context', () => {
 })
 
 describe('testing getting parameter value from context', () => {
-    afterEach(() => {
-        cleanVariableHandler()
-    })
     test('default handler should pass', () => {
         const variableHandler = getDefaultVariableHandler()
         let actualParameter = variableHandler.getParameter(placeParameterContext)

@@ -1,6 +1,6 @@
 import {Variable} from '../model/Variable'
 
-export class ParametersProvider {
+export class VariableProvider {
     private readonly variables: Variable[] = []
 
 

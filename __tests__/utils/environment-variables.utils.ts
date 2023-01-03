@@ -1,4 +1,4 @@
-import {ParametersProvider} from '../../src/variable/parameters-provider'
+import {VariableProvider} from '../../src/variable/variable-provider'
 
 export const environmentContext = {
     instrumentKey: 'test',
@@ -6,7 +6,7 @@ export const environmentContext = {
     commandKey: 'hello',
 }
 
-export const missionCommandEnvProvider = new ParametersProvider([{
+export const missionCommandEnvProvider = new VariableProvider([{
     instrumentKey: 'test',
     actionKey: 'custom',
     commandKey: 'hello',
@@ -20,19 +20,19 @@ export const missionCommandEnvProvider = new ParametersProvider([{
     value: '10',
 }])
 
-export const missionActionEnvProvider = new ParametersProvider([{
+export const missionActionEnvProvider = new VariableProvider([{
     instrumentKey: 'test',
     actionKey: 'custom',
     variableKey: 'test',
     value: '9',
 }, {instrumentKey: 'test', actionKey: 'custom', variableKey: 'missionAction', value: '9'}])
 
-export const missionEnvProvider = new ParametersProvider([{variableKey: 'test', value: '8'}, {
+export const missionEnvProvider = new VariableProvider([{variableKey: 'test', value: '8'}, {
     variableKey: 'mission',
     value: '8',
 }])
 
-export const instrumentCommandEnvProvider = new ParametersProvider([{
+export const instrumentCommandEnvProvider = new VariableProvider([{
     instrumentKey: 'test',
     actionKey: 'custom',
     commandKey: 'hello',
@@ -46,7 +46,7 @@ export const instrumentCommandEnvProvider = new ParametersProvider([{
     value: '7',
 }])
 
-export const instrumentActionEnvProvider = new ParametersProvider([{
+export const instrumentActionEnvProvider = new VariableProvider([{
     instrumentKey: 'test',
     actionKey: 'custom',
     variableKey: 'test',

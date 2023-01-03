@@ -2,23 +2,30 @@ import {Instrument} from '../model/Instrument'
 import {parseIntoMap} from './data-parser'
 import {Action} from '../model/Action'
 import {CommandContext} from '../model/Command'
-import {ParametersProvider} from '../variable/parameters-provider'
-import {variableHandler} from '../variable/variable-handler'
+import {VariableProvider} from '../variable/variable-provider'
 import {
     getEnvironmentVariables,
     replaceMissionContextVariables,
     replaceParameters,
 } from '../variable/variable-operations'
+import {VariableHandler} from '../variable/variable-handler'
+import {
+    missionActionEnvVarProvider,
+    missionActionVarProvider,
+    missionCommandEnvVarProvider,
+    missionCommandVarProvider,
+    missionEnvVarProvider,
+} from '../context/mission-providers'
 
-let actionVarProvider: ParametersProvider
-let commandVarProvider: ParametersProvider
-let commandEnvVarProvider: ParametersProvider
-let actionEnvVarProvider: ParametersProvider
+let variableHandler: VariableHandler
+let actionVarProvider: VariableProvider
+let commandVarProvider: VariableProvider
+let commandEnvVarProvider: VariableProvider
+let actionEnvVarProvider: VariableProvider
 
 export function parseInstrument(file: any): Instrument {
     initVariableProvider()
     const actions = parseInstrumentActions(file.actions, file.id)
-    cleanUpVariableProvider()
     return {
         id: file.id,
         name: file.name,
@@ -79,15 +86,11 @@ function parseProduces(producesObject: any): Map<string, string> {
 }
 
 function initVariableProvider(): void {
-    commandVarProvider = new ParametersProvider()
-    actionVarProvider = new ParametersProvider()
-    commandEnvVarProvider = new ParametersProvider()
-    actionEnvVarProvider = new ParametersProvider()
-    variableHandler.addParametersProvider(commandVarProvider, actionVarProvider)
-    variableHandler.addEnvironmentVariablesProviders(commandEnvVarProvider, actionEnvVarProvider)
-}
-
-function cleanUpVariableProvider(): void {
-    variableHandler.popParameterProvider()
-    variableHandler.popEnvironmentVariablesProvider(2)
+    variableHandler = new VariableHandler()
+    commandVarProvider = new VariableProvider()
+    actionVarProvider = new VariableProvider()
+    commandEnvVarProvider = new VariableProvider()
+    actionEnvVarProvider = new VariableProvider()
+    variableHandler.addParametersProvider(missionCommandVarProvider, missionActionVarProvider, commandVarProvider, actionVarProvider)
+    variableHandler.addEnvironmentVariablesProviders(missionCommandEnvVarProvider, missionActionEnvVarProvider, missionEnvVarProvider, commandEnvVarProvider, actionEnvVarProvider)
 }

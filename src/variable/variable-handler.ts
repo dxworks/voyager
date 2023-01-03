@@ -1,36 +1,14 @@
-import {ParametersProvider} from './parameters-provider'
+import {VariableProvider} from './variable-provider'
 import {ExtendedVariableContext, Variable, VariableContext} from '../model/Variable'
 
 export class VariableHandler {
 
-    private static instance: VariableHandler
+    private readonly parametersProviders: VariableProvider[] = []
 
-    private readonly parametersProviders: ParametersProvider[]
+    private readonly environmentVariablesProviders: VariableProvider[] = []
 
-    private readonly environmentVariablesProviders: ParametersProvider[]
-
-    private constructor() {
-        this.parametersProviders = []
-        this.environmentVariablesProviders = []
-    }
-
-    public static getInstance(): VariableHandler {
-        if (!VariableHandler.instance) {
-            VariableHandler.instance = new VariableHandler()
-        }
-        return VariableHandler.instance
-    }
-
-    public addParametersProvider(...parametersProvider: ParametersProvider[]): void {
+    public addParametersProvider(...parametersProvider: VariableProvider[]): void {
         this.parametersProviders.push(...parametersProvider)
-    }
-
-    public popParameterProvider(number?: number): void {
-        if (number)
-            for (let i = 0; i < number; i++)
-                this.parametersProviders.pop()
-        else
-            this.parametersProviders.pop()
     }
 
     public getParameter(variableContext: ExtendedVariableContext): string | null {
@@ -44,16 +22,8 @@ export class VariableHandler {
         return null
     }
 
-    public addEnvironmentVariablesProviders(...envVarProvider: ParametersProvider[]): void {
+    public addEnvironmentVariablesProviders(...envVarProvider: VariableProvider[]): void {
         this.environmentVariablesProviders.push(...envVarProvider)
-    }
-
-    public popEnvironmentVariablesProvider(number?: number): void {
-        if (number)
-            for (let i = 0; i < number; i++)
-                this.environmentVariablesProviders.pop()
-        else
-            this.environmentVariablesProviders.pop()
     }
 
     public getEnvironmentVariables(variableContext: VariableContext): Map<string, string> {
@@ -84,5 +54,3 @@ export class VariableHandler {
         return false
     }
 }
-
-export const variableHandler: VariableHandler = VariableHandler.getInstance()

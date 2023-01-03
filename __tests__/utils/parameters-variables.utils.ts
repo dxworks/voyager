@@ -1,4 +1,4 @@
-import {ParametersProvider} from '../../src/variable/parameters-provider'
+import {VariableProvider} from '../../src/variable/variable-provider'
 
 export const placeParameterContext = {
     instrumentKey: 'test',
@@ -13,7 +13,7 @@ export const maxHeapParameterContext = {
     commandKey: 'hello',
     variableKey: 'max-heap',
 }
-export const missionCommandParameterProvider = new ParametersProvider([{
+export const missionCommandParameterProvider = new VariableProvider([{
     instrumentKey: 'test',
     actionKey: 'custom',
     commandKey: 'hello',
@@ -27,7 +27,7 @@ export const missionCommandParameterProvider = new ParametersProvider([{
     value: 'missionCommand',
 }])
 
-export const missionActionParameterProvider = new ParametersProvider([{
+export const missionActionParameterProvider = new VariableProvider([{
     instrumentKey: 'test',
     actionKey: 'custom',
     variableKey: 'max-heap',
@@ -40,7 +40,7 @@ export const missionActionParameterProvider = new ParametersProvider([{
 }])
 
 
-export const instrumentCommandParameterProvider = new ParametersProvider([{
+export const instrumentCommandParameterProvider = new VariableProvider([{
     instrumentKey: 'test',
     actionKey: 'custom',
     commandKey: 'hello',
@@ -54,7 +54,7 @@ export const instrumentCommandParameterProvider = new ParametersProvider([{
     value: 'instrumentCommand',
 }])
 
-export const instrumentActionParameterProvider = new ParametersProvider([{
+export const instrumentActionParameterProvider = new VariableProvider([{
     instrumentKey: 'test',
     actionKey: 'custom',
     variableKey: 'max-heap',
