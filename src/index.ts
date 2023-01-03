@@ -1,5 +1,4 @@
 #!/usr/bin/env node
+import {runMission} from './runner/mission-runner'
 
-import {loadAndParseData} from './parser/data-parser'
-
-loadAndParseData('C:\\Users\\noprut\\voyager2\\unpack-mission.yml')
+runMission('C:\\Users\\noprut\\voyager2\\unpack-mission.yml')

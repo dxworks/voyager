@@ -1,8 +1,10 @@
 import {Instrument} from '../model/Instrument'
 import {runCommand} from './command-runner'
 import {missionContext} from '../context/mission-context'
+import {loadAndParseData} from '../parser/data-parser'
 
-export function runMission(): void {
+export function runMission(missionFilePath: string): void {
+    loadAndParseData(missionFilePath)
     if (missionContext.runAll)
         missionContext.instruments.forEach((instrument) => {
             runInstrument(instrument)

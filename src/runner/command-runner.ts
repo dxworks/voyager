@@ -1,45 +1,42 @@
-import {exec} from 'child_process'
+import {execSync} from 'child_process'
 import {Command, CommandContext, instanceOfCommand} from '../model/Command'
 import {osType} from '@dxworks/cli-common'
 
 export function runCommand(commandContext: CommandContext): void {
-
-    function runWithFallback(initialCommand?: string, fallbackCommand?: string) {
-        executeCommand(initialCommand ? initialCommand : fallbackCommand)
-    }
-
-    if (!instanceOfCommand(commandContext.command)) {
-        executeCommand(<string>commandContext.command)
-    } else {
-        const command = <Command>commandContext.command
-        switch (osType) {
-            case 'windows':
-                executeCommand(command.windows)
-                break
-            case 'linux':
-                runWithFallback(command.linux, command.unix)
-                break
-            case 'mac':
-                runWithFallback(command.mac, command.unix)
-                break
-        }
+    const env = createEnv(commandContext.environment)
+    if (typeof commandContext.command == 'string') {
+        executeCommand(<string>commandContext.command, env)
+    } else if (instanceOfCommand(commandContext.command)) {
+        executeCommand(translateCommand(<Command>commandContext.command), env)
     }
 }
 
-function executeCommand(command?: string): void {
+function translateCommand(command: Command): string | undefined {
+    switch (osType) {
+        case 'windows':
+            return command.windows
+        case 'linux':
+            return command.linux ? command.linux : command.unix
+        case 'mac':
+            return command.mac ? command.mac : command.unix
+    }
+}
+
+function createEnv(environmentVariables?: Map<string, string>) {
+    const env = process.env
+    environmentVariables?.forEach((value, key) => env[key] = value)
+    return env
+}
+
+function executeCommand(command: string | undefined, env: NodeJS.ProcessEnv): void {
     if (!command) {
         console.warn('warn: No command defined for platform')
         return
     }
-    exec(command, (error, stdout, stderr) => {
-        if (error) {
-            console.log(`error: ${error.message}`)
-            return
-        }
-        if (stderr) {
-            console.log(`stderr: ${stderr}`)
-            return
-        }
-        console.log(`stdout: ${stdout}`)
-    })
+    try {
+        execSync(command, {env: env, stdio: 'inherit'}) // TODO:stdio check what you need
+    } catch (error: any) {
+        console.log(`error: ${error.message}`)
+    }
+
 }
