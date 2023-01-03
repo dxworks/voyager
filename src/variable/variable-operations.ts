@@ -1,6 +1,6 @@
-import {variableHandler} from './variable-handler'
 import {VariableContext} from '../model/Variable'
 import {missionContext} from '../context/mission-context'
+import {VariableHandler} from './variable-handler'
 
 const variableRegex = /\${[^}]*}/g
 
@@ -10,7 +10,7 @@ export function replaceMissionContextVariables(targetString: string): string {
     return replaceRegex(targetString, replaceFunction)
 }
 
-export function replaceParameters(targetString: string, instrumentKey: string, actionKey: string, commandKey: string): string {
+export function replaceParameters(variableHandler: VariableHandler, targetString: string, instrumentKey: string, actionKey: string, commandKey: string): string {
     const replaceFunction = (variableKey: string): string | null =>
         variableHandler.getParameter({instrumentKey, actionKey, commandKey, variableKey})
     return replaceRegex(targetString, replaceFunction)
@@ -31,8 +31,8 @@ function replaceRegex(targetString: string, replaceFunction: (variableKey: strin
     return targetString
 }
 
-export function getEnvironmentVariables(envContext: VariableContext): Map<string, string> {
+export function getEnvironmentVariables(variableHandler: VariableHandler, envContext: VariableContext): Map<string, string> {
     const environmentVariables = new Map()
-    variableHandler.getEnvironmentVariables(envContext).forEach((value, key) => environmentVariables.set(key, replaceMissionContextVariables(value)))
+    variableHandler.getEnvironmentVariables(envContext).forEach((value: string, key: string) => environmentVariables.set(key, replaceMissionContextVariables(value)))
     return environmentVariables
 }

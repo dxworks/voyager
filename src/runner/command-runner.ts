@@ -1,13 +1,13 @@
 import {execSync} from 'child_process'
-import {Command, CommandContext, instanceOfCommand} from '../model/Command'
+import {Command, CommandContext, instanceOfCommand, WithActions} from '../model/Command'
 import {osType} from '@dxworks/cli-common'
 
 export function runCommand(commandContext: CommandContext): void {
     const env = createEnv(commandContext.environment)
     if (typeof commandContext.command == 'string') {
-        executeCommand(<string>commandContext.command, env)
+        executeCommand(<string>commandContext.command, env, commandContext.with)
     } else if (instanceOfCommand(commandContext.command)) {
-        executeCommand(translateCommand(<Command>commandContext.command), env)
+        executeCommand(translateCommand(<Command>commandContext.command), env, commandContext.with)
     }
 }
 
@@ -28,7 +28,7 @@ function createEnv(environmentVariables?: Map<string, string>) {
     return env
 }
 
-function executeCommand(command: string | undefined, env: NodeJS.ProcessEnv): void {
+function executeCommand(command: string | undefined, env: NodeJS.ProcessEnv, withActions?: WithActions): void {
     if (!command) {
         console.warn('warn: No command defined for platform')
         return
@@ -36,6 +36,8 @@ function executeCommand(command: string | undefined, env: NodeJS.ProcessEnv): vo
     try {
         execSync(command, {env: env, stdio: 'inherit'}) // TODO:stdio check what you need
     } catch (error: any) {
+        if (withActions?.validExitCodes?.find(error.status))
+            console.log('All good')
         console.log(`error: ${error.message}`)
     }
 

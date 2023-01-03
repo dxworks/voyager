@@ -1,7 +1,7 @@
 export const ROOT_DIR = 'rootDir'
 export const INSTRUMENTS_DIR = 'instrumentsDir'
 
-const defaultVariables = new Map([[INSTRUMENTS_DIR, './instrument']])
+const defaultVariables = new Map([[INSTRUMENTS_DIR, './instruments']])
 
 export class ContextVariableProvider {
 

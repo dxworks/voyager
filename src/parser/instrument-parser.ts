@@ -1,7 +1,7 @@
 import {Instrument} from '../model/Instrument'
 import {parseIntoMap} from './data-parser'
 import {Action} from '../model/Action'
-import {CommandContext} from '../model/Command'
+import {CommandContext, WithActions} from '../model/Command'
 import {VariableProvider} from '../variable/variable-provider'
 import {
     getEnvironmentVariables,
@@ -60,21 +60,31 @@ function parseInstrumentCommands(commandsObject: any, instrumentKey: string, act
             commandEnvVarProvider.addVariables({instrumentKey, actionKey, commandKey, variableKey, value}))
         let commandType
         if (typeof value.command === 'string')
-            commandType = replaceParameters(value.command, instrumentKey, actionKey, commandKey)
+            commandType = replaceParameters(variableHandler, value.command, instrumentKey, actionKey, commandKey)
         else
             commandType = {
-                windows: replaceParameters(value.command.windows, instrumentKey, actionKey, commandKey),
-                unix: replaceParameters(value.command.unix, instrumentKey, actionKey, commandKey),
-                mac: replaceParameters(value.command.mac, instrumentKey, actionKey, commandKey),
-                linux: replaceParameters(value.command.linux, instrumentKey, actionKey, commandKey),
+                windows: replaceParameters(variableHandler, value.command.windows, instrumentKey, actionKey, commandKey),
+                unix: replaceParameters(variableHandler, value.command.unix, instrumentKey, actionKey, commandKey),
+                mac: replaceParameters(variableHandler, value.command.mac, instrumentKey, actionKey, commandKey),
+                linux: replaceParameters(variableHandler, value.command.linux, instrumentKey, actionKey, commandKey),
             }
         commands.push({
             id: commandKey,
             command: commandType,
-            environment: getEnvironmentVariables({instrumentKey, actionKey, commandKey}),
+            environment: getEnvironmentVariables(variableHandler, {instrumentKey, actionKey, commandKey}),
+            with: parseWith(value.with),
         })
     })
     return commands
+}
+
+function parseWith(withObject: any): WithActions {
+    return {
+        validExitCodes: withObject?.validExitCodes,
+        script: withObject?.script,
+        locations: withObject?.locations,
+    }
+
 }
 
 function parseProduces(producesObject: any): Map<string, string> {
