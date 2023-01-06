@@ -41,7 +41,8 @@
     "@dxworks/ktextensions": "^0.1.0",
     "chalk": "^4.1.2",
     "commander": "^8.2.0",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "jszip": "^3.10.1"
   },
   "devDependencies": {
     "@types/cli-progress": "^3.9.2",

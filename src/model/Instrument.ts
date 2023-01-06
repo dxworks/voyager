@@ -5,6 +5,10 @@ export interface Instrument {
     name: string;
     version: string;
     actions: Action[];
-    produces: Map<string, string>;
+    results: Results
+}
 
+export interface Results {
+    dir?: string
+    files?: string[]
 }

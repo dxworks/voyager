@@ -1,13 +1,9 @@
-import {Instrument} from '../model/Instrument'
+import {Instrument, Results} from '../model/Instrument'
 import {parseIntoMap} from './data-parser'
 import {Action} from '../model/Action'
 import {CommandContext, WithActions} from '../model/Command'
 import {VariableProvider} from '../variable/variable-provider'
-import {
-    getEnvironmentVariables,
-    replaceMissionContextVariables,
-    replaceParameters,
-} from '../variable/variable-operations'
+import {getEnvironmentVariables, replaceParameters} from '../variable/variable-operations'
 import {VariableHandler} from '../variable/variable-handler'
 import {
     missionActionEnvVarProvider,
@@ -31,7 +27,7 @@ export function parseInstrument(file: any): Instrument {
         name: file.name,
         version: file.version,
         actions: actions,
-        produces: parseProduces(file.produces),
+        results: parseResults(file.results),
     }
 }
 
@@ -87,12 +83,11 @@ function parseWith(withObject: any): WithActions {
 
 }
 
-function parseProduces(producesObject: any): Map<string, string> {
-    const produces: Map<string, string> = new Map()
-    parseIntoMap(producesObject).forEach((value, key) => {
-        produces.set(key, replaceMissionContextVariables(value))
-    })
-    return produces
+function parseResults(resultsObject: any): Results {
+    return {
+        dir: resultsObject.dir,
+        files: resultsObject.files,
+    }
 }
 
 function initVariableProvider(): void {
