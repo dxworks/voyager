@@ -1,8 +1,4 @@
-import {Command} from 'commander'
-import {_package} from './utils'
+#!/usr/bin/env node
+import {runMission} from './runner/mission-runner'
 
-export const mainCommand = new Command()
-  .name('voyager')
-  .description(_package.description)
-  .version(_package.version, '-v, -version, --version, -V')
-
+runMission('C:\\Users\\noprut\\voyager2\\unpack-mission.yml')

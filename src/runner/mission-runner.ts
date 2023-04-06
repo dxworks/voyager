@@ -21,6 +21,12 @@ export function runMission(missionFilePath: string): void {
     packageResults(instruments)
 }
 
+function runInstrument(instrument: Instrument): void {
+    instrument.actions.forEach((action) => {
+        action.commandsContext.forEach((commandContext) => runCommand(commandContext))
+    })
+}
+
 function packageResults(instruments: Instrument[]): void {
     const zip = new JSZip()
     instruments.forEach((instrument: Instrument) => {
@@ -35,10 +41,4 @@ function packageResults(instruments: Instrument[]): void {
         .on('finish', function () {
             console.log('results.zip written.')
         })
-}
-
-function runInstrument(instrument: Instrument): void {
-    instrument.actions.forEach((action) => {
-        action.commandsContext.forEach((commandContext) => runCommand(commandContext))
-    })
 }

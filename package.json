@@ -16,10 +16,8 @@
   },
   "license": "Apache-2.0",
   "author": "Mario Rivis <mario.rivis@gmail.com>",
-  "main": "dist/voyager.js",
-  "bin": {
-    "dx-voyager": "dist/index.js"
-  },
+  "main": "dist/src/voyager.js",
+  "bin": "./dist/src/voyager.js",
   "files": [
     "dist"
   ],
@@ -68,13 +66,5 @@
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
-  },
-  "dxw": {
-    "commands": [
-      {
-        "file": "dist/voyager.js",
-        "command": "mainCommand"
-      }
-    ]
   }
 }
