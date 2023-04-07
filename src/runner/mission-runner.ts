@@ -32,13 +32,9 @@ function packageResults(instruments: Instrument[]): void {
     instruments.forEach((instrument: Instrument) => {
         if (instrument.results.dir) {
             console.log(instrument.results.dir)
-            const instrumentResulContent = fs.readFileSync(path.resolve(missionContext.getVariable(INSTRUMENTS_DIR)!, instrument.name, instrument.results.dir, 'success.txt'))
-            zip.file(instrument.name, instrumentResulContent)
+            const instrumentResultContent = fs.readFileSync(path.resolve(missionContext.getVariable(INSTRUMENTS_DIR)!, instrument.name, instrument.results.dir, 'success.txt'))
+            zip.file(instrument.name, instrumentResultContent)
         }
     })
-    zip.generateNodeStream()
-        .pipe(fs.createWriteStream('results.zip'))
-        .on('finish', function () {
-            console.log('results.zip written.')
-        })
+    zip.generateNodeStream().pipe(fs.createWriteStream('results.zip'))
 }
