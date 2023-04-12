@@ -1,5 +1,5 @@
-const cleanActionKey = 'clean'
-export const packageActionKey = 'package'
+export const cleanActionKey = 'clean'
+export const packageActionKey = 'pack'
 export const startActionKey = 'start'
 const defaultActionKeys: string[] = [cleanActionKey, packageActionKey]
 

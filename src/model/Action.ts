@@ -1,8 +1,7 @@
 import {CommandContext} from './Command'
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface Action {
-
+    name: string
 }
 
 export interface CustomAction extends Action {
@@ -24,5 +23,9 @@ export interface Location {
     source: string,
     destination: string,
     files: string[],
+}
+
+export function instanceOfDefaultAction(object: any): boolean{
+    return 'with' in object
 }
 

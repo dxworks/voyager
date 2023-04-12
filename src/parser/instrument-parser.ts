@@ -43,7 +43,7 @@ function parseInstrumentActions(actionObject: any, instrumentKey: string): Map<s
     const actions: Map<string, Action> = new Map<string, Action>()
     parseIntoMap(actionObject).forEach((value, actionKey) => {
         if (isDefaultAction(actionKey)) {
-            actions.set(actionKey, parseDefaultAction(value.with))
+            actions.set(actionKey, parseDefaultAction(value.with, actionKey))
         } else {
             parseIntoMap(value.parameters).forEach((value, variableKey) =>
                 actionVarProvider.addVariables({instrumentKey, actionKey, variableKey, value}))
@@ -81,12 +81,14 @@ function parseCustomAction(commandsObject: any, instrumentKey: string, actionKey
         })
     })
     return {
+        name: actionKey,
         commandsContext: commands,
     }
 }
 
-function parseDefaultAction(withObject: any): DefaultAction {
+function parseDefaultAction(withObject: any, actionKey: string): DefaultAction {
     return {
+        name: actionKey,
         with: parseWith(withObject),
     }
 }

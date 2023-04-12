@@ -1,24 +1,20 @@
 #!/usr/bin/env node
-import {runMission} from './runner/mission-runner'
-import yargs from 'yargs'
+import {cleanMission, runMission} from './runner/mission-runner'
+import {program} from 'commander'
 
-const yargsOptions = yargs
-    .option('mission-path', {
-        alias: 'm',
-        describe: 'the full path to the mission',
-        type: 'string',
+program
+    .command('run <missionPath>')
+    .description('Run mission')
+    .option('-a, --actions <actions...>', 'Actions to run from the mission')
+    .action((missionPath, options: { actions?: string[] }) => {
+        runMission(missionPath, options.actions).then()
     })
-    .demandOption(['mission-path'], 'Please specify the mission path')
-    .help(true)
-    .argv
 
+program
+    .command('clean <missionPath>')
+    .description('Clean mission instruments')
+    .action((missionPath) => {
+        cleanMission(missionPath).then()
+    })
 
-if (yargsOptions._[0] === 'run') {
-    runMission(yargsOptions['mission-path'] as string)
-} else if (yargsOptions._[0] === 'clean') {
-    console.log('Performing clean action')
-} else if (yargsOptions._[0] === 'unpack') {
-    console.log('Performing unpack action')
-} else {
-    console.log('Unknown command')
-}
+program.parse(process.argv)
