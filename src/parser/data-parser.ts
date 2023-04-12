@@ -5,7 +5,7 @@ import {parseInstrument} from './instrument-parser'
 import {parseMission} from './mission-parser'
 import path from 'node:path'
 import {missionContext} from '../context/mission-context'
-import {INSTRUMENTS_DIR, ROOT_DIR} from '../context/context-variable-provider'
+import {INSTRUMENT_DIR_DEFAULT, INSTRUMENTS_DIR, ROOT_DIR} from '../context/context-variable-provider'
 
 const instrumentYml = 'instrument.yml'
 
@@ -17,7 +17,7 @@ const getDirectories = (source: any): string[] =>
 export function loadAndParseData(filePath: string): void {
     const rootDir: string = path.dirname(filePath)
     missionContext.addVariable(ROOT_DIR, rootDir)
-    missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(<string>missionContext.getVariable(ROOT_DIR), <string>missionContext.getVariable(INSTRUMENTS_DIR)))
+    missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(rootDir, INSTRUMENT_DIR_DEFAULT))
     loadAndParseMission(filePath)
     loadAndParseInstruments()
 }

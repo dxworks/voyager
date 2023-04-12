@@ -12,8 +12,6 @@ const yargsOptions = yargs
     .help(true)
     .argv
 
-console.log('args:')
-console.log(yargsOptions.m)
 
 if (yargsOptions._[0] === 'run') {
     runMission(yargsOptions['mission-path'] as string)

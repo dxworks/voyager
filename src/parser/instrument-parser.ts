@@ -1,9 +1,13 @@
-import {Instrument, Results} from '../model/Instrument'
+import {Instrument} from '../model/Instrument'
 import {parseIntoMap} from './data-parser'
-import {Action} from '../model/Action'
-import {CommandContext, WithActions} from '../model/Command'
+import {Action, CustomAction, DefaultAction, Location, WithAction} from '../model/Action'
+import {CommandContext} from '../model/Command'
 import {VariableProvider} from '../variable/variable-provider'
-import {getEnvironmentVariables, replaceParameters} from '../variable/variable-operations'
+import {
+    getEnvironmentVariables,
+    replaceMissionContextVariables,
+    replaceParameters,
+} from '../variable/variable-operations'
 import {VariableHandler} from '../variable/variable-handler'
 import {
     missionActionEnvVarProvider,
@@ -12,6 +16,9 @@ import {
     missionCommandVarProvider,
     missionEnvVarProvider,
 } from '../context/mission-providers'
+import {isDefaultAction} from '../utils/ActionConstants'
+import {missionContext} from '../context/mission-context'
+import {INSTRUMENT_KEY} from '../context/context-variable-provider'
 
 let variableHandler: VariableHandler
 let actionVarProvider: VariableProvider
@@ -19,34 +26,36 @@ let commandVarProvider: VariableProvider
 let commandEnvVarProvider: VariableProvider
 let actionEnvVarProvider: VariableProvider
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function parseInstrument(file: any): Instrument {
     initVariableProvider()
+    missionContext.addVariable(INSTRUMENT_KEY, file.name)
     const actions = parseInstrumentActions(file.actions, file.id)
     return {
         id: file.id,
         name: file.name,
         version: file.version,
         actions: actions,
-        results: parseResults(file.results),
     }
 }
 
-function parseInstrumentActions(actionObject: any, instrumentKey: string): Action[] {
-    const actions: Action[] = []
+function parseInstrumentActions(actionObject: any, instrumentKey: string): Map<string, Action> {
+    const actions: Map<string, Action> = new Map<string, Action>()
     parseIntoMap(actionObject).forEach((value, actionKey) => {
-        parseIntoMap(value.parameters).forEach((value, variableKey) =>
-            actionVarProvider.addVariables({instrumentKey, actionKey, variableKey, value}))
-        parseIntoMap(value.environment).forEach((value, variableKey) =>
-            actionEnvVarProvider.addVariables({instrumentKey, actionKey, variableKey, value}))
-        actions.push({
-            id: actionKey,
-            commandsContext: parseInstrumentCommands(value.commands, instrumentKey, actionKey),
-        })
+        if (isDefaultAction(actionKey)) {
+            actions.set(actionKey, parseDefaultAction(value.with))
+        } else {
+            parseIntoMap(value.parameters).forEach((value, variableKey) =>
+                actionVarProvider.addVariables({instrumentKey, actionKey, variableKey, value}))
+            parseIntoMap(value.environment).forEach((value, variableKey) =>
+                actionEnvVarProvider.addVariables({instrumentKey, actionKey, variableKey, value}))
+            actions.set(actionKey, parseCustomAction(value.commands, instrumentKey, actionKey))
+        }
     })
     return actions
 }
 
-function parseInstrumentCommands(commandsObject: any, instrumentKey: string, actionKey: string): CommandContext[] {
+function parseCustomAction(commandsObject: any, instrumentKey: string, actionKey: string): CustomAction {
     const commands: CommandContext[] = []
     const commandsMap = parseIntoMap(commandsObject)
     commandsMap.forEach((value, commandKey) => {
@@ -71,24 +80,41 @@ function parseInstrumentCommands(commandsObject: any, instrumentKey: string, act
             with: parseWith(value.with),
         })
     })
-    return commands
+    return {
+        commandsContext: commands,
+    }
 }
 
-function parseWith(withObject: any): WithActions {
+function parseDefaultAction(withObject: any): DefaultAction {
+    return {
+        with: parseWith(withObject),
+    }
+}
+
+function parseWith(withObject: any): WithAction {
     return {
         validExitCodes: withObject?.validExitCodes,
         script: withObject?.script,
-        locations: withObject?.locations,
+        locations: parseLocations(withObject?.locations),
     }
-
 }
 
-function parseResults(resultsObject: any): Results {
+function parseLocations(locationsObject: any): Location[] {
+    const locations: Location[] = []
+    parseIntoMap(locationsObject).forEach(value => {
+        locations.push(parseLocation(value))
+    })
+    return locations
+}
+
+function parseLocation(locationObject: any): Location {
     return {
-        dir: resultsObject.dir,
-        files: resultsObject.files,
+        source: replaceMissionContextVariables(locationObject.source),
+        destination: locationObject.destination,
+        files: locationObject.files,
     }
 }
+
 
 function initVariableProvider(): void {
     variableHandler = new VariableHandler()

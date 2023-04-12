@@ -1,6 +1,7 @@
 import {execSync} from 'child_process'
-import {Command, CommandContext, instanceOfCommand, WithActions} from '../model/Command'
+import {Command, CommandContext, instanceOfCommand} from '../model/Command'
 import {osType} from '@dxworks/cli-common'
+import {WithAction} from '../model/Action'
 
 export function runCommand(commandContext: CommandContext): void {
     const env = createEnv(commandContext.environment)
@@ -28,7 +29,7 @@ function createEnv(environmentVariables?: Map<string, string>) {
     return env
 }
 
-function executeCommand(command: string | undefined, env: NodeJS.ProcessEnv, withActions?: WithActions): void {
+function executeCommand(command: string | undefined, env: NodeJS.ProcessEnv, withActions?: WithAction): void {
     if (!command) {
         console.warn('warn: No command defined for platform')
         return
