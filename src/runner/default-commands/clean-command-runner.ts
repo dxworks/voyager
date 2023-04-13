@@ -11,22 +11,21 @@ export async function runCleanAction(cleanAction: DefaultAction): Promise<void> 
         if (location.files) {
             location.files.forEach(file => {
                 const filePath = path.resolve(sourcePath, file)
-                fs.unlinkSync(filePath)
+                if (fs.existsSync(filePath))
+                    fs.unlinkSync(filePath)
             })
-        } else {
+        } else if (fs.existsSync(sourcePath))
             await deleteFolder(sourcePath)
-        }
     }
 }
 
 async function deleteFolder(path: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
         fs.rm(path, {recursive: true}, (err) => {
-            if (err) {
+            if (err)
                 reject(err)
-            } else {
+            else
                 resolve()
-            }
         })
     })
 }

@@ -12,9 +12,8 @@ export function parseMission(file: any): void {
     parseIntoMap(file.environment).forEach((value, variableKey) =>
         missionEnvVarProvider.addVariables({variableKey, value}))
     const instruments = parseMissionInstruments(file.instruments)
-    if (!missionContext.runAll) {
+    if (!missionContext.runAll)
         missionContext.runnableInstruments = instruments
-    }
 }
 
 function parseMissionInstruments(instrumentsObject: any): string[] {

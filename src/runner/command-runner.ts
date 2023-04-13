@@ -5,11 +5,10 @@ import {WithAction} from '../model/Action'
 
 export function runCommand(commandContext: CommandContext): void {
     const env = createEnv(commandContext.environment)
-    if (typeof commandContext.command == 'string') {
+    if (typeof commandContext.command == 'string')
         executeCommand(<string>commandContext.command, env, commandContext.with)
-    } else if (instanceOfCommand(commandContext.command)) {
+    else if (instanceOfCommand(commandContext.command))
         executeCommand(translateCommand(<Command>commandContext.command), env, commandContext.with)
-    }
 }
 
 function translateCommand(command: Command): string | undefined {
@@ -24,9 +23,11 @@ function translateCommand(command: Command): string | undefined {
 }
 
 function createEnv(environmentVariables?: Map<string, string>) {
-    const env = process.env
-    environmentVariables?.forEach((value, key) => env[key] = value)
-    return env
+    if (environmentVariables != null && environmentVariables.size != 0) {
+        const env = Object.fromEntries(environmentVariables)
+        return Object.assign({}, env, process.env)
+    } else
+        return process.env
 }
 
 function executeCommand(command: string | undefined, env: NodeJS.ProcessEnv, withActions?: WithAction): void {
@@ -35,11 +36,9 @@ function executeCommand(command: string | undefined, env: NodeJS.ProcessEnv, wit
         return
     }
     try {
-        execSync(command, {env: env, stdio: 'inherit'}) // TODO:stdio check what you need
+        execSync(command, {env: env})
     } catch (error: any) {
-        if (withActions?.validExitCodes?.find(error.status))
-            console.log('All good')
-        console.log(`error: ${error.message}`)
+        if (!withActions?.validExitCodes?.find(error.status))
+            console.log(`error: ${error.message}`)
     }
-
 }

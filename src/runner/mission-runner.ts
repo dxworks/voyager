@@ -44,25 +44,17 @@ function runStartAndPackResults(instruments: Instrument[]) {
 
 async function runActions(instruments: Instrument[], actionsKey: string[]) {
     let archive: Archiver | null = null
-    const packResultsRequired = actionsKey.includes(packageActionKey)
-    console.log('actions')
-    console.log(actionsKey)
-    if (packResultsRequired)
+    const resultsPackageRequired = actionsKey.includes(packageActionKey)
+    if (resultsPackageRequired)
         archive = archiver('zip', {zlib: {level: 9}})
-    console.log(instruments)
     for (const instrument of instruments) {
-
         const actions = actionsKey
             .map(actionKey => instrument.actions.get(actionKey))
             .filter(action => action != null)
-        console.log(actions)
-        for (const action of actions) {
-            console.log(action)
+        for (const action of actions)
             await runAction(action!, archive, instrument.name)
-        }
     }
-
-    if (packResultsRequired) {
+    if (resultsPackageRequired) {
         archive!.finalize().then()
         archive!.pipe(fs.createWriteStream('voyager2-results.zip'))
     }

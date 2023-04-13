@@ -27,9 +27,8 @@ export function loadAndParseMission(filePath: string): void {
     parseIntoMap(file.variables).forEach((value, key) => missionContext.addVariable(key, value))
     if (file.instrumentsDir)
         missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(<string>missionContext.getVariable(ROOT_DIR), <string>file.instrumentsDir))
-    if (file.runAll) {
+    if (file.runAll)
         missionContext.runAll = file.runAll
-    }
     parseMission(file)
 }
 

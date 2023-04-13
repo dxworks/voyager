@@ -42,9 +42,9 @@ export function parseInstrument(file: any): Instrument {
 function parseInstrumentActions(actionObject: any, instrumentKey: string): Map<string, Action> {
     const actions: Map<string, Action> = new Map<string, Action>()
     parseIntoMap(actionObject).forEach((value, actionKey) => {
-        if (isDefaultAction(actionKey)) {
+        if (isDefaultAction(actionKey))
             actions.set(actionKey, parseDefaultAction(value.with, actionKey))
-        } else {
+        else {
             parseIntoMap(value.parameters).forEach((value, variableKey) =>
                 actionVarProvider.addVariables({instrumentKey, actionKey, variableKey, value}))
             parseIntoMap(value.environment).forEach((value, variableKey) =>
