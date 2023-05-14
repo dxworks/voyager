@@ -19,6 +19,7 @@ import {
 import {isDefaultAction} from '../utils/ActionConstants'
 import {missionContext} from '../context/mission-context'
 import {INSTRUMENT_KEY} from '../context/context-variable-provider'
+import path from 'node:path'
 
 let variableHandler: VariableHandler
 let actionVarProvider: VariableProvider
@@ -27,14 +28,18 @@ let commandEnvVarProvider: VariableProvider
 let actionEnvVarProvider: VariableProvider
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function parseInstrument(file: any): Instrument {
+export function parseInstrument(instrumentsDirPath: string, instrumentDir: string, file: any): Instrument {
     initVariableProvider()
+    const instrumentPath = path.resolve(instrumentsDirPath, instrumentDir)
     missionContext.addVariable(INSTRUMENT_KEY, file.name)
+    missionContext.addVariable('instrumentPath', instrumentPath)
+    missionContext.addVariable('instrumentDir', instrumentDir)
     const actions = parseInstrumentActions(file.actions, file.id)
     return {
         id: file.id,
         name: file.name,
         version: file.version,
+        instrumentPath: instrumentPath,
         actions: actions,
     }
 }

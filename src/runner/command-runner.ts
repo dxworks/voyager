@@ -3,12 +3,12 @@ import {Command, CommandContext, instanceOfCommand} from '../model/Command'
 import {osType} from '@dxworks/cli-common'
 import {WithAction} from '../model/Action'
 
-export function runCommand(commandContext: CommandContext): void {
+export function runCommand(commandContext: CommandContext, instrumentPath: string): void {
     const env = createEnv(commandContext.environment)
     if (typeof commandContext.command == 'string')
-        executeCommand(<string>commandContext.command, env, commandContext.with)
+        executeCommand(<string>commandContext.command, env, instrumentPath, commandContext.with)
     else if (instanceOfCommand(commandContext.command))
-        executeCommand(translateCommand(<Command>commandContext.command), env, commandContext.with)
+        executeCommand(translateCommand(<Command>commandContext.command), env, instrumentPath, commandContext.with)
 }
 
 function translateCommand(command: Command): string | undefined {
@@ -30,13 +30,13 @@ function createEnv(environmentVariables?: Map<string, string>) {
         return process.env
 }
 
-function executeCommand(command: string | undefined, env: NodeJS.ProcessEnv, withActions?: WithAction): void {
+function executeCommand(command: string | undefined, env: NodeJS.ProcessEnv, path: string, withActions?: WithAction): void {
     if (!command) {
         console.warn('warn: No command defined for platform')
         return
     }
     try {
-        execSync(command, {env: env})
+        execSync(command, {env: env, cwd: path})
     } catch (error: any) {
         if (!withActions?.validExitCodes?.find(error.status))
             console.log(`error: ${error.message}`)

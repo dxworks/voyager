@@ -28,15 +28,18 @@ export async function runMission(missionFilePath: string, actions: string[] | un
     if (actions != null) {
         await runActions(instruments, actions)
     } else {
-        runStartAndPackResults(instruments)
+        await runStartAndPackResults(instruments)
     }
 }
 
 function runStartAndPackResults(instruments: Instrument[]) {
     const archive = archiver('zip', {zlib: {level: 9}})
     instruments.forEach(instrument => {
-        runCustomAction(<CustomAction>instrument.actions.get(startActionKey)!)
-        runPackageAction(instrument.name, archive, <DefaultAction>instrument.actions.get(packageActionKey))
+        console.log(instrument.name + ' is running...')
+        runCustomAction(<CustomAction>instrument.actions.get(startActionKey)!, instrument.instrumentPath)
+        const packAction = <DefaultAction>instrument.actions.get(packageActionKey)
+        if (packAction)
+            runPackageAction(instrument.name, archive, packAction)
     })
     archive.finalize().then()
     archive.pipe(fs.createWriteStream('voyager2-results.zip'))
@@ -52,7 +55,7 @@ async function runActions(instruments: Instrument[], actionsKey: string[]) {
             .map(actionKey => instrument.actions.get(actionKey))
             .filter(action => action != null)
         for (const action of actions)
-            await runAction(action!, archive, instrument.name)
+            await runAction(action!, archive, instrument.name, instrument.instrumentPath)
     }
     if (resultsPackageRequired) {
         archive!.finalize().then()
@@ -61,15 +64,15 @@ async function runActions(instruments: Instrument[], actionsKey: string[]) {
 }
 
 
-async function runAction(action: Action, archive: null | archiver.Archiver, instrumentName: string) {
+async function runAction(action: Action, archive: null | archiver.Archiver, instrumentName: string, instrumentPath: string) {
     if (instanceOfDefaultAction(action))
         await runDefaultAction(<DefaultAction>action, archive, instrumentName)
     else
-        runCustomAction(<CustomAction>action)
+        runCustomAction(<CustomAction>action, instrumentPath)
 }
 
-function runCustomAction(action: CustomAction) {
-    action.commandsContext.forEach((commandContext) => runCommand(commandContext))
+function runCustomAction(action: CustomAction, instrumentPath: string) {
+    action.commandsContext.forEach((commandContext) => runCommand(commandContext, instrumentPath))
 }
 
 async function runDefaultAction(action: DefaultAction, archive: archiver.Archiver | null, instrumentName: string) {

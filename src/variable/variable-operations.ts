@@ -11,6 +11,7 @@ export function replaceMissionContextVariables(targetString: string): string {
 }
 
 export function replaceParameters(variableHandler: VariableHandler, targetString: string, instrumentKey: string, actionKey: string, commandKey: string): string {
+    targetString = replaceMissionContextVariables(targetString)
     const replaceFunction = (variableKey: string): string | null =>
         variableHandler.getParameter({instrumentKey, actionKey, commandKey, variableKey})
     return replaceRegex(targetString, replaceFunction)

@@ -5,9 +5,9 @@ import {parseInstrument} from './instrument-parser'
 import {parseMission} from './mission-parser'
 import path from 'node:path'
 import {missionContext} from '../context/mission-context'
-import {INSTRUMENT_DIR_DEFAULT, INSTRUMENTS_DIR, ROOT_DIR} from '../context/context-variable-provider'
+import {INSTRUMENTS_DEFAULT_DIR, INSTRUMENTS_DIR, ROOT_DIR} from '../context/context-variable-provider'
 
-const instrumentYml = 'instrument.yml'
+const instrumentYml = 'instrument.v2.yml'
 
 const getDirectories = (source: any): string[] =>
     readdirSync(source, {withFileTypes: true})
@@ -17,7 +17,7 @@ const getDirectories = (source: any): string[] =>
 export function loadAndParseData(filePath: string): void {
     const rootDir: string = path.dirname(filePath)
     missionContext.addVariable(ROOT_DIR, rootDir)
-    missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(rootDir, INSTRUMENT_DIR_DEFAULT))
+    missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(rootDir, INSTRUMENTS_DEFAULT_DIR))
     loadAndParseMission(filePath)
     loadAndParseInstruments()
 }
@@ -34,17 +34,17 @@ export function loadAndParseMission(filePath: string): void {
 
 function loadAndParseInstruments() {
     const instruments: Instrument[] = []
-    const instrumentsDir = path.resolve(<string>missionContext.getVariable(ROOT_DIR), <string>missionContext.getVariable(INSTRUMENTS_DIR))
-    const instrumentDirectories = getDirectories(instrumentsDir)
+    const instrumentsDirPath = path.resolve(<string>missionContext.getVariable(ROOT_DIR), <string>missionContext.getVariable(INSTRUMENTS_DIR))
+    const instrumentDirectories = getDirectories(instrumentsDirPath)
     instrumentDirectories.forEach((instrumentDir) => {
-        instruments.push(loadAndParseInstrument(path.resolve(instrumentsDir, instrumentDir, instrumentYml)))
+        instruments.push(loadAndParseInstrument(instrumentsDirPath, instrumentDir))
     })
     missionContext.instruments = instruments
 }
 
-export function loadAndParseInstrument(filePath: string): Instrument {
-    const file = yaml.load(fs.readFileSync(filePath).toString())
-    return parseInstrument(file)
+export function loadAndParseInstrument(instrumentsDirPath: string, instrumentDir: string): Instrument {
+    const file = yaml.load(fs.readFileSync(path.resolve(instrumentsDirPath, instrumentDir, instrumentYml)).toString())
+    return parseInstrument(instrumentsDirPath, instrumentDir, file)
 }
 
 export function parseIntoMap(object?: Record<string, unknown>): Map<string, any> {

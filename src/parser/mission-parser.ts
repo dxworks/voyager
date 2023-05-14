@@ -7,8 +7,12 @@ import {
     missionCommandVarProvider,
     missionEnvVarProvider,
 } from '../context/mission-providers'
+import path from 'node:path'
 
 export function parseMission(file: any): void {
+    const targetPath = path.normalize(file.target)
+    missionContext.addVariable('repo', targetPath)
+    missionContext.addVariable('repoName', path.basename(targetPath))
     parseIntoMap(file.environment).forEach((value, variableKey) =>
         missionEnvVarProvider.addVariables({variableKey, value}))
     const instruments = parseMissionInstruments(file.instruments)
