@@ -72,7 +72,7 @@ async function runAction(action: Action, archive: null | archiver.Archiver, inst
 }
 
 function runCustomAction(action: CustomAction, instrumentPath: string) {
-    action.commandsContext.forEach((commandContext) => runCommand(commandContext, instrumentPath))
+    action.commandsContext.forEach((commandContext) => runCommand(commandContext, commandContext.dir ? commandContext.dir : instrumentPath))
 }
 
 async function runDefaultAction(action: DefaultAction, archive: archiver.Archiver | null, instrumentName: string) {

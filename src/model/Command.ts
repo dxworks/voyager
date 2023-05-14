@@ -4,6 +4,7 @@ export interface CommandContext {
     id: string;
     environment?: Map<string, string>;
     command: string | Command;
+    dir?: string;
     with?: WithAction
 }
 

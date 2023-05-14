@@ -3,12 +3,12 @@ import {Command, CommandContext, instanceOfCommand} from '../model/Command'
 import {osType} from '@dxworks/cli-common'
 import {WithAction} from '../model/Action'
 
-export function runCommand(commandContext: CommandContext, instrumentPath: string): void {
+export function runCommand(commandContext: CommandContext, commandPath: string): void {
     const env = createEnv(commandContext.environment)
     if (typeof commandContext.command == 'string')
-        executeCommand(<string>commandContext.command, env, instrumentPath, commandContext.with)
+        executeCommand(<string>commandContext.command, env, commandPath, commandContext.with)
     else if (instanceOfCommand(commandContext.command))
-        executeCommand(translateCommand(<Command>commandContext.command), env, instrumentPath, commandContext.with)
+        executeCommand(translateCommand(<Command>commandContext.command), env, commandPath, commandContext.with)
 }
 
 function translateCommand(command: Command): string | undefined {
@@ -35,6 +35,8 @@ function executeCommand(command: string | undefined, env: NodeJS.ProcessEnv, pat
         console.warn('warn: No command defined for platform')
         return
     }
+    console.log('path:', path)
+    console.log('command:', command)
     try {
         execSync(command, {env: env, cwd: path})
     } catch (error: any) {

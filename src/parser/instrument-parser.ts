@@ -81,6 +81,7 @@ function parseCustomAction(commandsObject: any, instrumentKey: string, actionKey
         commands.push({
             id: commandKey,
             command: commandType,
+            dir: replaceMissionContextVariables(value.dir),
             environment: getEnvironmentVariables(variableHandler, {instrumentKey, actionKey, commandKey}),
             with: parseWith(value.with),
         })
