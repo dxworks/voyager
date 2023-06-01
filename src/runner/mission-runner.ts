@@ -12,6 +12,8 @@ import {getLogFilePath, getLogsStream} from '../utils/logs_collector'
 import {InstrumentSummary} from '../model/summary/InstrumentSummary'
 import {logSummary} from '../utils/summary_generator'
 import path from 'node:path'
+import {generateHtmlReport, getHtmlLogContent} from '../utils/html-report-generator'
+import {getHtmlFilePath} from '../utils/summary-html-utils'
 
 
 export async function cleanMission(missionFilePath: string): Promise<void> {
@@ -38,7 +40,6 @@ export async function runMission(missionFilePath: string, actions: string[] | un
     } else {
         await runStartAndPackResults(instruments)
     }
-    // missionCleanup(instruments)
     const endTime = performance.now()
     missionContext.getMissionSummary().runningTime = ((endTime - startTime) / 1000).toFixed(1) + 's'
     logSummary()
@@ -50,16 +51,52 @@ function missionCleanup(instruments: Instrument[]): void {
         const instrumentLogFilePath = getLogFilePath(instrumentName)
         if (fs.existsSync(instrumentLogFilePath))
             fs.unlinkSync(instrumentLogFilePath)
+        const instrumentHtmlFilePath = getHtmlFilePath(instrumentName)
+        if (fs.existsSync(instrumentHtmlFilePath))
+            fs.unlinkSync(instrumentHtmlFilePath)
     })
     const missionLogFilePath = getLogFilePath(missionContext.getName())
     if (fs.existsSync(missionLogFilePath))
         fs.unlinkSync(missionLogFilePath)
+    const missionHtmlFilePath = getHtmlFilePath(missionContext.getName())
+    if (fs.existsSync(missionHtmlFilePath))
+        fs.unlinkSync(missionHtmlFilePath)
+
+    const missionReportHtml = getHtmlFilePath('MissionReport')
+    if (fs.existsSync(missionReportHtml))
+        fs.unlinkSync(missionReportHtml)
 }
 
-function addMissionReportToResult(archive: archiver.Archiver): void {
+function addMissionReportToResult(instruments: Instrument[], archive: archiver.Archiver): void {
+    const htmlReport = generateHtmlReport()
+    addHtmlToArchive(instruments, archive)
+    if (fs.existsSync(htmlReport))
+        archive.file(htmlReport, {name: path.basename(htmlReport)})
     const missionLogFilePath = getLogFilePath(missionContext.getName())
     if (fs.existsSync(missionLogFilePath))
         archive.file(missionLogFilePath, {name: path.basename(missionLogFilePath)})
+}
+
+function addHtmlToArchive(instruments: Instrument[], archive: archiver.Archiver): void {
+    instruments.map(instrument => instrument.name).forEach(instrumentName => {
+        const instrumentLogFile = getLogFilePath(instrumentName)
+        try {
+            const fileContent = fs.readFileSync(instrumentLogFile, 'utf8')
+            const instrumentHtmlFile = getHtmlFilePath(instrumentName)
+            fs.writeFileSync(instrumentHtmlFile, getHtmlLogContent(fileContent))
+            archive.file(instrumentHtmlFile, {name: '/html/' + path.basename(instrumentHtmlFile)})
+        } catch (err) {
+            console.error('Error reading/writing file:', err)
+        }
+    })
+    try {
+        const fileContent = fs.readFileSync(getLogFilePath(missionContext.getName()), 'utf8')
+        const missionHtmlFile = getHtmlFilePath(missionContext.getName())
+        fs.writeFileSync(missionHtmlFile, getHtmlLogContent(fileContent))
+        archive.file(missionHtmlFile, {name: path.basename(missionHtmlFile)})
+    } catch (err) {
+        console.error('Error reading/writing file:', err)
+    }
 }
 
 function runStartAndPackResults(instruments: Instrument[]) {
@@ -78,7 +115,7 @@ function runStartAndPackResults(instruments: Instrument[]) {
         instrumentSummary.runningTime = ((endTime - startTime) / 1000).toFixed(1) + 's'
         console.log('Finished running ', instrument.name)
     })
-    addMissionReportToResult(archive)
+    addMissionReportToResult(instruments, archive)
     archive.finalize().then(() => missionCleanup(instruments))
     archive.pipe(fs.createWriteStream('voyager2-results.zip'))
 }
@@ -103,7 +140,7 @@ async function runActions(instruments: Instrument[], actionsKey: string[]) {
         console.log('Finished running ', instrument.name)
     }
     if (resultsPackageRequired) {
-        addMissionReportToResult(archive!)
+        addMissionReportToResult(instruments, archive!)
         archive!.finalize().then(() => missionCleanup(instruments))
         archive!.pipe(fs.createWriteStream('voyager2-results.zip'))
     }
