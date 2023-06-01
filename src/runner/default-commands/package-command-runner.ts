@@ -4,10 +4,12 @@ import path from 'node:path'
 import {missionContext} from '../../context/mission-context'
 import {INSTRUMENTS_DIR} from '../../context/context-variable-provider'
 import fs from 'fs'
+import {getLogFilePath} from '../../utils/logs_collector'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const {minimatch} = require('minimatch')
 
 export function runPackageAction(instrumentName: string, archive: Archiver, action: DefaultAction): void {
+    addLogFileToArchive(getLogFilePath(instrumentName), archive)
     const instrumentResultsDirectory = instrumentName
     const locations: Location[] = action.with.locations!
     locations.forEach(location => {
@@ -31,4 +33,9 @@ export function runPackageAction(instrumentName: string, archive: Archiver, acti
         } else if (fs.existsSync(sourcePath))
             archive.directory(sourcePath, destinationDirectory)
     })
+}
+
+function addLogFileToArchive(logFilePath: string, archive: Archiver): void {
+    if (fs.existsSync(logFilePath))
+        archive.file(logFilePath, {name: path.basename(logFilePath)})
 }

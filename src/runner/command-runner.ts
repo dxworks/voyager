@@ -1,15 +1,37 @@
-import {execSync, ExecSyncOptionsWithStringEncoding} from 'child_process'
 import {Command, CommandContext} from '../model/Command'
 import {osType} from '@dxworks/cli-common'
-import {WithAction} from '../model/Action'
-import fs from 'fs'
-import path from 'node:path'
 import {missionContext} from '../context/mission-context'
+import {execSync, ExecSyncOptionsWithStringEncoding} from 'child_process'
+import fs from 'fs'
+import {WithAction} from '../model/Action'
+import {CommandSummary} from '../model/summary/CommandSummary'
+import {getLogFilePath} from '../utils/logs_collector'
 
-export function runCommand(commandContext: CommandContext, commandPath: string, instrumentName: string): void {
+
+export function runCommand(commandContext: CommandContext,
+                           commandPath: string,
+                           instrumentName: string): void {
     const env = createEnv(commandContext.environment)
     const command = typeof commandContext.command == 'string' ? <string>commandContext.command : translateCommand(<Command>commandContext.command)
-    executeCommand(command, env, commandPath, commandContext.with, generateLogFilePath(instrumentName))
+    const withActions = commandContext.with
+    const instrumentSummary = missionContext.getMissionSummary().getInstrumentSummary(instrumentName)
+    const startTime = performance.now()
+    const commandSummary = new CommandSummary()
+    try {
+        executeCommand(command, env, commandPath, commandContext.with, getLogFilePath(instrumentName))
+    } catch (error: any) {
+        if (
+            withActions &&
+            withActions.validExitCodes &&
+            !withActions.validExitCodes.includes(error.status)
+        ) {
+            commandSummary.success = false
+            console.log(`error: ${error.message}`)
+        }
+    }
+    const endTime = performance.now()
+    commandSummary.runningTime = ((endTime - startTime) / 1000).toFixed(1) + 's'
+    instrumentSummary.addCommandSummary(commandContext.id, commandSummary)
 }
 
 function translateCommand(command: Command): string | undefined {
@@ -31,51 +53,31 @@ function createEnv(environmentVariables?: Map<string, string>) {
         return process.env
 }
 
-function generateLogFilePath(instrumentName: string) {
-    return path.join(<string>missionContext.getVariable('firstWorkingDir'), instrumentName + '.txt')
-}
-
-function executeCommand(
-    command: string | undefined,
-    env: NodeJS.ProcessEnv,
-    path: string,
-    withActions?: WithAction,
-    logFilePath?: string
-): void {
+function executeCommand(command: string | undefined, env: NodeJS.ProcessEnv,
+                        path: string,
+                        withActions?: WithAction,
+                        logFilePath?: string) {
     if (!command) {
         console.warn('warn: No command defined for platform')
         return
     }
-    try {
-        const options: ExecSyncOptionsWithStringEncoding = {
-            env: env,
-            cwd: path,
-            encoding: 'utf-8',
-            stdio: ['ignore', 'pipe', 'pipe'],
-        }
-        const childProcess = execSync(command, options)
-
-        const output = childProcess.toString()
-        console.log('output: ', output)
-
-        if (missionContext.getLogsStream() != null) {
-            missionContext.getLogsStream()?.write(output)
-        }
-        if (logFilePath) {
-            fs.writeFileSync(logFilePath, output, {flag: 'a'})
-        }
-
-        // Output logs to the console
-        process.stdout.write(output)
-
-
-    } catch (error: any) {
-        if (
-            withActions &&
-            withActions.validExitCodes &&
-            !withActions.validExitCodes.includes(error.status)
-        ) {
-            console.log(`error: ${error.message}`)
-        }
+    const options: ExecSyncOptionsWithStringEncoding = {
+        env: env,
+        cwd: path,
+        encoding: 'utf-8',
+        stdio: ['ignore', 'pipe', 'pipe'],
     }
+    const childProcess = execSync(command, options)
+
+    const output = childProcess.toString()
+
+    if (missionContext.getLogsStream() != null) {
+        missionContext.getLogsStream()?.write(output)
+    }
+    if (logFilePath) {
+        fs.writeFileSync(logFilePath, output, {flag: 'a'})
+    }
+
+    // Output logs to the console
+    process.stdout.write(output)
 }

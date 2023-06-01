@@ -1,5 +1,10 @@
 import path from 'node:path'
 import fs from 'fs'
+import {missionContext} from '../context/mission-context'
+
+export function getLogFilePath(instrumentName: string): string {
+    return path.join(<string>missionContext.getVariable('firstWorkingDir'), instrumentName + '.txt')
+}
 
 export function getLogsStream(missionName: string): fs.WriteStream {
     const logFilePath = path.join(process.cwd(), missionName + '.txt')

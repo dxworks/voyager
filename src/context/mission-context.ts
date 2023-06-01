@@ -1,6 +1,7 @@
 import {Instrument} from '../model/Instrument'
 import {ContextVariableProvider} from './context-variable-provider'
 import fs from 'fs'
+import {MissionSummary} from '../model/summary/MissionSummary'
 
 export class MissionContext {
 
@@ -16,6 +17,8 @@ export class MissionContext {
 
     private logsStream: fs.WriteStream | null
 
+    private missionSummary: MissionSummary
+
     runAll = true
 
     private constructor() {
@@ -24,6 +27,7 @@ export class MissionContext {
         this.runnableInstruments = []
         this.variableProvider = new ContextVariableProvider()
         this.logsStream = null
+        this.missionSummary = new MissionSummary()
     }
 
     public static getInstance(): MissionContext {
@@ -47,6 +51,7 @@ export class MissionContext {
 
     public setName(name: string): void {
         this.name = name
+        this.missionSummary.missionName = name
     }
 
 
@@ -56,6 +61,10 @@ export class MissionContext {
 
     public setLogsStream(value: fs.WriteStream | null): void {
         this.logsStream = value
+    }
+
+    public getMissionSummary(): MissionSummary {
+        return this.missionSummary
     }
 }
 
