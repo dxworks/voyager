@@ -8,6 +8,7 @@ import {runPackageAction} from './default-commands/package-command-runner'
 import {runCleanAction} from './default-commands/clean-command-runner'
 import archiver, {Archiver} from 'archiver'
 import fs from 'fs'
+import {getLogsStream} from '../utils/logs_collector'
 
 
 export async function cleanMission(missionFilePath: string): Promise<void> {
@@ -18,25 +19,37 @@ export async function cleanMission(missionFilePath: string): Promise<void> {
 }
 
 export async function runMission(missionFilePath: string, actions: string[] | undefined): Promise<void> {
+    const startTime = performance.now()
+
     function getRunnableInstruments() {
         return <Instrument[]>missionContext.runnableInstruments.map(runnableInstrument => missionContext.instruments.find((instrument) => instrument.id == runnableInstrument))
             .filter(instrument => !!instrument)
     }
 
     loadAndParseData(missionFilePath)
+    const logStream = getLogsStream(missionContext.getName())
+    missionContext.setLogsStream(logStream)
     const instruments = missionContext.runAll ? missionContext.instruments : getRunnableInstruments()
     if (actions != null) {
         await runActions(instruments, actions)
     } else {
         await runStartAndPackResults(instruments)
     }
+    const endTime = performance.now()
+    const elapsedTime = endTime - startTime
+    console.log('Mission running time: ', (elapsedTime / 1000).toFixed(1), 's')
+    logStream.close()
 }
 
 function runStartAndPackResults(instruments: Instrument[]) {
     const archive = archiver('zip', {zlib: {level: 9}})
     instruments.forEach(instrument => {
         console.log(instrument.name + ' is running...')
-        runCustomAction(<CustomAction>instrument.actions.get(startActionKey)!, instrument.instrumentPath)
+        const startTime = performance.now()
+        runCustomAction(<CustomAction>instrument.actions.get(startActionKey)!, instrument.instrumentPath, instrument.name)
+        const endTime = performance.now()
+        const elapsedTime = endTime - startTime
+        console.log(instrument.name + ' running time: ' + (elapsedTime / 1000).toFixed(1), 's')
         const packAction = <DefaultAction>instrument.actions.get(packageActionKey)
         if (packAction)
             runPackageAction(instrument.name, archive, packAction)
@@ -68,11 +81,11 @@ async function runAction(action: Action, archive: null | archiver.Archiver, inst
     if (instanceOfDefaultAction(action))
         await runDefaultAction(<DefaultAction>action, archive, instrumentName)
     else
-        runCustomAction(<CustomAction>action, instrumentPath)
+        runCustomAction(<CustomAction>action, instrumentName, instrumentPath)
 }
 
-function runCustomAction(action: CustomAction, instrumentPath: string) {
-    action.commandsContext.forEach((commandContext) => runCommand(commandContext, commandContext.dir ? commandContext.dir : instrumentPath))
+function runCustomAction(action: CustomAction, instrumentPath: string, instrumentName: string) {
+    action.commandsContext.forEach((commandContext) => runCommand(commandContext, commandContext.dir ? commandContext.dir : instrumentPath, instrumentName))
 }
 
 async function runDefaultAction(action: DefaultAction, archive: archiver.Archiver | null, instrumentName: string) {

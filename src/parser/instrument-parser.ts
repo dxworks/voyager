@@ -63,7 +63,8 @@ function parseInstrumentActions(actionObject: any, instrumentKey: string): Map<s
 function parseCustomAction(commandsObject: any, instrumentKey: string, actionKey: string): CustomAction {
     const commands: CommandContext[] = []
     const commandsMap = parseIntoMap(commandsObject)
-    commandsMap.forEach((value, commandKey) => {
+    commandsMap.forEach((value) => {
+        const commandKey = value.id
         parseIntoMap(value.parameters).forEach((value, variableKey) =>
             commandVarProvider.addVariables({instrumentKey, actionKey, commandKey, variableKey, value}))
         parseIntoMap(value.environment).forEach((value, variableKey) =>

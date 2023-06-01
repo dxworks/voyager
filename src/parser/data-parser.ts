@@ -17,6 +17,8 @@ const getDirectories = (source: any): string[] =>
 export function loadAndParseData(filePath: string): void {
     const rootDir: string = path.dirname(filePath)
     missionContext.addVariable(ROOT_DIR, rootDir)
+    const currentPath = process.cwd()
+    missionContext.addVariable('firstWorkingDir', currentPath)
     missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(rootDir, INSTRUMENTS_DEFAULT_DIR))
     loadAndParseMission(filePath)
     loadAndParseInstruments()
@@ -24,6 +26,7 @@ export function loadAndParseData(filePath: string): void {
 
 export function loadAndParseMission(filePath: string): void {
     const file: any = yaml.load(fs.readFileSync(filePath).toString())
+    missionContext.setName(file.mission)
     parseIntoMap(file.variables).forEach((value, key) => missionContext.addVariable(key, value))
     if (file.instrumentsDir)
         missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(<string>missionContext.getVariable(ROOT_DIR), <string>file.instrumentsDir))

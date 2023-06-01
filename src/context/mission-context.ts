@@ -1,9 +1,12 @@
 import {Instrument} from '../model/Instrument'
 import {ContextVariableProvider} from './context-variable-provider'
+import fs from 'fs'
 
 export class MissionContext {
 
     private static instance: MissionContext
+
+    private name: string
 
     public instruments: Instrument[]
 
@@ -11,12 +14,16 @@ export class MissionContext {
 
     private variableProvider: ContextVariableProvider
 
+    private logsStream: fs.WriteStream | null
+
     runAll = true
 
     private constructor() {
+        this.name = ''
         this.instruments = []
         this.runnableInstruments = []
         this.variableProvider = new ContextVariableProvider()
+        this.logsStream = null
     }
 
     public static getInstance(): MissionContext {
@@ -32,6 +39,23 @@ export class MissionContext {
 
     public addVariable(key: string, value: string): void {
         this.variableProvider.addVariable(key, value)
+    }
+
+    public getName(): string {
+        return this.name
+    }
+
+    public setName(name: string): void {
+        this.name = name
+    }
+
+
+    public getLogsStream(): fs.WriteStream | null {
+        return this.logsStream
+    }
+
+    public setLogsStream(value: fs.WriteStream | null): void {
+        this.logsStream = value
     }
 }
 

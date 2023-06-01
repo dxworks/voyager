@@ -2,6 +2,7 @@
 import {cleanMission, runMission} from './runner/mission-runner'
 import {program} from 'commander'
 
+
 program
     .command('run <missionPath>')
     .description('Run mission')

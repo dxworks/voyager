@@ -1,14 +1,15 @@
-import {execSync} from 'child_process'
-import {Command, CommandContext, instanceOfCommand} from '../model/Command'
+import {execSync, ExecSyncOptionsWithStringEncoding} from 'child_process'
+import {Command, CommandContext} from '../model/Command'
 import {osType} from '@dxworks/cli-common'
 import {WithAction} from '../model/Action'
+import fs from 'fs'
+import path from 'node:path'
+import {missionContext} from '../context/mission-context'
 
-export function runCommand(commandContext: CommandContext, commandPath: string): void {
+export function runCommand(commandContext: CommandContext, commandPath: string, instrumentName: string): void {
     const env = createEnv(commandContext.environment)
-    if (typeof commandContext.command == 'string')
-        executeCommand(<string>commandContext.command, env, commandPath, commandContext.with)
-    else if (instanceOfCommand(commandContext.command))
-        executeCommand(translateCommand(<Command>commandContext.command), env, commandPath, commandContext.with)
+    const command = typeof commandContext.command == 'string' ? <string>commandContext.command : translateCommand(<Command>commandContext.command)
+    executeCommand(command, env, commandPath, commandContext.with, generateLogFilePath(instrumentName))
 }
 
 function translateCommand(command: Command): string | undefined {
@@ -30,17 +31,51 @@ function createEnv(environmentVariables?: Map<string, string>) {
         return process.env
 }
 
-function executeCommand(command: string | undefined, env: NodeJS.ProcessEnv, path: string, withActions?: WithAction): void {
+function generateLogFilePath(instrumentName: string) {
+    return path.join(<string>missionContext.getVariable('firstWorkingDir'), instrumentName + '.txt')
+}
+
+function executeCommand(
+    command: string | undefined,
+    env: NodeJS.ProcessEnv,
+    path: string,
+    withActions?: WithAction,
+    logFilePath?: string
+): void {
     if (!command) {
         console.warn('warn: No command defined for platform')
         return
     }
-    console.log('path:', path)
-    console.log('command:', command)
     try {
-        execSync(command, {env: env, cwd: path})
+        const options: ExecSyncOptionsWithStringEncoding = {
+            env: env,
+            cwd: path,
+            encoding: 'utf-8',
+            stdio: ['ignore', 'pipe', 'pipe'],
+        }
+        const childProcess = execSync(command, options)
+
+        const output = childProcess.toString()
+        console.log('output: ', output)
+
+        if (missionContext.getLogsStream() != null) {
+            missionContext.getLogsStream()?.write(output)
+        }
+        if (logFilePath) {
+            fs.writeFileSync(logFilePath, output, {flag: 'a'})
+        }
+
+        // Output logs to the console
+        process.stdout.write(output)
+
+
     } catch (error: any) {
-        if (!withActions?.validExitCodes?.find(error.status))
+        if (
+            withActions &&
+            withActions.validExitCodes &&
+            !withActions.validExitCodes.includes(error.status)
+        ) {
             console.log(`error: ${error.message}`)
+        }
     }
 }
