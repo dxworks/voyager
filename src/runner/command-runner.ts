@@ -1,33 +1,22 @@
 import {Command, CommandContext} from '../model/Command'
 import {osType} from '@dxworks/cli-common'
 import {missionContext} from '../context/mission-context'
-import {execSync, ExecSyncOptionsWithStringEncoding} from 'child_process'
+import {ExecSyncOptionsWithStringEncoding, spawn} from 'child_process'
 import fs from 'fs'
-import {WithAction} from '../model/Action'
 import {CommandSummary} from '../model/summary/CommandSummary'
 import {getLogFilePath} from '../utils/logs_collector'
 
-
-export function runCommand(commandContext: CommandContext,
-                           commandPath: string,
-                           instrumentName: string): void {
-    const env = createEnv(commandContext.environment)
-    const command = typeof commandContext.command == 'string' ? <string>commandContext.command : translateCommand(<Command>commandContext.command)
-    const withActions = commandContext.with
+export async function runCommand(commandContext: CommandContext,
+                                 commandPath: string,
+                                 instrumentName: string): Promise<void> {
     const instrumentSummary = missionContext.getMissionSummary().getInstrumentSummary(instrumentName)
     const startTime = performance.now()
     const commandSummary = new CommandSummary()
     try {
-        executeCommand(command, env, commandPath, commandContext.with, getLogFilePath(instrumentName))
-    } catch (error: any) {
-        if (
-            withActions &&
-            withActions.validExitCodes &&
-            !withActions.validExitCodes.includes(error.status)
-        ) {
-            commandSummary.success = false
-            console.log(`error: ${error.message}`)
-        }
+        await executeCommand(commandContext, commandPath, getLogFilePath(instrumentName))
+    } catch (e) {
+        console.error(e)
+        commandSummary.success = false
     }
     const endTime = performance.now()
     commandSummary.runningTime = ((endTime - startTime) / 1000).toFixed(1) + 's'
@@ -53,13 +42,13 @@ function createEnv(environmentVariables?: Map<string, string>) {
         return process.env
 }
 
-function executeCommand(command: string | undefined, env: NodeJS.ProcessEnv,
-                        path: string,
-                        withActions?: WithAction,
-                        logFilePath?: string) {
+async function executeCommand(commandContext: CommandContext,
+                              path: string,
+                              logFilePath?: string): Promise<void> {
+    const env = createEnv(commandContext.environment)
+    const command = typeof commandContext.command == 'string' ? <string>commandContext.command : translateCommand(<Command>commandContext.command)
     if (!command) {
         console.warn('warn: No command defined for platform')
-        return
     }
     const options: ExecSyncOptionsWithStringEncoding = {
         env: env,
@@ -67,17 +56,45 @@ function executeCommand(command: string | undefined, env: NodeJS.ProcessEnv,
         encoding: 'utf-8',
         stdio: ['ignore', 'pipe', 'pipe'],
     }
-    const childProcess = execSync(command, options)
+    const [commandKey, ...args] = command!.split(' ')
 
-    const output = childProcess.toString()
+    return new Promise((resolve, reject) => {
+        const childProcess = spawn(commandKey, args, options)
 
+        childProcess.stdout?.on('data', (data) => {
+            const logs = data.toString()
+            writeLogs(logs, logFilePath)
+        })
+
+        childProcess.stderr?.on('data', (data) => {
+            const errorOutput = data.toString()
+            writeLogs(errorOutput, logFilePath)
+        })
+
+        childProcess.on('error', (error) => {
+            console.log('Command execution error:', error)
+            writeLogs(error.message, logFilePath)
+            reject(error)
+        })
+
+        childProcess.on('close', (code) => {
+            if (code && commandContext.with?.validExitCodes?.includes(code) || code == 0) {
+                resolve()
+            } else {
+                reject(new Error(`Command execution failed with exit code: ${code}`))
+            }
+        })
+    })
+
+}
+
+function writeLogs(logs: string, logFilePath: string | undefined) {
     if (missionContext.getLogsStream() != null) {
-        missionContext.getLogsStream()?.write(output)
+        missionContext.getLogsStream()!.write(logs)
     }
     if (logFilePath) {
-        fs.writeFileSync(logFilePath, output, {flag: 'a'})
+        fs.writeFileSync(logFilePath, logs, {flag: 'a'})
     }
-
     // Output logs to the console
-    process.stdout.write(output)
+    process.stdout.write(logs)
 }
