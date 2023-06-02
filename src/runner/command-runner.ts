@@ -1,7 +1,7 @@
 import {Command, CommandContext} from '../model/Command'
 import {osType} from '@dxworks/cli-common'
 import {missionContext} from '../context/mission-context'
-import {ExecSyncOptionsWithStringEncoding, spawn} from 'child_process'
+import {spawn, SpawnOptions} from 'child_process'
 import fs from 'fs'
 import {CommandSummary} from '../model/summary/CommandSummary'
 import {getLogFilePath} from '../utils/logs_collector'
@@ -50,16 +50,15 @@ async function executeCommand(commandContext: CommandContext,
     if (!command) {
         console.warn('warn: No command defined for platform')
     }
-    const options: ExecSyncOptionsWithStringEncoding = {
+    const options: SpawnOptions = {
         env: env,
         cwd: path,
-        encoding: 'utf-8',
         stdio: ['ignore', 'pipe', 'pipe'],
+        shell: true,
     }
-    const [commandKey, ...args] = command!.split(' ')
 
     return new Promise((resolve, reject) => {
-        const childProcess = spawn(commandKey, args, options)
+        const childProcess = spawn(command!, options)
 
         childProcess.stdout?.on('data', (data) => {
             const logs = data.toString()
