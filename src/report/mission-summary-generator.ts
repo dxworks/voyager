@@ -18,12 +18,12 @@ export function generateMissionSummary(): void {
     console.log(output)
 }
 
-function centerText(text: string, maxLength: number): string {
+export function centerText(text: string, maxLength: number): string {
     const padding = '.'.repeat(Math.floor((maxLength - text.length) / 2))
     return padding + text + padding
 }
 
-function padLine(startLine: string, endLine: string, maxLength: number, frontTab?: boolean): string {
+export function padLine(startLine: string, endLine: string, maxLength: number, frontTab?: boolean): string {
     if (frontTab)
         startLine = '    ' + startLine
     const remainingSpace = maxLength - (startLine.length + endLine.length)

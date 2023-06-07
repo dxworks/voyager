@@ -14,12 +14,16 @@ const getDirectories = (source: any): string[] =>
         .filter(dirent => dirent.isDirectory())
         .map(dirent => dirent.name)
 
-export function loadAndParseData(filePath: string): void {
+function extractContextVariables(filePath: string): void{
     const rootDir: string = path.dirname(filePath)
     missionContext.addVariable(ROOT_DIR, rootDir)
     const currentPath = process.cwd()
     missionContext.addVariable(VOYAGER_DIR, currentPath)
     missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(rootDir, INSTRUMENTS_DEFAULT_DIR))
+}
+
+export function loadAndParseData(filePath: string): void {
+    extractContextVariables(filePath)
     loadAndParseMission(filePath)
     loadAndParseInstruments()
 }

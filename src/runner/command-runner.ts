@@ -23,7 +23,7 @@ export async function runCommand(commandContext: CommandContext,
     instrumentSummary.addCommandSummary(commandContext.id, commandSummary)
 }
 
-function translateCommand(command: Command): string | undefined {
+export function translateCommand(command: Command): string | undefined {
     switch (osType) {
         case 'windows':
             return command.windows

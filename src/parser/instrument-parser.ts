@@ -1,7 +1,7 @@
 import {Instrument} from '../model/Instrument'
 import {parseIntoMap} from './data-parser'
-import {Action, CustomAction, DefaultAction, Location, WithAction} from '../model/Action'
-import {CommandContext} from '../model/Command'
+import {Action, CustomAction, DefaultAction, Location, Requirement, WithAction} from '../model/Action'
+import {Command, CommandContext} from '../model/Command'
 import {VariableProvider} from '../variable/VariableProvider'
 import {
     getEnvironmentVariables,
@@ -105,6 +105,7 @@ function parseWith(withObject: any): WithAction {
         validExitCodes: withObject?.validExitCodes,
         script: withObject?.script,
         locations: parseLocations(withObject?.locations),
+        requirements: parseRequirements(withObject?.requirements),
     }
 }
 
@@ -124,6 +125,37 @@ function parseLocation(locationObject: any): Location {
     }
 }
 
+function parseRequirements(requirementsObject: any): Requirement[] {
+    const requirements: Requirement[] = []
+    parseIntoMap(requirementsObject).forEach(value => {
+        requirements.push(parseRequirement(value))
+    })
+    return requirements
+}
+
+function parseRequirement(requirementObject: any): Requirement {
+    return {
+        name: requirementObject.name,
+        min: requirementObject.min,
+        match: requirementObject.match,
+        command: parseRequirementCommand(requirementObject.command),
+    }
+}
+
+function parseRequirementCommand(commandObject: any): string | Command {
+    let commandType
+    if (typeof commandObject == 'string')
+        commandType = commandObject
+    else
+        commandType = {
+            windows: commandObject.windows,
+            unix: commandObject.unix,
+            mac: commandObject.mac,
+            linux: commandObject.linux,
+        }
+
+    return commandType
+}
 
 function initVariableProvider(): void {
     variableHandler = new VariableHandler()

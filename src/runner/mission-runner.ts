@@ -1,8 +1,8 @@
 import {Instrument} from '../model/Instrument'
 import {missionContext} from '../context/MissionContext'
 import {loadAndParseData} from '../parser/data-parser'
-import {cleanActionKey, packageActionKey} from './action-utils'
-import {DefaultAction} from '../model/Action'
+import {cleanActionKey, packageActionKey, verifyActionKey} from './action-utils'
+import {CustomAction, DefaultAction} from '../model/Action'
 import {runCleanAction} from './default-actions/clean-action-runner'
 import archiver, {Archiver} from 'archiver'
 import fs from 'fs'
@@ -12,6 +12,9 @@ import path from 'node:path'
 import {generateHtmlReport, getHtmlLogContent} from '../report/html/html-report-generator'
 import {getHtmlFilePath} from '../report/html/html-report-utils'
 import {runInstrument} from './instrument-runner'
+import {runVerifyAction} from './default-actions/verify-action-runner'
+import {DoctorReport} from '../report/DoctorReport'
+import {generateDoctorReportLogs} from '../report/doctor-summary-generator'
 
 
 export async function cleanMission(missionFilePath: string): Promise<void> {
@@ -19,6 +22,18 @@ export async function cleanMission(missionFilePath: string): Promise<void> {
     const cleanActions = missionContext.instruments.map(instrument => (<DefaultAction>instrument.actions.get(cleanActionKey)))
         .filter(cleanAction => cleanAction != null)
     cleanActions.forEach(cleanAction => runCleanAction(cleanAction))
+}
+
+export async function verifyMission(missionFilePath: string): Promise<void> {
+    const doctorReport = new DoctorReport()
+    loadAndParseData(missionFilePath)
+    for (const instrument of missionContext.instruments) {
+        const verifyAction = (<DefaultAction>instrument.actions.get(verifyActionKey))
+        if(verifyAction != null){
+            doctorReport.addInstrumentDoctorReport(await runVerifyAction(verifyAction, instrument.name))
+        }
+    }
+    generateDoctorReportLogs(doctorReport)
 }
 
 export async function runMission(missionFilePath: string, actions: string[] | undefined): Promise<void> {
