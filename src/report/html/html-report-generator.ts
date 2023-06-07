@@ -17,7 +17,7 @@ export function getHtmlLogContent(logs: string): string {
 </head>
 <body>
 <pre>
-    ${logs}
+${logs}
 </pre>
 </body>
 </html>`

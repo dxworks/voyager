@@ -36,6 +36,7 @@ export class MissionContext {
 
     set name(value: string) {
         this._name = value
+        this.missionSummary.missionName = value
     }
 
     get instruments(): Instrument[] {

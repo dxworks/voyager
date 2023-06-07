@@ -70,7 +70,7 @@ export function getMissionSummaryHtml(missionName: string, missionRunningTime: s
             color: green;
         }
 
-        .failure {
+        .fail {
             color: red;
         }
         
@@ -102,7 +102,7 @@ export function getMissionSummaryHtml(missionName: string, missionRunningTime: s
 <p>Elapsed Time: ${missionRunningTime}</p>
 <script>
     function openNewTab() {
-        const newTabURL = './${missionName}.html'
+        const newTabURL = './html/${missionName}.html'
         window.open(newTabURL, '_blank')
     }
     document.getElementById('summaryReportLink').addEventListener('click', openNewTab)

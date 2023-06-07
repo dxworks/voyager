@@ -1,17 +1,18 @@
 import path from 'node:path'
 import fs from 'fs'
 import {missionContext} from '../context/MissionContext'
+import {VOYAGER_DIR} from '../context/context-variable-provider'
 
 export function getLogFilePath(instrumentName: string): string {
-    return path.join(<string>missionContext.getVariable('firstWorkingDir'), instrumentName + '.txt')
+    return path.join(<string>missionContext.getVariable(VOYAGER_DIR), instrumentName + '.logs')
 }
 
 export function getTimeInSeconds(startTime: number, endTime: number): string {
     return ((endTime - startTime) / 1000).toFixed(1) + 's'
 }
 
-export function getLogsStream(missionName: string): fs.WriteStream {
-    const logFilePath = path.join(process.cwd(), missionName + '.txt')
+export function getLogsStream(): fs.WriteStream {
+    const logFilePath = getLogFilePath(missionContext.name)
     const logStream = fs.createWriteStream(logFilePath, {flags: 'a'})
 
     // Override the default console.log and console.error functions

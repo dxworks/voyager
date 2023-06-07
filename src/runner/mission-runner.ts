@@ -24,8 +24,6 @@ export async function cleanMission(missionFilePath: string): Promise<void> {
 export async function runMission(missionFilePath: string, actions: string[] | undefined): Promise<void> {
     const startTime = performance.now()
 
-    missionContext.logsStream = getLogsStream(missionContext.name)
-
     function getRunnableInstruments() {
         return <Instrument[]>missionContext.runnableInstruments.map(runnableInstrument => missionContext.instruments.find((instrument) => instrument.id == runnableInstrument))
             .filter(instrument => !!instrument)
@@ -33,6 +31,7 @@ export async function runMission(missionFilePath: string, actions: string[] | un
 
     loadAndParseData(missionFilePath)
     const instruments = missionContext.runAll ? missionContext.instruments : getRunnableInstruments()
+    missionContext.logsStream = getLogsStream()
     await runInstruments(instruments, actions)
     const endTime = performance.now()
 
@@ -100,7 +99,7 @@ function addHtmlToArchive(instruments: Instrument[], archive: archiver.Archiver)
         const fileContent = fs.readFileSync(getLogFilePath(missionContext.name), 'utf8')
         const missionHtmlFile = getHtmlFilePath(missionContext.name)
         fs.writeFileSync(missionHtmlFile, getHtmlLogContent(fileContent))
-        archive.file(missionHtmlFile, {name: path.basename(missionHtmlFile)})
+        archive.file(missionHtmlFile, {name:'/html/' + path.basename(missionHtmlFile)})
     } catch (err) {
         console.error('Error reading/writing file:', err)
     }
