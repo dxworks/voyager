@@ -1,9 +1,10 @@
 import {Archiver} from 'archiver'
-import {cleanActionKey, packageActionKey} from './action-utils'
+import {cleanActionKey, packageActionKey, verifyActionKey} from './action-utils'
 import {Action, CustomAction, DefaultAction, instanceOfDefaultAction} from '../model/Action'
 import {runCommand} from './command-runner'
 import {runCleanAction} from './default-actions/clean-action-runner'
 import {runPackageAction} from './default-actions/package-action-runner'
+import {runVerifyAction} from './default-actions/verify-action-runner'
 
 
 export async function runAction(action: Action, archive: Archiver | null, instrumentName: string, instrumentPath: string): Promise<void> {
@@ -27,6 +28,10 @@ async function runDefaultAction(action: DefaultAction, archive: Archiver | null,
         }
         case packageActionKey: {
             runPackageAction(instrumentName!, archive!, action)
+            break
+        }
+        case verifyActionKey: {
+            await runVerifyAction(action, instrumentName)
             break
         }
     }

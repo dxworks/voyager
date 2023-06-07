@@ -5,10 +5,20 @@ import {spawn, SpawnOptions} from 'child_process'
 import {parseIntoMap} from '../../parser/data-parser'
 import {InstrumentDoctorReport} from '../../report/DoctorReport'
 import semver from 'semver/preload'
+import {missionContext} from '../../context/MissionContext'
+import {verifyActionKey} from '../action-utils'
 
 const regexGroup = /\(\?<(?<group>\w+)>\.\+\)/gm
 
-export async function runVerifyAction(verifyAction: DefaultAction, instrumentName: string): Promise<InstrumentDoctorReport> {
+export async function runVerifyActionsAndGetReport(): Promise<void> {
+    for (const instrument of missionContext.instruments) {
+        const verifyAction = (<DefaultAction>instrument.actions.get(verifyActionKey))
+        if (verifyAction != null)
+            await runVerifyAction(verifyAction, instrument.name)
+    }
+}
+
+export async function runVerifyAction(verifyAction: DefaultAction, instrumentName: string): Promise<void> {
     const requirements = verifyAction.with?.requirements
     const instrumentDoctorReport = new InstrumentDoctorReport(instrumentName)
     if (requirements) {
@@ -22,7 +32,7 @@ export async function runVerifyAction(verifyAction: DefaultAction, instrumentNam
             }
         }
     }
-    return instrumentDoctorReport
+    missionContext.doctorReport.addInstrumentDoctorReport(instrumentDoctorReport)
 }
 
 async function checkRequirement(command: string, requirement: Requirement): Promise<void> {

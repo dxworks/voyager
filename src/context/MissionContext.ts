@@ -2,6 +2,7 @@ import {Instrument} from '../model/Instrument'
 import {ContextVariableProvider} from './context-variable-provider'
 import fs from 'fs'
 import {MissionSummary} from '../model/summary/MissionSummary'
+import {DoctorReport} from '../report/DoctorReport'
 
 export class MissionContext {
 
@@ -19,6 +20,8 @@ export class MissionContext {
 
     private readonly _missionSummary: MissionSummary
 
+    private readonly _doctorReport: DoctorReport
+
     runAll = true
 
     private constructor() {
@@ -28,6 +31,7 @@ export class MissionContext {
         this.variableProvider = new ContextVariableProvider()
         this._logsStream = null
         this._missionSummary = new MissionSummary()
+        this._doctorReport = new DoctorReport()
     }
 
     get name(): string {
@@ -65,6 +69,10 @@ export class MissionContext {
 
     get missionSummary(): MissionSummary {
         return this._missionSummary
+    }
+
+    get doctorReport(): DoctorReport {
+        return this._doctorReport
     }
 
     public static getInstance(): MissionContext {

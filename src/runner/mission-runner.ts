@@ -2,7 +2,7 @@ import {Instrument} from '../model/Instrument'
 import {missionContext} from '../context/MissionContext'
 import {loadAndParseData} from '../parser/data-parser'
 import {cleanActionKey, packageActionKey, verifyActionKey} from './action-utils'
-import {CustomAction, DefaultAction} from '../model/Action'
+import {DefaultAction} from '../model/Action'
 import {runCleanAction} from './default-actions/clean-action-runner'
 import archiver, {Archiver} from 'archiver'
 import fs from 'fs'
@@ -12,8 +12,7 @@ import path from 'node:path'
 import {generateHtmlReport, getHtmlLogContent} from '../report/html/html-report-generator'
 import {getHtmlFilePath} from '../report/html/html-report-utils'
 import {runInstrument} from './instrument-runner'
-import {runVerifyAction} from './default-actions/verify-action-runner'
-import {DoctorReport} from '../report/DoctorReport'
+import {runVerifyActionsAndGetReport} from './default-actions/verify-action-runner'
 import {generateDoctorReportLogs} from '../report/doctor-summary-generator'
 
 
@@ -25,15 +24,9 @@ export async function cleanMission(missionFilePath: string): Promise<void> {
 }
 
 export async function verifyMission(missionFilePath: string): Promise<void> {
-    const doctorReport = new DoctorReport()
     loadAndParseData(missionFilePath)
-    for (const instrument of missionContext.instruments) {
-        const verifyAction = (<DefaultAction>instrument.actions.get(verifyActionKey))
-        if(verifyAction != null){
-            doctorReport.addInstrumentDoctorReport(await runVerifyAction(verifyAction, instrument.name))
-        }
-    }
-    generateDoctorReportLogs(doctorReport)
+    await runVerifyActionsAndGetReport()
+    generateDoctorReportLogs()
 }
 
 export async function runMission(missionFilePath: string, actions: string[] | undefined): Promise<void> {
@@ -58,12 +51,15 @@ export async function runMission(missionFilePath: string, actions: string[] | un
 async function runInstruments(instruments: Instrument[], actions: string[] | undefined) {
     let archive: Archiver | null = null
     const customRun = actions != undefined
+    const requireVerifyActionReport = customRun ? !!actions.includes(verifyActionKey) : true
     const requirePackaging = customRun ? !!actions.includes(packageActionKey) : true
     if (requirePackaging)
         archive = archiver('zip', {zlib: {level: 9}})
     for (const instrument of instruments) {
         await runInstrument(instrument, archive, customRun, actions)
     }
+    if (requireVerifyActionReport)
+        generateDoctorReportLogs()
     if (requirePackaging) {
         addLogsAndHtmlReportToArchive(instruments, archive!)
         archive!.finalize().then(() => cleanLogsAndHtmlFileFromDisk(instruments))
@@ -114,7 +110,7 @@ function addHtmlToArchive(instruments: Instrument[], archive: archiver.Archiver)
         const fileContent = fs.readFileSync(getLogFilePath(missionContext.name), 'utf8')
         const missionHtmlFile = getHtmlFilePath(missionContext.name)
         fs.writeFileSync(missionHtmlFile, getHtmlLogContent(fileContent))
-        archive.file(missionHtmlFile, {name:'/html/' + path.basename(missionHtmlFile)})
+        archive.file(missionHtmlFile, {name: '/html/' + path.basename(missionHtmlFile)})
     } catch (err) {
         console.error('Error reading/writing file:', err)
     }
