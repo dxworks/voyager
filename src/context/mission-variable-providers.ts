@@ -1,4 +1,4 @@
-import {VariableProvider} from '../variable/variable-provider'
+import {VariableProvider} from '../variable/VariableProvider'
 
 export const missionCommandVarProvider = new VariableProvider()
 export const missionActionVarProvider = new VariableProvider()

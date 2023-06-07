@@ -1,10 +1,10 @@
 import {Archiver} from 'archiver'
 import {DefaultAction, Location} from '../../model/Action'
 import path from 'node:path'
-import {missionContext} from '../../context/mission-context'
+import {missionContext} from '../../context/MissionContext'
 import {INSTRUMENTS_DIR} from '../../context/context-variable-provider'
 import fs from 'fs'
-import {getLogFilePath} from '../../utils/logs_collector'
+import {getLogFilePath} from '../../report/logs-collector-utils'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const {minimatch} = require('minimatch')
 

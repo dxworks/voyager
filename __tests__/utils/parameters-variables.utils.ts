@@ -1,4 +1,4 @@
-import {VariableProvider} from '../../src/variable/variable-provider'
+import {VariableProvider} from '../../src/variable/VariableProvider'
 
 export const placeParameterContext = {
     instrumentKey: 'test',

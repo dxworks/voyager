@@ -4,8 +4,8 @@ import fs, {readdirSync} from 'fs'
 import {parseInstrument} from './instrument-parser'
 import {parseMission} from './mission-parser'
 import path from 'node:path'
-import {missionContext} from '../context/mission-context'
-import {INSTRUMENTS_DEFAULT_DIR, INSTRUMENTS_DIR, ROOT_DIR} from '../context/context-variable-provider'
+import {missionContext} from '../context/MissionContext'
+import {INSTRUMENTS_DEFAULT_DIR, INSTRUMENTS_DIR, ROOT_DIR, VOYAGER_DIR} from '../context/context-variable-provider'
 
 const instrumentYml = 'instrument.v2.yml'
 
@@ -18,7 +18,7 @@ export function loadAndParseData(filePath: string): void {
     const rootDir: string = path.dirname(filePath)
     missionContext.addVariable(ROOT_DIR, rootDir)
     const currentPath = process.cwd()
-    missionContext.addVariable('firstWorkingDir', currentPath)
+    missionContext.addVariable(VOYAGER_DIR, currentPath)
     missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(rootDir, INSTRUMENTS_DEFAULT_DIR))
     loadAndParseMission(filePath)
     loadAndParseInstruments()
@@ -26,7 +26,7 @@ export function loadAndParseData(filePath: string): void {
 
 export function loadAndParseMission(filePath: string): void {
     const file: any = yaml.load(fs.readFileSync(filePath).toString())
-    missionContext.setName(file.mission)
+    missionContext.name = file.mission
     parseIntoMap(file.variables).forEach((value, key) => missionContext.addVariable(key, value))
     if (file.instrumentsDir)
         missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(<string>missionContext.getVariable(ROOT_DIR), <string>file.instrumentsDir))

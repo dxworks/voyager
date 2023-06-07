@@ -1,4 +1,4 @@
-import {VariableProvider} from './variable-provider'
+import {VariableProvider} from './VariableProvider'
 import {ExtendedVariableContext, Variable, VariableContext} from '../model/Variable'
 
 export class VariableHandler {

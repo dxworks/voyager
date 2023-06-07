@@ -1,7 +1,7 @@
-import {missionContext} from '../context/mission-context'
+import {missionContext} from '../context/MissionContext'
 
-export function logSummary(): void {
-    const missionSummary = missionContext.getMissionSummary()
+export function generateMissionSummary(): void {
+    const missionSummary = missionContext.missionSummary
     const maxLength = 100
     const missionNameLine = ` ${missionSummary.missionName} Summary `
     const centeredMissionNameLine = centerText(missionNameLine, maxLength)

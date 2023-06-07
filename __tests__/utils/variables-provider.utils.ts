@@ -1,5 +1,5 @@
-import {VariableHandler} from '../../src/variable/variable-handler'
-import {VariableProvider} from '../../src/variable/variable-provider'
+import {VariableHandler} from '../../src/variable/VariableHandler'
+import {VariableProvider} from '../../src/variable/VariableProvider'
 import {
     instrumentActionEnvProvider,
     instrumentCommandEnvProvider,

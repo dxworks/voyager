@@ -2,22 +2,22 @@ import {Instrument} from '../model/Instrument'
 import {parseIntoMap} from './data-parser'
 import {Action, CustomAction, DefaultAction, Location, WithAction} from '../model/Action'
 import {CommandContext} from '../model/Command'
-import {VariableProvider} from '../variable/variable-provider'
+import {VariableProvider} from '../variable/VariableProvider'
 import {
     getEnvironmentVariables,
     replaceMissionContextVariables,
     replaceParameters,
 } from '../variable/variable-operations'
-import {VariableHandler} from '../variable/variable-handler'
+import {VariableHandler} from '../variable/VariableHandler'
 import {
     missionActionEnvVarProvider,
     missionActionVarProvider,
     missionCommandEnvVarProvider,
     missionCommandVarProvider,
     missionEnvVarProvider,
-} from '../context/mission-providers'
-import {isDefaultAction} from '../utils/ActionConstants'
-import {missionContext} from '../context/mission-context'
+} from '../context/mission-variable-providers'
+import {isDefaultAction} from '../runner/action-utils'
+import {missionContext} from '../context/MissionContext'
 import {INSTRUMENT_KEY} from '../context/context-variable-provider'
 import path from 'node:path'
 

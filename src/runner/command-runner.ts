@@ -1,15 +1,15 @@
 import {Command, CommandContext} from '../model/Command'
 import {osType} from '@dxworks/cli-common'
-import {missionContext} from '../context/mission-context'
+import {missionContext} from '../context/MissionContext'
 import {spawn, SpawnOptions} from 'child_process'
 import fs from 'fs'
 import {CommandSummary} from '../model/summary/CommandSummary'
-import {getLogFilePath} from '../utils/logs_collector'
+import {getLogFilePath, getTimeInSeconds} from '../report/logs-collector-utils'
 
 export async function runCommand(commandContext: CommandContext,
                                  commandPath: string,
                                  instrumentName: string): Promise<void> {
-    const instrumentSummary = missionContext.getMissionSummary().getInstrumentSummary(instrumentName)
+    const instrumentSummary = missionContext.missionSummary.getInstrumentSummary(instrumentName)
     const startTime = performance.now()
     const commandSummary = new CommandSummary()
     try {
@@ -19,7 +19,7 @@ export async function runCommand(commandContext: CommandContext,
         commandSummary.success = false
     }
     const endTime = performance.now()
-    commandSummary.runningTime = ((endTime - startTime) / 1000).toFixed(1) + 's'
+    commandSummary.runningTime = getTimeInSeconds(startTime, endTime)
     instrumentSummary.addCommandSummary(commandContext.id, commandSummary)
 }
 
@@ -88,8 +88,8 @@ async function executeCommand(commandContext: CommandContext,
 }
 
 function writeLogs(logs: string, logFilePath: string | undefined) {
-    if (missionContext.getLogsStream() != null) {
-        missionContext.getLogsStream()!.write(logs)
+    if (missionContext.logsStream != null) {
+        missionContext.logsStream!.write(logs)
     }
     if (logFilePath) {
         fs.writeFileSync(logFilePath, logs, {flag: 'a'})

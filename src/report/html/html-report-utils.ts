@@ -1,12 +1,13 @@
 import path from 'node:path'
-import {missionContext} from '../context/mission-context'
+import {missionContext} from '../../context/MissionContext'
+import {VOYAGER_DIR} from '../../context/context-variable-provider'
 
-export function normalizeInstrumentName(instrumentName:string): string{
+export function normalizeInstrumentName(instrumentName: string): string {
     return instrumentName.replace(/[^\w\s]/gi, '')
 }
 
 export function getHtmlFilePath(instrumentName: string): string {
-    return path.join(<string>missionContext.getVariable('firstWorkingDir'),instrumentName + '.html')
+    return path.join(<string>missionContext.getVariable(VOYAGER_DIR), instrumentName + '.html')
 }
 
 function getCommandHtml(commandName: string, commandSuccessStatus: string, commandRunningTime: string): string {
@@ -101,7 +102,7 @@ export function getMissionSummaryHtml(missionName: string, missionRunningTime: s
 <p>Elapsed Time: ${missionRunningTime}</p>
 <script>
     function openNewTab() {
-        const newTabURL = '/${missionName}.html'
+        const newTabURL = './${missionName}.html'
         window.open(newTabURL, '_blank')
     }
     document.getElementById('summaryReportLink').addEventListener('click', openNewTab)

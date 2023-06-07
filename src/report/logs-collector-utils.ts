@@ -1,9 +1,13 @@
 import path from 'node:path'
 import fs from 'fs'
-import {missionContext} from '../context/mission-context'
+import {missionContext} from '../context/MissionContext'
 
 export function getLogFilePath(instrumentName: string): string {
     return path.join(<string>missionContext.getVariable('firstWorkingDir'), instrumentName + '.txt')
+}
+
+export function getTimeInSeconds(startTime: number, endTime: number): string {
+    return ((endTime - startTime) / 1000).toFixed(1) + 's'
 }
 
 export function getLogsStream(missionName: string): fs.WriteStream {

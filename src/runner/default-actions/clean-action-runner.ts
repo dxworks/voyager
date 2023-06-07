@@ -1,6 +1,6 @@
 import {DefaultAction} from '../../model/Action'
 import path from 'node:path'
-import {missionContext} from '../../context/mission-context'
+import {missionContext} from '../../context/MissionContext'
 import {INSTRUMENTS_DIR} from '../../context/context-variable-provider'
 import fs from 'fs'
 

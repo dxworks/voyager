@@ -2,6 +2,7 @@ export const ROOT_DIR = 'rootDir'
 export const INSTRUMENTS_DIR = 'instrumentsDir'
 export const INSTRUMENT_KEY = 'instrument'
 export const INSTRUMENTS_DEFAULT_DIR = './instruments'
+export const VOYAGER_DIR = 'firstWorkingDir'
 
 export class ContextVariableProvider {
 

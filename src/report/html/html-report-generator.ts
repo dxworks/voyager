@@ -1,5 +1,5 @@
-import {missionContext} from '../context/mission-context'
-import {getCommandSummaryHtml, getInstrumentSummaryHtml, getMissionSummaryHtml} from './summary-html-utils'
+import {missionContext} from '../../context/MissionContext'
+import {getCommandSummaryHtml, getInstrumentSummaryHtml, getMissionSummaryHtml} from './html-report-utils'
 import fs from 'fs'
 import path from 'node:path'
 
@@ -7,7 +7,7 @@ export function getHtmlReportPath(): string {
     return path.join(<string>missionContext.getVariable('firstWorkingDir'), 'MissionReport.html')
 }
 
-export function getHtmlLogContent(logs:string): string{
+export function getHtmlLogContent(logs: string): string {
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -24,7 +24,7 @@ export function getHtmlLogContent(logs:string): string{
 }
 
 export function generateHtmlReport(): string {
-    const missionSummary = missionContext.getMissionSummary()
+    const missionSummary = missionContext.missionSummary
     let summaryContent = ''
     missionSummary.instrumentsSummary.forEach((instrumentSummary, instrumentName) => {
         const numberOfCommands = instrumentSummary.commandsSummary.size

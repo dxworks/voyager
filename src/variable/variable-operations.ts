@@ -1,6 +1,6 @@
 import {VariableContext} from '../model/Variable'
-import {missionContext} from '../context/mission-context'
-import {VariableHandler} from './variable-handler'
+import {missionContext} from '../context/MissionContext'
+import {VariableHandler} from './VariableHandler'
 
 const variableRegex = /\${[^}]*}/g
 

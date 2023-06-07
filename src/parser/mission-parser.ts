@@ -1,12 +1,12 @@
 import {parseIntoMap} from './data-parser'
-import {missionContext} from '../context/mission-context'
+import {missionContext} from '../context/MissionContext'
 import {
     missionActionEnvVarProvider,
     missionActionVarProvider,
     missionCommandEnvVarProvider,
     missionCommandVarProvider,
     missionEnvVarProvider,
-} from '../context/mission-providers'
+} from '../context/mission-variable-providers'
 import path from 'node:path'
 
 export function parseMission(file: any): void {
