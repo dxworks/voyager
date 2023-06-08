@@ -5,8 +5,7 @@ import {missionContext} from '../../context/MissionContext'
 import {INSTRUMENTS_DIR} from '../../context/context-variable-provider'
 import fs from 'fs'
 import {getLogFilePath} from '../../report/logs-collector-utils'
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const {minimatch} = require('minimatch')
+import {getMatchingFilesFromDir} from '../action-utils'
 
 export function runPackageAction(instrumentName: string, archive: Archiver, action: DefaultAction): void {
     addLogFileToArchive(getLogFilePath(instrumentName), archive)
@@ -16,20 +15,11 @@ export function runPackageAction(instrumentName: string, archive: Archiver, acti
         const destinationDirectory = location.destination ? path.join(instrumentResultsDirectory, location.destination) : instrumentResultsDirectory
         const sourcePath = path.resolve(missionContext.getVariable(INSTRUMENTS_DIR)!, location.source)
         if (location.files) {
-            const matchingFiles: string[] = []
-            if (fs.existsSync(sourcePath)) {
-                const files = fs.readdirSync(sourcePath)
-                location.files.forEach(fileName => {
-                    matchingFiles.push(...files.filter(str => {
-                            return minimatch(str, fileName)
-                        })
-                    )
-                })
-                matchingFiles.forEach(file => {
-                    const filePath = path.resolve(sourcePath, file)
-                    archive.file(filePath, {name: path.join(destinationDirectory, file)})
-                })
-            }
+            const matchingFiles = getMatchingFilesFromDir(sourcePath, location.files)
+            matchingFiles.forEach(file => {
+                const filePath = path.resolve(sourcePath, file)
+                archive.file(filePath, {name: path.join(destinationDirectory, file)})
+            })
         } else if (fs.existsSync(sourcePath))
             archive.directory(sourcePath, destinationDirectory)
     })

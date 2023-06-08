@@ -54,16 +54,15 @@ async function checkRequirement(command: string, requirement: Requirement): Prom
         childProcess.on('close', () => {
             let fulfilled = false
             for (const regexStr of requirement.match) {
-                const groupMach = new RegExp(regexGroup).exec(regexStr)
+                const groupMach = new RegExp(regexGroup, 'i').exec(regexStr)
                 if (groupMach && groupMach.groups && groupMach.groups.group) {
                     const group = groupMach.groups.group
                     const regex = new RegExp(regexStr)  //global RegExp are stateful, so we make sure to use a new state free RegExp
                     const match = regex.exec(output)
                     if (match && match.groups) {
                         const version = String(parseIntoMap(match.groups).get(group))
-                        if (semver.gte(version, requirement.min, true)) {
+                        if (semver.gte(version, requirement.min, true))
                             fulfilled = true
-                        }
                     }
                 }
             }

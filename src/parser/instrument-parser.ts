@@ -122,6 +122,7 @@ function parseLocation(locationObject: any): Location {
         source: replaceMissionContextVariables(locationObject.source),
         destination: locationObject.destination,
         files: locationObject.files,
+        rmDir: locationObject.rmDir,
     }
 }
 
