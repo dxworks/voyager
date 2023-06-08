@@ -5,7 +5,13 @@ import {parseInstrument} from './instrument-parser'
 import {parseMission} from './mission-parser'
 import path from 'node:path'
 import {missionContext} from '../context/MissionContext'
-import {INSTRUMENTS_DEFAULT_DIR, INSTRUMENTS_DIR, ROOT_DIR, VOYAGER_DIR} from '../context/context-variable-provider'
+import {
+    INSTRUMENTS_DEFAULT_DIR,
+    INSTRUMENTS_DIR,
+    MISSION_NAME,
+    MISSION_ROOT_DIR,
+    VOYAGER_WORKING_DIR,
+} from '../context/context-variable-provider'
 
 const instrumentYml = 'instrument.v2.yml'
 
@@ -14,11 +20,11 @@ const getDirectories = (source: any): string[] =>
         .filter(dirent => dirent.isDirectory())
         .map(dirent => dirent.name)
 
-function extractContextVariables(filePath: string): void{
+function extractContextVariables(filePath: string): void {
     const rootDir: string = path.dirname(filePath)
-    missionContext.addVariable(ROOT_DIR, rootDir)
+    missionContext.addVariable(MISSION_ROOT_DIR, rootDir)
     const currentPath = process.cwd()
-    missionContext.addVariable(VOYAGER_DIR, currentPath)
+    missionContext.addVariable(VOYAGER_WORKING_DIR, currentPath)
     missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(rootDir, INSTRUMENTS_DEFAULT_DIR))
 }
 
@@ -31,9 +37,10 @@ export function loadAndParseData(filePath: string): void {
 export function loadAndParseMission(filePath: string): void {
     const file: any = yaml.load(fs.readFileSync(filePath).toString())
     missionContext.name = file.mission
+    missionContext.addVariable(MISSION_NAME, file.mission)
     parseIntoMap(file.variables).forEach((value, key) => missionContext.addVariable(key, value))
     if (file.instrumentsDir)
-        missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(<string>missionContext.getVariable(ROOT_DIR), <string>file.instrumentsDir))
+        missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(<string>missionContext.getVariable(MISSION_ROOT_DIR), <string>file.instrumentsDir))
     if (file.runAll)
         missionContext.runAll = file.runAll
     parseMission(file)
@@ -41,7 +48,7 @@ export function loadAndParseMission(filePath: string): void {
 
 function loadAndParseInstruments() {
     const instruments: Instrument[] = []
-    const instrumentsDirPath = path.resolve(<string>missionContext.getVariable(ROOT_DIR), <string>missionContext.getVariable(INSTRUMENTS_DIR))
+    const instrumentsDirPath = path.resolve(<string>missionContext.getVariable(MISSION_ROOT_DIR), <string>missionContext.getVariable(INSTRUMENTS_DIR))
     const instrumentDirectories = getDirectories(instrumentsDirPath)
     instrumentDirectories.forEach((instrumentDir) => {
         instruments.push(loadAndParseInstrument(instrumentsDirPath, instrumentDir))

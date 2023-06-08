@@ -1,10 +1,10 @@
 import path from 'node:path'
 import fs from 'fs'
 import {missionContext} from '../context/MissionContext'
-import {VOYAGER_DIR} from '../context/context-variable-provider'
+import {VOYAGER_WORKING_DIR} from '../context/context-variable-provider'
 
 export function getLogFilePath(instrumentName: string): string {
-    return path.join(<string>missionContext.getVariable(VOYAGER_DIR), instrumentName + '.logs')
+    return path.join(<string>missionContext.getVariable(VOYAGER_WORKING_DIR), instrumentName + '.logs')
 }
 
 export function getTimeInSeconds(startTime: number, endTime: number): string {

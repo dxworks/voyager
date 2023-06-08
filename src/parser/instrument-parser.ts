@@ -18,7 +18,7 @@ import {
 } from '../context/mission-variable-providers'
 import {isDefaultAction} from '../runner/action-utils'
 import {missionContext} from '../context/MissionContext'
-import {INSTRUMENT_KEY} from '../context/context-variable-provider'
+import {INSTRUMENT_NAME} from '../context/context-variable-provider'
 import path from 'node:path'
 
 let variableHandler: VariableHandler
@@ -31,7 +31,7 @@ let actionEnvVarProvider: VariableProvider
 export function parseInstrument(instrumentsDirPath: string, instrumentDir: string, file: any): Instrument {
     initVariableProvider()
     const instrumentPath = path.resolve(instrumentsDirPath, instrumentDir)
-    missionContext.addVariable(INSTRUMENT_KEY, file.name)
+    missionContext.addVariable(INSTRUMENT_NAME, file.name)
     missionContext.addVariable('instrumentPath', instrumentPath)
     missionContext.addVariable('instrumentDir', instrumentDir)
     const actions = parseInstrumentActions(file.actions, file.id)

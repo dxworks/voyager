@@ -1,8 +1,9 @@
-export const ROOT_DIR = 'rootDir'
+export const MISSION_ROOT_DIR = 'rootDir'
+export const MISSION_NAME = 'missionName'
 export const INSTRUMENTS_DIR = 'instrumentsDir'
-export const INSTRUMENT_KEY = 'instrument'
+export const INSTRUMENT_NAME = 'instrument'
+export const VOYAGER_WORKING_DIR = 'voyagerWorkingDir'
 export const INSTRUMENTS_DEFAULT_DIR = './instruments'
-export const VOYAGER_DIR = 'firstWorkingDir'
 
 export class ContextVariableProvider {
 

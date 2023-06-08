@@ -1,13 +1,13 @@
 import path from 'node:path'
 import {missionContext} from '../../context/MissionContext'
-import {VOYAGER_DIR} from '../../context/context-variable-provider'
+import {VOYAGER_WORKING_DIR} from '../../context/context-variable-provider'
 
 export function normalizeInstrumentName(instrumentName: string): string {
     return instrumentName.replace(/[^\w\s]/gi, '')
 }
 
 export function getHtmlFilePath(instrumentName: string): string {
-    return path.join(<string>missionContext.getVariable(VOYAGER_DIR), instrumentName + '.html')
+    return path.join(<string>missionContext.getVariable(VOYAGER_WORKING_DIR), instrumentName + '.html')
 }
 
 function getCommandHtml(commandName: string, commandSuccessStatus: string, commandRunningTime: string): string {
