@@ -51,7 +51,7 @@ export async function runMission(missionFilePath: string, actions: string[] | un
 async function runInstruments(instruments: Instrument[], actions: string[] | undefined) {
     let archive: Archiver | null = null
     const customRun = actions != undefined
-    const requireVerifyActionReport = customRun ? !!actions.includes(verifyActionKey) : true
+    const requireVerifyActionReport = customRun ? !!actions.includes(verifyActionKey) : false
     const requirePackaging = customRun ? !!actions.includes(packageActionKey) : true
     if (requirePackaging)
         archive = archiver('zip', {zlib: {level: 9}})
