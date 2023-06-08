@@ -2,25 +2,10 @@ import {missionContext} from '../../context/MissionContext'
 import {getCommandSummaryHtml, getInstrumentSummaryHtml, getMissionSummaryHtml} from './html-report-utils'
 import fs from 'fs'
 import path from 'node:path'
+import {VOYAGER_WORKING_DIR} from '../../context/context-variable-provider'
 
 export function getHtmlReportPath(): string {
-    return path.join(<string>missionContext.getVariable('firstWorkingDir'), 'MissionReport.html')
-}
-
-export function getHtmlLogContent(logs: string): string {
-    return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-<pre>
-${logs}
-</pre>
-</body>
-</html>`
+    return path.join(<string>missionContext.getVariable(VOYAGER_WORKING_DIR), 'MissionReport.html')
 }
 
 export function generateHtmlReport(): string {

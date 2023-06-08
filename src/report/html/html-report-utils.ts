@@ -36,7 +36,7 @@ export function getInstrumentSummaryHtml(instrumentName: string, numberOfCommand
             const newTabURL = './html/${instrumentName}.html'
             window.open(newTabURL, '_blank')
         }
-        document.getElementById('summaryReportLink').addEventListener('click', openNewTab)
+        document.getElementById('summaryReportLink').addEventListener('click', ${normalizeInstrumentName(instrumentName)}openNewTab)
     </script>`
 }
 
@@ -107,6 +107,22 @@ export function getMissionSummaryHtml(missionName: string, missionRunningTime: s
     }
     document.getElementById('summaryReportLink').addEventListener('click', openNewTab)
 </script>
+</body>
+</html>`
+}
+
+export function getHtmlLogContent(title: string,logs: string): string {
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>${title}</title>
+</head>
+<body>
+<pre>
+${logs}
+</pre>
 </body>
 </html>`
 }

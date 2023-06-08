@@ -9,8 +9,8 @@ import fs from 'fs'
 import {getLogFilePath, getLogsStream, getTimeInSeconds} from '../report/logs-collector-utils'
 import {generateMissionSummary} from '../report/mission-summary-generator'
 import path from 'node:path'
-import {generateHtmlReport, getHtmlLogContent} from '../report/html/html-report-generator'
-import {getHtmlFilePath} from '../report/html/html-report-utils'
+import {generateHtmlReport} from '../report/html/html-report-generator'
+import {getHtmlFilePath, getHtmlLogContent} from '../report/html/html-report-utils'
 import {runInstrument} from './instrument-runner'
 import {runVerifyActionsAndGetReport} from './default-actions/verify-action-runner'
 import {generateDoctorReportLogs} from '../report/doctor-summary-generator'
@@ -100,7 +100,7 @@ function addHtmlToArchive(instruments: Instrument[], archive: archiver.Archiver)
         try {
             const fileContent = fs.readFileSync(instrumentLogFile, 'utf8')
             const instrumentHtmlFile = getHtmlFilePath(instrumentName)
-            fs.writeFileSync(instrumentHtmlFile, getHtmlLogContent(fileContent))
+            fs.writeFileSync(instrumentHtmlFile, getHtmlLogContent(instrumentName,fileContent))
             archive.file(instrumentHtmlFile, {name: '/html/' + path.basename(instrumentHtmlFile)})
         } catch (err) {
             console.error('Error reading/writing file:', err)
@@ -109,7 +109,7 @@ function addHtmlToArchive(instruments: Instrument[], archive: archiver.Archiver)
     try {
         const fileContent = fs.readFileSync(getLogFilePath(missionContext.name), 'utf8')
         const missionHtmlFile = getHtmlFilePath(missionContext.name)
-        fs.writeFileSync(missionHtmlFile, getHtmlLogContent(fileContent))
+        fs.writeFileSync(missionHtmlFile, getHtmlLogContent(missionContext.name,fileContent))
         archive.file(missionHtmlFile, {name: '/html/' + path.basename(missionHtmlFile)})
     } catch (err) {
         console.error('Error reading/writing file:', err)
