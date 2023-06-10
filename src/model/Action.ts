@@ -2,14 +2,12 @@ import {Command, CommandContext} from './Command'
 
 export interface Action {
     name: string
-}
-
-export interface CustomAction extends Action {
-    commandsContext: CommandContext[];
+    commandsContext?: CommandContext[];
 }
 
 export interface DefaultAction extends Action {
-    with: WithAction;
+    with?: WithAction;
+    produces?: Map<string, string>
 }
 
 export interface WithAction {

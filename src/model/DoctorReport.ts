@@ -1,4 +1,4 @@
-export class DoctorReport{
+export class DoctorReport {
 
     private _instrumentsDoctorReport: InstrumentDoctorReport[] = []
 
@@ -7,20 +7,16 @@ export class DoctorReport{
         return this._instrumentsDoctorReport
     }
 
-    set instrumentsDoctorReport(value: InstrumentDoctorReport[]) {
-        this._instrumentsDoctorReport = value
-    }
-
-    public addInstrumentDoctorReport(instrumentDoctorReport: InstrumentDoctorReport): void{
+    public addInstrumentDoctorReport(instrumentDoctorReport: InstrumentDoctorReport): void {
         this._instrumentsDoctorReport.push(instrumentDoctorReport)
     }
 }
 
-export class InstrumentDoctorReport{
+export class InstrumentDoctorReport {
 
     private _instrumentName: string
 
-    private _requirementsByName: Map<string,boolean> = new Map()
+    private _requirementsByName: Map<string, boolean> = new Map()
 
 
     constructor(instrumentName: string) {
@@ -37,9 +33,5 @@ export class InstrumentDoctorReport{
 
     get requirementsByName(): Map<string, boolean> {
         return this._requirementsByName
-    }
-
-    set requirementsByName(value: Map<string, boolean>) {
-        this._requirementsByName = value
     }
 }

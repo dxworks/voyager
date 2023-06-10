@@ -1,6 +1,6 @@
 import {Instrument} from '../model/Instrument'
 import {parseIntoMap} from './data-parser'
-import {Action, CustomAction, DefaultAction, Location, Requirement, WithAction} from '../model/Action'
+import {Action, DefaultAction, Location, Requirement, WithAction} from '../model/Action'
 import {Command, CommandContext} from '../model/Command'
 import {VariableProvider} from '../variable/VariableProvider'
 import {
@@ -18,7 +18,13 @@ import {
 } from '../context/mission-variable-providers'
 import {isDefaultAction} from '../runner/action-utils'
 import {missionContext} from '../context/MissionContext'
-import {INSTRUMENT_NAME} from '../context/context-variable-provider'
+import {
+    INSTRUMENT_DIR_NAME,
+    INSTRUMENT_NAME,
+    INSTRUMENT_PATH,
+    INSTRUMENT_RESULTS,
+    RESULTS_UNPACK_DIR,
+} from '../context/context-variable-provider'
 import path from 'node:path'
 
 let variableHandler: VariableHandler
@@ -32,8 +38,9 @@ export function parseInstrument(instrumentsDirPath: string, instrumentDir: strin
     initVariableProvider()
     const instrumentPath = path.resolve(instrumentsDirPath, instrumentDir)
     missionContext.addVariable(INSTRUMENT_NAME, file.name)
-    missionContext.addVariable('instrumentPath', instrumentPath)
-    missionContext.addVariable('instrumentDir', instrumentDir)
+    missionContext.addVariable(INSTRUMENT_DIR_NAME, instrumentDir)
+    missionContext.addVariable(INSTRUMENT_PATH, instrumentPath)
+    missionContext.addVariable(INSTRUMENT_RESULTS, path.resolve(<string>missionContext.getVariable(RESULTS_UNPACK_DIR), file.name))
     const actions = parseInstrumentActions(file.actions, file.id)
     return {
         id: file.id,
@@ -47,20 +54,24 @@ export function parseInstrument(instrumentsDirPath: string, instrumentDir: strin
 function parseInstrumentActions(actionObject: any, instrumentKey: string): Map<string, Action> {
     const actions: Map<string, Action> = new Map<string, Action>()
     parseIntoMap(actionObject).forEach((value, actionKey) => {
-        if (isDefaultAction(actionKey))
-            actions.set(actionKey, parseDefaultAction(value.with, actionKey))
-        else {
-            parseIntoMap(value.parameters).forEach((value, variableKey) =>
-                actionVarProvider.addVariables({instrumentKey, actionKey, variableKey, value}))
-            parseIntoMap(value.environment).forEach((value, variableKey) =>
-                actionEnvVarProvider.addVariables({instrumentKey, actionKey, variableKey, value}))
-            actions.set(actionKey, parseCustomAction(value.commands, instrumentKey, actionKey))
-        }
+        parseIntoMap(value.parameters).forEach((value, variableKey) =>
+            actionVarProvider.addVariables({instrumentKey, actionKey, variableKey, value}))
+        parseIntoMap(value.environment).forEach((value, variableKey) =>
+            actionEnvVarProvider.addVariables({instrumentKey, actionKey, variableKey, value}))
+        const action = isDefaultAction(actionKey) ? parseDefaultAction(value, instrumentKey, actionKey) : parseAction(value.commands, instrumentKey, actionKey)
+        actions.set(actionKey, action)
     })
     return actions
 }
 
-function parseCustomAction(commandsObject: any, instrumentKey: string, actionKey: string): CustomAction {
+function parseAction(commandsObject: any, instrumentKey: string, actionKey: string): Action {
+    return {
+        name: actionKey,
+        commandsContext: parseCommands(commandsObject, instrumentKey, actionKey),
+    }
+}
+
+function parseCommands(commandsObject: any, instrumentKey: string, actionKey: string): CommandContext[] {
     const commands: CommandContext[] = []
     const commandsMap = parseIntoMap(commandsObject)
     commandsMap.forEach((value) => {
@@ -70,7 +81,7 @@ function parseCustomAction(commandsObject: any, instrumentKey: string, actionKey
         parseIntoMap(value.environment).forEach((value, variableKey) =>
             commandEnvVarProvider.addVariables({instrumentKey, actionKey, commandKey, variableKey, value}))
         let commandType
-        if (typeof value.command === 'string')
+        if (typeof value.command == 'string')
             commandType = replaceParameters(variableHandler, value.command, instrumentKey, actionKey, commandKey)
         else
             commandType = {
@@ -87,16 +98,15 @@ function parseCustomAction(commandsObject: any, instrumentKey: string, actionKey
             with: parseWith(value.with),
         })
     })
-    return {
-        name: actionKey,
-        commandsContext: commands,
-    }
+    return commands
 }
 
-function parseDefaultAction(withObject: any, actionKey: string): DefaultAction {
+function parseDefaultAction(defaultActionObject: any, instrumentKey: string, actionKey: string): DefaultAction {
     return {
         name: actionKey,
-        with: parseWith(withObject),
+        commandsContext: parseCommands(defaultActionObject.commands, instrumentKey, actionKey),
+        with: parseWith(defaultActionObject.with),
+        produces: parseProduces(defaultActionObject.produces),
     }
 }
 
@@ -156,6 +166,15 @@ function parseRequirementCommand(commandObject: any): string | Command {
         }
 
     return commandType
+}
+
+function parseProduces(producesObject: any): Map<string, string> {
+    const producesMap = new Map()
+    parseIntoMap(producesObject).forEach((filePath, fileName) => {
+            producesMap.set(fileName, replaceMissionContextVariables(filePath))
+        }
+    )
+    return producesMap
 }
 
 function initVariableProvider(): void {

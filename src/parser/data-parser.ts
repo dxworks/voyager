@@ -6,10 +6,14 @@ import {parseMission} from './mission-parser'
 import path from 'node:path'
 import {missionContext} from '../context/MissionContext'
 import {
-    INSTRUMENTS_DEFAULT_DIR,
     INSTRUMENTS_DIR,
+    INSTRUMENTS_DIR_DEFAULT_VALUE,
     MISSION_NAME,
     MISSION_ROOT_DIR,
+    RESULTS_UNPACK_DIR,
+    RESULTS_UNPACK_DIR_DEFAULT_VALUE,
+    RESULTS_ZIP_DIR,
+    RESULTS_ZIP_DIR_DEFAULT_VALUE,
     VOYAGER_WORKING_DIR,
 } from '../context/context-variable-provider'
 
@@ -20,18 +24,26 @@ const getDirectories = (source: any): string[] =>
         .filter(dirent => dirent.isDirectory())
         .map(dirent => dirent.name)
 
-function extractContextVariables(filePath: string): void {
+function setContextVariables(filePath: string): void {
     const rootDir: string = path.dirname(filePath)
     missionContext.addVariable(MISSION_ROOT_DIR, rootDir)
+    addDefaultVariables()
+}
+
+function addDefaultVariables() {
     const currentPath = process.cwd()
     missionContext.addVariable(VOYAGER_WORKING_DIR, currentPath)
-    missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(rootDir, INSTRUMENTS_DEFAULT_DIR))
+    missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(<string>missionContext.getVariable(MISSION_ROOT_DIR), INSTRUMENTS_DIR_DEFAULT_VALUE))
+    missionContext.addVariable(RESULTS_ZIP_DIR, path.resolve(<string>missionContext.getVariable(MISSION_ROOT_DIR), RESULTS_ZIP_DIR_DEFAULT_VALUE))
+    missionContext.addVariable(RESULTS_UNPACK_DIR, path.resolve(<string>missionContext.getVariable(MISSION_ROOT_DIR), RESULTS_UNPACK_DIR_DEFAULT_VALUE))
 }
 
 export function loadAndParseData(filePath: string): void {
-    extractContextVariables(filePath)
+    console.log('Start parsing mission data..')
+    setContextVariables(filePath)
     loadAndParseMission(filePath)
     loadAndParseInstruments()
+    console.log('Data parsing finished successfully!')
 }
 
 export function loadAndParseMission(filePath: string): void {
@@ -43,6 +55,10 @@ export function loadAndParseMission(filePath: string): void {
         missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(<string>missionContext.getVariable(MISSION_ROOT_DIR), <string>file.instrumentsDir))
     if (file.runAll)
         missionContext.runAll = file.runAll
+    if (file.resultsPath)
+        missionContext.addVariable(RESULTS_ZIP_DIR, path.resolve(<string>missionContext.getVariable(MISSION_ROOT_DIR), <string>file.resultsPath))
+    if (file.resultsUnpackTarget)
+        missionContext.addVariable(RESULTS_UNPACK_DIR, path.resolve(<string>missionContext.getVariable(MISSION_ROOT_DIR), <string>file.resultsUnpackTarget))
     parseMission(file)
 }
 

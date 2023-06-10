@@ -6,7 +6,7 @@ import fs from 'fs'
 import {getMatchingFilesFromDir} from '../action-utils'
 
 export async function runCleanAction(cleanAction: DefaultAction): Promise<void> {
-    const locations = cleanAction.with.locations!
+    const locations = cleanAction.with!.locations!
     for (const location of locations) {
         const sourcePath = path.resolve(missionContext.getVariable(INSTRUMENTS_DIR)!, location.source)
         if (location.files) {

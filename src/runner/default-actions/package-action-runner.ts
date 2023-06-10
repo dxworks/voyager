@@ -10,7 +10,7 @@ import {getMatchingFilesFromDir} from '../action-utils'
 export function runPackageAction(instrumentName: string, archive: Archiver, action: DefaultAction): void {
     addLogFileToArchive(getLogFilePath(instrumentName), archive)
     const instrumentResultsDirectory = instrumentName
-    const locations: Location[] = action.with.locations!
+    const locations: Location[] = action.with!.locations!
     locations.forEach(location => {
         const destinationDirectory = location.destination ? path.join(instrumentResultsDirectory, location.destination) : instrumentResultsDirectory
         const sourcePath = path.resolve(missionContext.getVariable(INSTRUMENTS_DIR)!, location.source)

@@ -6,8 +6,9 @@ export const cleanActionKey = 'clean'
 export const packageActionKey = 'pack'
 export const startActionKey = 'start'
 export const verifyActionKey = 'verify'
+export const unpackActionKey = 'unpack'
 
-const defaultActionKeys: string[] = [cleanActionKey, packageActionKey, verifyActionKey]
+const defaultActionKeys: string[] = [cleanActionKey, packageActionKey, verifyActionKey, unpackActionKey]
 
 export function isDefaultAction(actionKey: string): boolean {
     for (let i = 0; i < defaultActionKeys.length; i++)

@@ -1,6 +1,6 @@
 import {Archiver} from 'archiver'
 import {cleanActionKey, packageActionKey, verifyActionKey} from './action-utils'
-import {Action, CustomAction, DefaultAction, instanceOfDefaultAction} from '../model/Action'
+import {Action, DefaultAction, instanceOfDefaultAction} from '../model/Action'
 import {runCommand} from './command-runner'
 import {runCleanAction} from './default-actions/clean-action-runner'
 import {runPackageAction} from './default-actions/package-action-runner'
@@ -11,11 +11,11 @@ export async function runAction(action: Action, archive: Archiver | null, instru
     if (instanceOfDefaultAction(action))
         await runDefaultAction(<DefaultAction>action, archive, instrumentName)
     else
-        await runCustomAction(<CustomAction>action, instrumentName, instrumentPath)
+        await runCustomAction(action, instrumentName, instrumentPath)
 }
 
-async function runCustomAction(action: CustomAction, instrumentPath: string, instrumentName: string) {
-    for (const commandContext of action.commandsContext) {
+async function runCustomAction(action: Action, instrumentPath: string, instrumentName: string) {
+    for (const commandContext of action.commandsContext!) {
         await runCommand(commandContext, commandContext.dir ? commandContext.dir : instrumentPath, instrumentName)
     }
 }

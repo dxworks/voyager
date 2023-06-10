@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {cleanMission, runMission, verifyMission} from './runner/mission-runner'
+import {cleanMission, packMission, runMission, unpackMission, verifyMission} from './runner/mission-runner'
 import {program} from 'commander'
 
 
@@ -23,6 +23,20 @@ program
     .description('Verify mission instruments requirements')
     .action((missionPath) => {
         verifyMission(missionPath).then()
+    })
+
+program
+    .command('pack <missionPath>')
+    .description('Pack mission results')
+    .action((missionPath) => {
+        packMission(missionPath)
+    })
+
+program
+    .command('unpack <missionPath>')
+    .description('Unpack mission results archive')
+    .action((missionPath) => {
+        unpackMission(missionPath)
     })
 
 program.parse(process.argv)

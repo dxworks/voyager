@@ -1,8 +1,8 @@
 import {Instrument} from '../model/Instrument'
-import {ContextVariableProvider} from './context-variable-provider'
+import {ContextVariableProvider, RESULTS_UNPACK_DIR, RESULTS_ZIP_DIR} from './context-variable-provider'
 import fs from 'fs'
 import {MissionSummary} from '../model/summary/MissionSummary'
-import {DoctorReport} from '../report/DoctorReport'
+import {DoctorReport} from '../model/DoctorReport'
 
 export class MissionContext {
 
@@ -41,6 +41,8 @@ export class MissionContext {
     set name(value: string) {
         this._name = value
         this.missionSummary.missionName = value
+        this.addVariable(RESULTS_ZIP_DIR, `./${missionContext.name}-voyager-results.zip`)
+        this.addVariable(RESULTS_UNPACK_DIR, `./${missionContext.name}-voyager-results`)
     }
 
     get instruments(): Instrument[] {
@@ -80,10 +82,6 @@ export class MissionContext {
             MissionContext.instance = new MissionContext()
         }
         return MissionContext.instance
-    }
-
-    public getResultsArchiveName(): string {
-        return this._name + '-results.zip'
     }
 
     public getVariable(key: string): string | null {
