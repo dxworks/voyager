@@ -40,6 +40,7 @@ function addDefaultVariables() {
 
 export function loadAndParseData(filePath: string): void {
     console.log('Start parsing mission data..')
+    console.log('filePath = ', filePath)
     setContextVariables(filePath)
     loadAndParseMission(filePath)
     loadAndParseInstruments()

@@ -20,57 +20,91 @@ import {runUnpackAction} from './default-actions/unpack-action-runner'
 import {runPackageAction} from './default-actions/package-action-runner'
 
 
-export async function cleanMission(missionFilePath: string): Promise<void> {
-    loadAndParseData(missionFilePath)
-    console.log(`Start cleaning the mission ${missionContext.name}...`)
-    const cleanActions = missionContext.instruments.map(instrument => (<DefaultAction>instrument.actions.get(cleanActionKey)))
-        .filter(cleanAction => cleanAction != null)
-    cleanActions.forEach(cleanAction => runCleanAction(cleanAction))
-    console.log(`Mission ${missionContext.name} was cleaned successfully.`)
+export async function cleanMission(missionFilePath?: string): Promise<void> {
+    const missionPath = findMissionFile(missionFilePath)
+    if (missionPath) {
+        loadAndParseData(missionPath)
+        console.log(`Start cleaning the mission ${missionContext.name}...`)
+        const cleanActions = missionContext.instruments.map(instrument => (<DefaultAction>instrument.actions.get(cleanActionKey)))
+            .filter(cleanAction => cleanAction != null)
+        cleanActions.forEach(cleanAction => runCleanAction(cleanAction))
+        console.log(`Mission ${missionContext.name} was cleaned successfully.`)
+    }
 }
 
-export async function verifyMission(missionFilePath: string): Promise<void> {
-    loadAndParseData(missionFilePath)
-    console.log(`Start verifying the mission ${missionContext.name}...`)
-    await runVerifyActionsAndGetReport()
-    generateDoctorReportLogs()
+export async function verifyMission(missionFilePath?: string): Promise<void> {
+    const missionPath = findMissionFile(missionFilePath)
+    if (missionPath) {
+        loadAndParseData(missionPath)
+        console.log(`Start verifying the mission ${missionContext.name}...`)
+        await runVerifyActionsAndGetReport()
+        generateDoctorReportLogs()
+    }
 }
 
-export function packMission(missionFilePath: string): void {
-    loadAndParseData(missionFilePath)
-    console.log(`Start packing the mission ${missionContext.name}...`)
-    const archive = archiver('zip', {zlib: {level: 9}})
-    missionContext.instruments.forEach(instrument => {
-        const packAction = (<DefaultAction>instrument.actions.get(unpackActionKey))
-        runPackageAction(instrument.name, archive, packAction)
-    })
-    archive.finalize().then()
-    archive.pipe(fs.createWriteStream(missionContext.getVariable(RESULTS_ZIP_DIR)!))
-    console.log(`Mission ${missionContext.name} was packed successfully.`)
-
+export function packMission(missionFilePath?: string): void {
+    const missionPath = findMissionFile(missionFilePath)
+    if (missionPath) {
+        loadAndParseData(missionPath)
+        console.log(`Start packing the mission ${missionContext.name}...`)
+        const archive = archiver('zip', {zlib: {level: 9}})
+        missionContext.instruments.forEach(instrument => {
+            const packAction = (<DefaultAction>instrument.actions.get(unpackActionKey))
+            runPackageAction(instrument.name, archive, packAction)
+        })
+        archive.finalize().then()
+        archive.pipe(fs.createWriteStream(missionContext.getVariable(RESULTS_ZIP_DIR)!))
+        console.log(`Mission ${missionContext.name} was packed successfully.`)
+    }
 }
 
-export function unpackMission(missionFilePath: string): void {
-    loadAndParseData(missionFilePath)
-    console.log(`Start unpacking the mission ${missionContext.name}...`)
-    const zip = new AdmZip(<string>missionContext.getVariable(RESULTS_ZIP_DIR))
-    zip.extractAllTo(<string>missionContext.getVariable(RESULTS_UNPACK_DIR), true)
-    const unpackActions = missionContext.instruments.map(instrument => (<DefaultAction>instrument.actions.get(unpackActionKey)))
-        .filter(unpackAction => unpackAction != null)
-    unpackActions.forEach(unpackAction => runUnpackAction(unpackAction))
-    console.log(`Mission ${missionContext.name} was unpacked successfully.`)
+export function unpackMission(missionFilePath?: string): void {
+    const missionPath = findMissionFile(missionFilePath)
+    if (missionPath) {
+        loadAndParseData(missionPath)
+        console.log(`Start unpacking the mission ${missionContext.name}...`)
+        const zip = new AdmZip(<string>missionContext.getVariable(RESULTS_ZIP_DIR))
+        zip.extractAllTo(<string>missionContext.getVariable(RESULTS_UNPACK_DIR), true)
+        const unpackActions = missionContext.instruments.map(instrument => (<DefaultAction>instrument.actions.get(unpackActionKey)))
+            .filter(unpackAction => unpackAction != null)
+        unpackActions.forEach(unpackAction => runUnpackAction(unpackAction))
+        console.log(`Mission ${missionContext.name} was unpacked successfully.`)
+    }
+}
 
+export function findMissionFile(missionFilePath?: string): string | null {
+    if (missionFilePath)
+        return missionFilePath
+    console.log('!!!!!!!!!!!!!!here')
+    const files = fs.readdirSync(__dirname) // Read all files in the current directory
+    const missionFile = files.find((file) => file === 'mission.yml') // Find the mission.yml file
+    console.log('missionFile=', missionFile)
+    if (missionFile) {
+        return path.join(__dirname, missionFile) // Return the full path to the mission.yml file
+    }
+
+    return null // Return null if mission.yml file doesn't exist
+}
+
+export async function findAndRunMission(actions: string[] | undefined): Promise<void> {
+    const missionFilePath = findMissionFile()
+    if (missionFilePath == null)
+        console.error('Mission YAML file could not be found in the current directory. Please specify the path of the file or make sure the name of the mission is \'mission.yml\'.')
+    else
+        await runMission(missionFilePath, actions)
 }
 
 export async function runMission(missionFilePath: string, actions: string[] | undefined): Promise<void> {
     const startTime = performance.now()
 
+    loadAndParseData(missionFilePath)
+
     function getRunnableInstruments() {
         return <Instrument[]>missionContext.runnableInstruments.map(runnableInstrument => missionContext.instruments.find((instrument) => instrument.id == runnableInstrument))
             .filter(instrument => !!instrument)
+
     }
 
-    loadAndParseData(missionFilePath)
     const instruments = missionContext.runAll ? missionContext.instruments : getRunnableInstruments()
     missionContext.logsStream = getLogsStream()
     let archive: Archiver | null = null

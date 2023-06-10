@@ -11,7 +11,7 @@ export async function runAction(action: Action, archive: Archiver | null, instru
     if (instanceOfDefaultAction(action))
         await runDefaultAction(<DefaultAction>action, archive, instrumentName)
     else
-        await runCustomAction(action, instrumentName, instrumentPath)
+        await runCustomAction(action, instrumentPath, instrumentName)
 }
 
 async function runCustomAction(action: Action, instrumentPath: string, instrumentName: string) {

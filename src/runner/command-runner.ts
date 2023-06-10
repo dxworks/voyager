@@ -9,6 +9,7 @@ import {getLogFilePath, getTimeInSeconds} from '../report/logs-collector-utils'
 export async function runCommand(commandContext: CommandContext,
                                  commandPath: string,
                                  instrumentName: string): Promise<void> {
+    console.log(commandPath)
     const instrumentSummary = missionContext.missionSummary.getInstrumentSummary(instrumentName)
     const startTime = performance.now()
     const commandSummary = new CommandSummary()
