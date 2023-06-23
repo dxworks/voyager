@@ -167,14 +167,15 @@ addLogsAndHtmlReportToArchive(instruments: Instrument[], archive: archiver.Archi
 function addHtmlToArchive(instruments: Instrument[], archive: archiver.Archiver): void {
     instruments.map(instrument => instrument.name).forEach(instrumentName => {
         const instrumentLogFile = getLogFilePath(instrumentName)
-        try {
-            const fileContent = fs.readFileSync(instrumentLogFile, 'utf8')
-            const instrumentHtmlFile = getHtmlFilePath(instrumentName)
-            fs.writeFileSync(instrumentHtmlFile, getHtmlLogContent(instrumentName, fileContent))
-            archive.file(instrumentHtmlFile, {name: '/html/' + path.basename(instrumentHtmlFile)})
-        } catch (err) {
-            console.error('Error reading/writing file:', err)
-        }
+        if (fs.existsSync(instrumentLogFile))
+            try {
+                const fileContent = fs.readFileSync(instrumentLogFile, 'utf8')
+                const instrumentHtmlFile = getHtmlFilePath(instrumentName)
+                fs.writeFileSync(instrumentHtmlFile, getHtmlLogContent(instrumentName, fileContent))
+                archive.file(instrumentHtmlFile, {name: '/html/' + path.basename(instrumentHtmlFile)})
+            } catch (err) {
+                console.error('Error reading/writing file:', err)
+            }
     })
     try {
         const fileContent = fs.readFileSync(getLogFilePath(missionContext.name), 'utf8')
