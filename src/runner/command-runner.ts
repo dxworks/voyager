@@ -5,11 +5,11 @@ import {spawn, SpawnOptions} from 'child_process'
 import fs from 'fs'
 import {CommandSummary} from '../model/summary/CommandSummary'
 import {getLogFilePath, getTimeInSeconds} from '../report/logs-collector-utils'
+import {centerText, maxLength} from '../report/mission-summary-generator'
 
 export async function runCommand(commandContext: CommandContext,
                                  commandPath: string,
                                  instrumentName: string): Promise<void> {
-    console.log(commandPath)
     const instrumentSummary = missionContext.missionSummary.getInstrumentSummary(instrumentName)
     const startTime = performance.now()
     const commandSummary = new CommandSummary()
@@ -57,7 +57,8 @@ async function executeCommand(commandContext: CommandContext,
         stdio: ['ignore', 'pipe', 'pipe'],
         shell: true,
     }
-
+    console.log(centerText('Running command', maxLength, '*'))
+    console.log('The command: "', command, '" is now running \n')
     return new Promise((resolve, reject) => {
         const childProcess = spawn(command!, options)
 

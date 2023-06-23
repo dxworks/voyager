@@ -6,14 +6,12 @@ export const INSTRUMENT_DIR_NAME = 'instrumentDir'
 export const INSTRUMENT_PATH = 'instrumentPath'
 export const INSTRUMENT_RESULTS = 'instrumentResults'
 export const VOYAGER_WORKING_DIR = 'voyagerWorkingDir'
-export const RESULTS_ZIP_DIR = 'resultsDefaultDir'
+export const RESULTS_ZIP_DIR = 'resultsDir'
 
 export const RESULTS_UNPACK_DIR = 'resultsUnpackTarget'
 
 
 export const INSTRUMENTS_DIR_DEFAULT_VALUE = './instruments'
-export const RESULTS_ZIP_DIR_DEFAULT_VALUE = ''
-export const RESULTS_UNPACK_DIR_DEFAULT_VALUE = ''
 
 export class ContextVariableProvider {
 

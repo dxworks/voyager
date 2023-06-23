@@ -11,9 +11,7 @@ import {
     MISSION_NAME,
     MISSION_ROOT_DIR,
     RESULTS_UNPACK_DIR,
-    RESULTS_UNPACK_DIR_DEFAULT_VALUE,
     RESULTS_ZIP_DIR,
-    RESULTS_ZIP_DIR_DEFAULT_VALUE,
     VOYAGER_WORKING_DIR,
 } from '../context/context-variable-provider'
 
@@ -34,13 +32,10 @@ function addDefaultVariables() {
     const currentPath = process.cwd()
     missionContext.addVariable(VOYAGER_WORKING_DIR, currentPath)
     missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(<string>missionContext.getVariable(MISSION_ROOT_DIR), INSTRUMENTS_DIR_DEFAULT_VALUE))
-    missionContext.addVariable(RESULTS_ZIP_DIR, path.resolve(<string>missionContext.getVariable(MISSION_ROOT_DIR), RESULTS_ZIP_DIR_DEFAULT_VALUE))
-    missionContext.addVariable(RESULTS_UNPACK_DIR, path.resolve(<string>missionContext.getVariable(MISSION_ROOT_DIR), RESULTS_UNPACK_DIR_DEFAULT_VALUE))
 }
 
 export function loadAndParseData(filePath: string): void {
     console.log('Start parsing mission data..')
-    console.log('filePath = ', filePath)
     setContextVariables(filePath)
     loadAndParseMission(filePath)
     loadAndParseInstruments()

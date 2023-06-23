@@ -1,10 +1,9 @@
-import {centerText, padLine} from './mission-summary-generator'
+import {centerText, maxLength, padLine} from './mission-summary-generator'
 import {missionContext} from '../context/MissionContext'
 
 export function generateDoctorReportLogs(): void {
-    const maxLength = 100
     const missionNameLine = ` ${missionContext.name} Doctor Report `
-    const centeredMissionNameLine = centerText(missionNameLine, maxLength)
+    const centeredMissionNameLine = centerText(missionNameLine, maxLength, '.')
     let output = centeredMissionNameLine + '\n'
 
     missionContext.doctorReport.instrumentsDoctorReport.forEach(instrumentReport => {

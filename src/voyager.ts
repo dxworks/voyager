@@ -5,7 +5,7 @@ import {
     packMission,
     runMission,
     unpackMission,
-    verifyMission
+    verifyMission,
 } from './runner/mission-runner'
 import {program} from 'commander'
 

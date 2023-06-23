@@ -1,10 +1,12 @@
 import {missionContext} from '../context/MissionContext'
 
+export const maxLength = 100
+
 export function generateMissionSummary(): void {
     const missionSummary = missionContext.missionSummary
-    const maxLength = 100
+
     const missionNameLine = ` ${missionSummary.missionName} Summary `
-    const centeredMissionNameLine = centerText(missionNameLine, maxLength)
+    const centeredMissionNameLine = centerText(missionNameLine, maxLength, '.')
     let output = centeredMissionNameLine + '\n'
 
     missionSummary.instrumentsSummary.forEach((instrumentSummary, instrumentName) => {
@@ -18,8 +20,8 @@ export function generateMissionSummary(): void {
     console.log(output)
 }
 
-export function centerText(text: string, maxLength: number): string {
-    const padding = '.'.repeat(Math.floor((maxLength - text.length) / 2))
+export function centerText(text: string, maxLength: number, paddingCharacters: string): string {
+    const padding = paddingCharacters.repeat(Math.floor((maxLength - text.length) / 2) / paddingCharacters.length)
     return padding + text + padding
 }
 

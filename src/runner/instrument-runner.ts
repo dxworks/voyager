@@ -7,9 +7,10 @@ import {getTimeInSeconds} from '../report/logs-collector-utils'
 import {runAction} from './action-runner'
 import {DefaultAction} from '../model/Action'
 import {runPackageAction} from './default-actions/package-action-runner'
+import {centerText, maxLength} from '../report/mission-summary-generator'
 
 export async function runInstrument(instrument: Instrument, archive: Archiver | null, customRun: boolean, actionsKey?: string[]): Promise<void> {
-    console.log(instrument.name + ' is running...')
+    console.log(centerText(instrument.name + ' is running...', maxLength, '-'))
     const startTime = performance.now()
     const instrumentSummary = new InstrumentSummary()
     missionContext.missionSummary.addInstrumentSummary(instrument.name, instrumentSummary)
@@ -19,7 +20,7 @@ export async function runInstrument(instrument: Instrument, archive: Archiver | 
         await defaultInstrumentRun(instrument, archive!)
     const endTime = performance.now()
     instrumentSummary.runningTime = getTimeInSeconds(startTime, endTime)
-    console.log('Finished running ', instrument.name)
+    console.log(centerText('Finished running ' + instrument.name, maxLength, '-'))
 }
 
 async function defaultInstrumentRun(instrument: Instrument, archive: Archiver): Promise<void> {
@@ -36,6 +37,6 @@ export async function customInstrumentRun(instrument: Instrument, archive: Archi
             .map(actionKey => instrument.actions.get(actionKey))
             .filter(action => action != null)
         for (const action of actions)
-            await runAction(action!, archive, instrument.name, instrument.instrumentPath)
+            await runAction(action!, archive, instrument.instrumentPath, instrument.name)
     }
 }

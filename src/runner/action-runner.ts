@@ -7,7 +7,7 @@ import {runPackageAction} from './default-actions/package-action-runner'
 import {runVerifyAction} from './default-actions/verify-action-runner'
 
 
-export async function runAction(action: Action, archive: Archiver | null, instrumentName: string, instrumentPath: string): Promise<void> {
+export async function runAction(action: Action, archive: Archiver | null, instrumentPath: string, instrumentName: string): Promise<void> {
     if (instanceOfDefaultAction(action))
         await runDefaultAction(<DefaultAction>action, archive, instrumentName)
     else
