@@ -25,16 +25,13 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v2
         with:
-          node-version: '16.x'
+          node-version: '18.x'
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@dxworks'
 
       - name: Setup Voyenv
         run: | 
           npm i -g @dxworks/voyenv
           voyenv -v
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prepare Voyager release
         run: |
