@@ -23,10 +23,9 @@ jobs:
           echo ::set-output name=currentDate::$currentDate
 
       - name: Setup Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: '18.x'
-          registry-url: 'https://npm.pkg.github.com'
 
       - name: Setup Voyenv
         run: | 
