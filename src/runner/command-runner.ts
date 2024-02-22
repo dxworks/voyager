@@ -1,5 +1,5 @@
 import {Command, CommandContext} from '../model/Command'
-import {osType} from '@dxworks/cli-common'
+import {OS, osType} from '@dxworks/cli-common'
 import {missionContext} from '../context/MissionContext'
 import {spawn, SpawnOptions} from 'child_process'
 import fs from 'fs'
@@ -26,11 +26,11 @@ export async function runCommand(commandContext: CommandContext,
 
 export function translateCommand(command: Command): string | undefined {
     switch (osType) {
-        case 'windows':
+        case OS.WINDOWS:
             return command.windows
-        case 'linux':
+        case OS.LINUX:
             return command.linux ? command.linux : command.unix
-        case 'mac':
+        case OS.MAC:
             return command.mac ? command.mac : command.unix
     }
 }

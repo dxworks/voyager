@@ -18,7 +18,7 @@ import {RESULTS_UNPACK_DIR, RESULTS_ZIP_DIR} from '../context/context-variable-p
 import AdmZip from 'adm-zip'
 import {runUnpackAction} from './default-actions/unpack-action-runner'
 import {runPackageAction} from './default-actions/package-action-runner'
-
+import {buildAndOpenLegacySummary, openMissionSummary} from './mission-summary-runner'
 
 export async function cleanMission(missionFilePath?: string): Promise<void> {
     const missionPath = findMissionFile(missionFilePath)
@@ -70,6 +70,14 @@ export function unpackMission(missionFilePath?: string): void {
         unpackActions.forEach(unpackAction => runUnpackAction(unpackAction))
         console.log(`Mission ${missionContext.name} was unpacked successfully.`)
     }
+}
+
+export function openSummary(zipPath: string, legacySummary: boolean): void {
+    if (legacySummary) {
+        buildAndOpenLegacySummary(zipPath)
+        return
+    }
+    openMissionSummary(zipPath)
 }
 
 export function findMissionFile(missionFilePath?: string): string | null {
@@ -156,7 +164,7 @@ function cleanLogsAndHtmlFileFromDisk(instruments: Instrument[]): void {
 
 function
 addLogsAndHtmlReportToArchive(instruments: Instrument[], archive: archiver.Archiver): void {
-    const htmlReport = generateHtmlReport()
+    const htmlReport = generateHtmlReport(missionContext.missionSummary)
     addHtmlToArchive(instruments, archive)
     if (fs.existsSync(htmlReport))
         archive.file(htmlReport, {name: path.basename(htmlReport)})

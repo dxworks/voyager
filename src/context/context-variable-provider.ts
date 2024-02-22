@@ -1,3 +1,4 @@
+export const MISSION_RESULT_ARCHIVE_NAME = 'MissionReport.html'
 export const MISSION_ROOT_DIR = 'rootDir'
 export const MISSION_NAME = 'mission'
 export const INSTRUMENTS_DIR = 'instrumentsDir'

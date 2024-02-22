@@ -2,14 +2,20 @@ import {missionContext} from '../../context/MissionContext'
 import {getCommandSummaryHtml, getInstrumentSummaryHtml, getMissionSummaryHtml} from './html-report-utils'
 import fs from 'fs'
 import path from 'node:path'
-import {VOYAGER_WORKING_DIR} from '../../context/context-variable-provider'
+import {MISSION_RESULT_ARCHIVE_NAME, VOYAGER_WORKING_DIR} from '../../context/context-variable-provider'
+import {MissionSummary} from '../../model/summary/MissionSummary'
 
 export function getHtmlReportPath(): string {
-    return path.join(<string>missionContext.getVariable(VOYAGER_WORKING_DIR), 'MissionReport.html')
+    return path.join(<string>missionContext.getVariable(VOYAGER_WORKING_DIR), MISSION_RESULT_ARCHIVE_NAME)
 }
 
-export function generateHtmlReport(): string {
-    const missionSummary = missionContext.missionSummary
+export function generateHtmlReport(missionSummary: MissionSummary): string {
+    const htmReportPath = getHtmlReportPath()
+    fs.writeFileSync(htmReportPath, generateHtmlReportContent(missionSummary), {flag: 'w'})
+    return htmReportPath
+}
+
+export function generateHtmlReportContent(missionSummary: MissionSummary): string {
     let summaryContent = ''
     missionSummary.instrumentsSummary.forEach((instrumentSummary, instrumentName) => {
         const numberOfCommands = instrumentSummary.commandsSummary.size
@@ -23,8 +29,5 @@ export function generateHtmlReport(): string {
                 summaryContent += getCommandSummaryHtml(commandName, successStatus, commandSummary.runningTime)
         })
     })
-    const missionSummaryContent = getMissionSummaryHtml(missionSummary.missionName, missionSummary.runningTime, summaryContent)
-    const htmReportPath = getHtmlReportPath()
-    fs.writeFileSync(htmReportPath, missionSummaryContent, {flag: 'w'})
-    return htmReportPath
+    return getMissionSummaryHtml(missionSummary.missionName, missionSummary.runningTime, summaryContent)
 }

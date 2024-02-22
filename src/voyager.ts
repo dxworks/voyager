@@ -2,6 +2,7 @@
 import {
     cleanMission,
     findAndRunMission,
+    openSummary,
     packMission,
     runMission,
     unpackMission,
@@ -51,6 +52,15 @@ program
     .option('-m, --missionPath <missionPath>')
     .action((options: { missionPath?: string }) => {
         unpackMission(options.missionPath)
+    })
+
+program
+    .command('summary')
+    .description('Opens the mission summary from the archive')
+    .requiredOption('-z, --zipPath <zipPath>')
+    .option('-l, --legacy', 'Use legacy summary')
+    .action((options: { zipPath: string, legacy?: boolean }) => {
+        openSummary(options.zipPath, !!options.legacy)
     })
 
 program.parse(process.argv)
