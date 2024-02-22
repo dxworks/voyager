@@ -123,6 +123,7 @@ export async function runMission(missionFilePath: string, actions: string[] | un
         generateDoctorReportLogs()
     if (requirePackaging) {
         addLogsAndHtmlReportToArchive(instruments, archive!)
+        addMissionYmlToArchive(missionFilePath, archive!)
         archive!.finalize().then(() => cleanLogsAndHtmlFileFromDisk(instruments))
         archive!.pipe(fs.createWriteStream(missionContext.getVariable(RESULTS_ZIP_DIR)!))
     }
@@ -162,6 +163,11 @@ addLogsAndHtmlReportToArchive(instruments: Instrument[], archive: archiver.Archi
     const missionLogFilePath = getLogFilePath(missionContext.name)
     if (fs.existsSync(missionLogFilePath))
         archive.file(missionLogFilePath, {name: path.basename(missionLogFilePath)})
+}
+
+function addMissionYmlToArchive(missionFilePath: string, archive: archiver.Archiver): void {
+    if (missionFilePath)
+        archive.file(missionFilePath, {name: path.basename(missionFilePath)})
 }
 
 function addHtmlToArchive(instruments: Instrument[], archive: archiver.Archiver): void {
