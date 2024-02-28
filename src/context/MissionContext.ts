@@ -25,6 +25,8 @@ export class MissionContext {
 
     private readonly _unpackMapping: UnpackMapping
 
+    private _targets: string[] = []
+
     runAll = true
 
     private constructor() {
@@ -83,6 +85,14 @@ export class MissionContext {
 
     get unpackMapping(): UnpackMapping {
         return this._unpackMapping
+    }
+
+    get targets(): string[] {
+        return this._targets
+    }
+
+    set targets(value: string[]) {
+        this._targets = value
     }
 
     public static getInstance(): MissionContext {

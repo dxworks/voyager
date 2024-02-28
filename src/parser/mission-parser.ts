@@ -17,10 +17,20 @@ export function parseMission(file: any): void {
     missionContext.addVariable(REPO_NAME, path.basename(targetPath))
     parseIntoMap(file.environment).forEach((value, variableKey) =>
         missionEnvVarProvider.addVariables({variableKey, value}))
+    parseMissionTargets(file.targets)
     parseMissionMapping(file.mapping)
     const instruments = parseMissionInstruments(file.instruments)
     if (!missionContext.runAll)
         missionContext.runnableInstruments = instruments
+}
+
+function parseMissionTargets(targetsObject: any): void {
+    const targets: string[] = []
+    const targetsMap = parseIntoMap(targetsObject)
+    targetsMap.forEach((value) => {
+        targets.push(value)
+    })
+    missionContext.targets = targets
 }
 
 function parseMissionMapping(mappingObject: any): void {

@@ -62,15 +62,24 @@ export function unpackMission(missionFilePath?: string): void {
     const missionPath = findMissionFile(missionFilePath)
     if (missionPath) {
         loadAndParseData(missionPath)
-        const mappingOperationRequired = !missionContext.unpackMapping.isEmpty()
+        const mappingPresentInMission = !missionContext.unpackMapping.isEmpty()
+        const unpackTargets: string[] = []
+        if (missionContext.targets.length == 0)
+            unpackTargets.push(<string>missionContext.getVariable(TARGET))
+        else
+            unpackTargets.push(...missionContext.targets)
+        unpackTargets.forEach(targetPath => {
+            console.log(`Start unpacking the mission ${missionContext.name}...`)
+            const zip = new AdmZip(<string>missionContext.getVariable(TARGET))
+            zip.extractAllTo(<string>missionContext.getVariable(RESULTS_UNPACK_DIR), true)
+            missionContext.instruments.filter(instrument => instrument.actions.has(unpackActionKey))
+                .forEach(instrument => runUnpackAction(<DefaultAction>instrument.actions.get(unpackActionKey), mappingPresentInMission, instrument.name))
+        })
         const resultsUnpackDir = <string>missionContext.getVariable(RESULTS_UNPACK_DIR)
-        console.log(`Start unpacking the mission ${missionContext.name}...`)
-        const zip = new AdmZip(<string>missionContext.getVariable(TARGET))
-        zip.extractAllTo(<string>missionContext.getVariable(RESULTS_UNPACK_DIR), true)
-        missionContext.instruments.filter(instrument => instrument.actions.has(unpackActionKey))
-            .forEach(instrument => runUnpackAction(<DefaultAction>instrument.actions.get(unpackActionKey), mappingOperationRequired, instrument.name))
-        if (mappingOperationRequired)
+        if (mappingPresentInMission)
             fs.remove(resultsUnpackDir).then().catch((error) => console.error(`Error deleting folder ${resultsUnpackDir}:`, error))
+        else
+            console.warn(`The mission ${missionContext.name} does not contain any mapping. The unpacked files are located in ${resultsUnpackDir}.`)
 
         console.log(`Mission ${missionContext.name} was unpacked successfully.`)
     }
@@ -87,15 +96,11 @@ export function openSummary(zipPath: string, legacySummary: boolean): void {
 export function findMissionFile(missionFilePath?: string): string | null {
     if (missionFilePath)
         return missionFilePath
-    console.log('!!!!!!!!!!!!!!here') //TODO: fix mission find operation
-    const files = fs.readdirSync(__dirname) // Read all files in the current directory
-    const missionFile = files.find((file) => file === 'mission.yml') // Find the mission.yml file
-    console.log('missionFile=', missionFile)
-    if (missionFile) {
-        return path.join(__dirname, missionFile) // Return the full path to the mission.yml file
-    }
-
-    return null // Return null if mission.yml file doesn't exist
+    const files = fs.readdirSync(process.cwd())
+    const missionFile = files.find((file) => file === 'mission.yml')
+    if (missionFile)
+        return path.join(process.cwd(), missionFile)
+    return null
 }
 
 export async function findAndRunMission(actions: string[] | undefined): Promise<void> {
