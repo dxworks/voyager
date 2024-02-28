@@ -2,15 +2,12 @@ import {DefaultAction} from '../../model/Action'
 import fs from 'fs'
 import path from 'path'
 import {missionContext} from '../../context/MissionContext'
-import {RESULTS_UNPACK_DIR} from '../../context/context-variable-provider'
+import {replaceRegex} from '../../variable/variable-operations'
 
-export function runUnpackAction(unpackAction: DefaultAction, mappingRequired: boolean, instrumentName: string): void {
+export function runUnpackAction(unpackAction: DefaultAction, instrumentName: string, unpackedResultsPath: string, initialMissionName: string): void {
     unpackAction.produces?.forEach((filePath, fileId) => {
-        const fullPath = path.resolve(<string>missionContext.getVariable(RESULTS_UNPACK_DIR), filePath)
-        if (!fs.existsSync(fullPath)) {
-            console.warn(`The file ${fileId} is absent from the results archive.`)
-        }
-        if (mappingRequired) {
+        const fullPath = path.resolve(unpackedResultsPath, filePath)
+        if (fs.existsSync(fullPath)) {
             const instrumentMappingElements = missionContext.unpackMapping.getInstrumentMapping(instrumentName)
             instrumentMappingElements.forEach((unpackElement) => {
                 if (unpackElement.fileId === fileId) {
@@ -18,10 +15,19 @@ export function runUnpackAction(unpackAction: DefaultAction, mappingRequired: bo
                     if (!fs.existsSync(destinationPath)) {
                         fs.mkdirSync(destinationPath, {recursive: true})
                     }
-                    const fileName = unpackElement.prefix ? unpackElement.prefix + path.basename(filePath) : path.basename(filePath)
+                    const fileName = buildFileName(unpackElement.prefix, filePath, initialMissionName)
                     fs.copyFileSync(fullPath, path.resolve(destinationPath, `${fileName}`))
                 }
             })
+        } else {
+            console.warn(`The file ${fileId} is absent from the results archive.`)
         }
+
     })
+}
+
+function buildFileName(prefix: string, filePath: string, initialMissionName: string): string {
+    if (prefix === '${initialMissionName}')
+        prefix = replaceRegex(prefix, () => initialMissionName)
+    return prefix ? `${prefix}-${path.basename(filePath)}` : path.basename(filePath)
 }

@@ -17,7 +17,7 @@ export function replaceParameters(variableHandler: VariableHandler, targetString
     return replaceRegex(targetString, replaceFunction)
 }
 
-function replaceRegex(targetString: string, replaceFunction: (variableKey: string) => string | null) {
+export function replaceRegex(targetString: string, replaceFunction: (variableKey: string) => string | null) {
     if (targetString) {
         let match = variableRegex.exec(targetString)
         while (match) {

@@ -14,11 +14,12 @@ import {getHtmlFilePath, getHtmlLogContent} from '../report/html/html-report-uti
 import {runInstrument} from './instrument-runner'
 import {runVerifyActionsAndGetReport} from './default-actions/verify-action-runner'
 import {generateDoctorReportLogs} from '../report/doctor-summary-generator'
-import {RESULTS_UNPACK_DIR, RESULTS_ZIP_DIR, TARGET} from '../context/context-variable-provider'
+import {RESULTS_ZIP_DIR, TARGET} from '../context/context-variable-provider'
 import AdmZip from 'adm-zip'
 import {runUnpackAction} from './default-actions/unpack-action-runner'
 import {runPackageAction} from './default-actions/package-action-runner'
 import {buildAndOpenLegacySummary, openMissionSummary} from './mission-summary-runner'
+import yaml from 'js-yaml'
 
 export async function cleanMission(missionFilePath?: string): Promise<void> {
     const missionPath = findMissionFile(missionFilePath)
@@ -49,7 +50,7 @@ export function packMission(missionFilePath?: string): void {
         console.log(`Start packing the mission ${missionContext.name}...`)
         const archive = archiver('zip', {zlib: {level: 9}})
         missionContext.instruments.forEach(instrument => {
-            const packAction = (<DefaultAction>instrument.actions.get(unpackActionKey))
+            const packAction = (<DefaultAction>instrument.actions.get(packageActionKey))
             runPackageAction(instrument.name, archive, packAction)
         })
         archive.finalize().then()
@@ -62,27 +63,42 @@ export function unpackMission(missionFilePath?: string): void {
     const missionPath = findMissionFile(missionFilePath)
     if (missionPath) {
         loadAndParseData(missionPath)
-        const mappingPresentInMission = !missionContext.unpackMapping.isEmpty()
-        const unpackTargets: string[] = []
-        if (missionContext.targets.length == 0)
-            unpackTargets.push(<string>missionContext.getVariable(TARGET))
-        else
-            unpackTargets.push(...missionContext.targets)
-        unpackTargets.forEach(targetPath => {
-            console.log(`Start unpacking the mission ${missionContext.name}...`)
-            const zip = new AdmZip(<string>missionContext.getVariable(TARGET))
-            zip.extractAllTo(<string>missionContext.getVariable(RESULTS_UNPACK_DIR), true)
+        console.log(`Start the unpack mission ${missionContext.name}...`)
+        if (missionContext.unpackMapping.isEmpty()) {
+            console.warn(`The mission ${missionContext.name} does not contain mapping.`)
+            return
+        }
+        getUnpackTargets().forEach(targetPath => {
+            console.log(`Target path: ${targetPath}`)
+            const zip = new AdmZip(targetPath)
+            const unpackedDirPath = path.resolve(`./${path.basename(targetPath)}-results`)
+            zip.extractAllTo(unpackedDirPath, true)
+            const initialMissionName = extractInitialMissionName(unpackedDirPath)
+            console.log(`Initial mission name: ${initialMissionName}`)
             missionContext.instruments.filter(instrument => instrument.actions.has(unpackActionKey))
-                .forEach(instrument => runUnpackAction(<DefaultAction>instrument.actions.get(unpackActionKey), mappingPresentInMission, instrument.name))
+                .forEach(instrument => runUnpackAction(<DefaultAction>instrument.actions.get(unpackActionKey), instrument.name, unpackedDirPath, initialMissionName))
+            fs.remove(unpackedDirPath).then().catch((error) => console.error(`Error deleting folder ${unpackedDirPath}:`, error))
         })
-        const resultsUnpackDir = <string>missionContext.getVariable(RESULTS_UNPACK_DIR)
-        if (mappingPresentInMission)
-            fs.remove(resultsUnpackDir).then().catch((error) => console.error(`Error deleting folder ${resultsUnpackDir}:`, error))
-        else
-            console.warn(`The mission ${missionContext.name} does not contain any mapping. The unpacked files are located in ${resultsUnpackDir}.`)
-
         console.log(`Mission ${missionContext.name} was unpacked successfully.`)
     }
+}
+
+function getUnpackTargets(): string[] {
+    if (missionContext.targets.length == 0)
+        return [<string>missionContext.getVariable(TARGET)]
+    else
+        return missionContext.targets
+
+}
+
+function extractInitialMissionName(unpackedResultsPath: string): string {
+    const files = fs.readdirSync(unpackedResultsPath)
+    const missionFilePath = files.find((file) => file === 'mission.yml')
+    if (missionFilePath) {
+        const missionFile: any = yaml.load(fs.readFileSync(path.resolve(unpackedResultsPath, missionFilePath)).toString())
+        return missionFile.mission
+    }
+    return ''
 }
 
 export function openSummary(zipPath: string, legacySummary: boolean): void {

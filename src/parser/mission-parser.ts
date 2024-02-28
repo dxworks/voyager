@@ -11,10 +11,12 @@ import path from 'node:path'
 import {REPO, REPO_NAME, TARGET} from '../context/context-variable-provider'
 
 export function parseMission(file: any): void {
-    const targetPath = path.normalize(file.target)
-    missionContext.addVariable(TARGET, targetPath)
-    missionContext.addVariable(REPO, targetPath)
-    missionContext.addVariable(REPO_NAME, path.basename(targetPath))
+    if (file.target) {
+        const targetPath = path.normalize(file.target)
+        missionContext.addVariable(TARGET, targetPath)
+        missionContext.addVariable(REPO, targetPath)
+        missionContext.addVariable(REPO_NAME, path.basename(targetPath))
+    }
     parseIntoMap(file.environment).forEach((value, variableKey) =>
         missionEnvVarProvider.addVariables({variableKey, value}))
     parseMissionTargets(file.targets)
