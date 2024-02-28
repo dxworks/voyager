@@ -8,8 +8,10 @@ export const INSTRUMENT_PATH = 'instrumentPath'
 export const INSTRUMENT_RESULTS = 'instrumentResults'
 export const VOYAGER_WORKING_DIR = 'voyagerWorkingDir'
 export const RESULTS_ZIP_DIR = 'resultsDir'
-
 export const RESULTS_UNPACK_DIR = 'resultsUnpackTarget'
+export const TARGET = 'target'
+export const REPO = 'repo'
+export const REPO_NAME = 'repoName'
 
 
 export const INSTRUMENTS_DIR_DEFAULT_VALUE = './instruments'

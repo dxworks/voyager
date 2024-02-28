@@ -8,16 +8,29 @@ import {
     missionEnvVarProvider,
 } from '../context/mission-variable-providers'
 import path from 'node:path'
+import {REPO, REPO_NAME, TARGET} from '../context/context-variable-provider'
 
 export function parseMission(file: any): void {
     const targetPath = path.normalize(file.target)
-    missionContext.addVariable('repo', targetPath)
-    missionContext.addVariable('repoName', path.basename(targetPath))
+    missionContext.addVariable(TARGET, targetPath)
+    missionContext.addVariable(REPO, targetPath)
+    missionContext.addVariable(REPO_NAME, path.basename(targetPath))
     parseIntoMap(file.environment).forEach((value, variableKey) =>
         missionEnvVarProvider.addVariables({variableKey, value}))
+    parseMissionMapping(file.mapping)
     const instruments = parseMissionInstruments(file.instruments)
     if (!missionContext.runAll)
         missionContext.runnableInstruments = instruments
+}
+
+function parseMissionMapping(mappingObject: any): void {
+    const mappingMap = parseIntoMap(mappingObject)
+    mappingMap.forEach((value, instrumentKey) => {
+        const instrumentMapping = parseIntoMap(value)
+        instrumentMapping.forEach((value) => {
+            missionContext.unpackMapping.addMappingElement(instrumentKey, value.source, value.destination, value.prefix)
+        })
+    })
 }
 
 function parseMissionInstruments(instrumentsObject: any): string[] {

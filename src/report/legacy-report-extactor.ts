@@ -55,7 +55,6 @@ function extractCommandsSummary(instrumentText: string): Map<string, CommandSumm
         const commandSummary = new CommandSummary()
         commandSummary.success = match[2].toLowerCase() === 'success'
         commandSummary.runningTime = match[3] + ' s'
-        console.log(name, ' ', commandSummary.runningTime)
         commandsSummary.set(name, commandSummary)
     }
 

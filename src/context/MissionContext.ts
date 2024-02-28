@@ -3,6 +3,7 @@ import {ContextVariableProvider, RESULTS_UNPACK_DIR, RESULTS_ZIP_DIR} from './co
 import fs from 'fs'
 import {MissionSummary} from '../model/summary/MissionSummary'
 import {DoctorReport} from '../model/DoctorReport'
+import {UnpackMapping} from '../model/UnpackMapping'
 
 export class MissionContext {
 
@@ -22,6 +23,8 @@ export class MissionContext {
 
     private readonly _doctorReport: DoctorReport
 
+    private readonly _unpackMapping: UnpackMapping
+
     runAll = true
 
     private constructor() {
@@ -32,6 +35,7 @@ export class MissionContext {
         this._logsStream = null
         this._missionSummary = new MissionSummary()
         this._doctorReport = new DoctorReport()
+        this._unpackMapping = new UnpackMapping()
     }
 
     get name(): string {
@@ -75,6 +79,10 @@ export class MissionContext {
 
     get doctorReport(): DoctorReport {
         return this._doctorReport
+    }
+
+    get unpackMapping(): UnpackMapping {
+        return this._unpackMapping
     }
 
     public static getInstance(): MissionContext {

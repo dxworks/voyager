@@ -5,7 +5,7 @@ import {cleanActionKey, packageActionKey, unpackActionKey, verifyActionKey} from
 import {DefaultAction} from '../model/Action'
 import {runCleanAction} from './default-actions/clean-action-runner'
 import archiver, {Archiver} from 'archiver'
-import fs from 'fs'
+import fs from 'fs-extra'
 import {getLogFilePath, getLogsStream, getTimeInSeconds} from '../report/logs-collector-utils'
 import {generateMissionSummary} from '../report/mission-summary-generator'
 import path from 'node:path'
@@ -14,7 +14,7 @@ import {getHtmlFilePath, getHtmlLogContent} from '../report/html/html-report-uti
 import {runInstrument} from './instrument-runner'
 import {runVerifyActionsAndGetReport} from './default-actions/verify-action-runner'
 import {generateDoctorReportLogs} from '../report/doctor-summary-generator'
-import {RESULTS_UNPACK_DIR, RESULTS_ZIP_DIR} from '../context/context-variable-provider'
+import {RESULTS_UNPACK_DIR, RESULTS_ZIP_DIR, TARGET} from '../context/context-variable-provider'
 import AdmZip from 'adm-zip'
 import {runUnpackAction} from './default-actions/unpack-action-runner'
 import {runPackageAction} from './default-actions/package-action-runner'
@@ -62,12 +62,16 @@ export function unpackMission(missionFilePath?: string): void {
     const missionPath = findMissionFile(missionFilePath)
     if (missionPath) {
         loadAndParseData(missionPath)
+        const mappingOperationRequired = !missionContext.unpackMapping.isEmpty()
+        const resultsUnpackDir = <string>missionContext.getVariable(RESULTS_UNPACK_DIR)
         console.log(`Start unpacking the mission ${missionContext.name}...`)
-        const zip = new AdmZip(<string>missionContext.getVariable(RESULTS_ZIP_DIR))
+        const zip = new AdmZip(<string>missionContext.getVariable(TARGET))
         zip.extractAllTo(<string>missionContext.getVariable(RESULTS_UNPACK_DIR), true)
-        const unpackActions = missionContext.instruments.map(instrument => (<DefaultAction>instrument.actions.get(unpackActionKey)))
-            .filter(unpackAction => unpackAction != null)
-        unpackActions.forEach(unpackAction => runUnpackAction(unpackAction))
+        missionContext.instruments.filter(instrument => instrument.actions.has(unpackActionKey))
+            .forEach(instrument => runUnpackAction(<DefaultAction>instrument.actions.get(unpackActionKey), mappingOperationRequired, instrument.name))
+        if (mappingOperationRequired)
+            fs.remove(resultsUnpackDir).then().catch((error) => console.error(`Error deleting folder ${resultsUnpackDir}:`, error))
+
         console.log(`Mission ${missionContext.name} was unpacked successfully.`)
     }
 }
@@ -83,7 +87,7 @@ export function openSummary(zipPath: string, legacySummary: boolean): void {
 export function findMissionFile(missionFilePath?: string): string | null {
     if (missionFilePath)
         return missionFilePath
-    console.log('!!!!!!!!!!!!!!here')
+    console.log('!!!!!!!!!!!!!!here') //TODO: fix mission find operation
     const files = fs.readdirSync(__dirname) // Read all files in the current directory
     const missionFile = files.find((file) => file === 'mission.yml') // Find the mission.yml file
     console.log('missionFile=', missionFile)
