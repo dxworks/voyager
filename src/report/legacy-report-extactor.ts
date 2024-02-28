@@ -5,7 +5,7 @@ import {CommandSummary} from '../model/summary/CommandSummary'
 const MISSION_SUMMARY_HEADER = '------------------- Mission Summary -------------------'
 const MISSION_SUMMARY_FOOTER = '_______________________container_______________________'
 
-export function buildLegacyMissionSummary(missionReportContent: string) {
+export function buildLegacyMissionSummary(missionReportContent: string): MissionSummary {
     const missionSummary = new MissionSummary()
     missionSummary.missionName = extractMissionName(missionReportContent)
     const summaryText = extractSummaryText(missionReportContent)
@@ -21,7 +21,8 @@ function extractMissionName(fileContent: string): string {
 }
 
 function extractSummaryText(fileContent: string): string {
-    let summaryText = fileContent.split(MISSION_SUMMARY_HEADER)[1]
+    const text = fileContent.split(MISSION_SUMMARY_HEADER)
+    let summaryText = text[text.length - 1]
     summaryText = summaryText.split(MISSION_SUMMARY_FOOTER)[0]
     if (!summaryText) {
         throw new Error('Summary text not found in the file.')

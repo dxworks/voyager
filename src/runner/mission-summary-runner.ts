@@ -1,6 +1,6 @@
 import AdmZip from 'adm-zip'
 import {MISSION_RESULT_ARCHIVE_NAME} from '../context/context-variable-provider'
-import fs from 'fs'
+import fs from 'fs-extra'
 import path from 'node:path'
 import {exec} from 'node:child_process'
 import {OS, osType} from '@dxworks/cli-common'
@@ -48,10 +48,13 @@ export function buildAndOpenLegacySummary(zipPath: string): void {
     const fileContent = zip.readAsText(textFileEntry)
     const missionSummary = buildLegacyMissionSummary(fileContent)
     const legacyHtmlReport = generateHtmlReportContent(missionSummary)
-    const tempDir = fs.mkdtempSync('mission_summary-')
-    const tempHtmlPath = path.join(tempDir, 'MissionReport.html')
+    const summaryPath = path.resolve('./mission_summary')
+    if (fs.existsSync(summaryPath))
+        fs.rmSync(summaryPath, {recursive: true, force: true})
+    fs.mkdirSync(summaryPath)
+    const tempHtmlPath = path.join(summaryPath, 'MissionReport.html')
     fs.writeFileSync(tempHtmlPath, legacyHtmlReport)
-    const tempHtmlFolderPath = path.join(tempDir, 'html')
+    const tempHtmlFolderPath = path.join(summaryPath, 'html')
     fs.mkdirSync(tempHtmlFolderPath)
 
     const logFilesEntries = zip.getEntries().filter(entry => entry.entryName.endsWith('.log')).filter(entry => entry.entryName != 'mission-report.log')
