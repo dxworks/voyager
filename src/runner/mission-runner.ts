@@ -69,12 +69,12 @@ export function unpackMission(missionFilePath?: string): void {
             return
         }
         getUnpackTargets().forEach(targetPath => {
-            console.log(`Target path: ${targetPath}`)
+            const archiveName = path.basename(targetPath).split('.')[0]
+            console.log(`Unpacking ${archiveName}...`)
             const zip = new AdmZip(targetPath)
             const unpackedDirPath = path.resolve(`./${path.basename(targetPath)}-results`)
             zip.extractAllTo(unpackedDirPath, true)
-            const initialMissionName = extractInitialMissionName(unpackedDirPath)
-            console.log(`Initial mission name: ${initialMissionName}`)
+            const initialMissionName = missionContext.missionNameInZipFile ? archiveName : extractInitialMissionName(unpackedDirPath)
             missionContext.instruments.filter(instrument => instrument.actions.has(unpackActionKey))
                 .forEach(instrument => runUnpackAction(<DefaultAction>instrument.actions.get(unpackActionKey), instrument.name, unpackedDirPath, initialMissionName))
             fs.remove(unpackedDirPath).then().catch((error) => console.error(`Error deleting folder ${unpackedDirPath}:`, error))

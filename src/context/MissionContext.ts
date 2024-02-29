@@ -27,6 +27,8 @@ export class MissionContext {
 
     private _targets: string[] = []
 
+    private _missionNameInZipFile = false
+
     runAll = true
 
     private constructor() {
@@ -93,6 +95,14 @@ export class MissionContext {
 
     set targets(value: string[]) {
         this._targets = value
+    }
+
+    set missionNameInZipFile(value: boolean) {
+        this._missionNameInZipFile = value
+    }
+
+    get missionNameInZipFile(): boolean {
+        return this._missionNameInZipFile
     }
 
     public static getInstance(): MissionContext {

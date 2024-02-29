@@ -17,6 +17,7 @@ export function parseMission(file: any): void {
         missionContext.addVariable(REPO, targetPath)
         missionContext.addVariable(REPO_NAME, path.basename(targetPath))
     }
+    missionContext.missionNameInZipFile = file.missionNameInZipFile
     parseIntoMap(file.environment).forEach((value, variableKey) =>
         missionEnvVarProvider.addVariables({variableKey, value}))
     parseMissionTargets(file.targets)
