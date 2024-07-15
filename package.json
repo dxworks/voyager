@@ -32,7 +32,8 @@
     "local": "npm run build && npm link && npx dx-voyager --help",
     "refresh": "rm -rf ./node_modules package-lock.json && npm install",
     "test": "jest --passWithNoTests",
-    "test:dev": "jest --watch"
+    "test:dev": "jest --watch",
+    "package": "npm run build && pkg . --output bin"
   },
   "dependencies": {
     "@dxworks/cli-common": "^0.0.20",
@@ -66,6 +67,7 @@
     "eslint": "^7.32.0",
     "jest": "^27.2.4",
     "json": "^11.0.0",
+    "pkg": "^5.8.1",
     "rimraf": "^3.0.2",
     "sort-package-json": "^1.52.0",
     "ts-jest": "^27.0.5",

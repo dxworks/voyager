@@ -63,4 +63,6 @@ program
         openSummary(options.zipPath, !!options.legacy)
     })
 
+program.version("0.0.1")
+
 program.parse(process.argv)
