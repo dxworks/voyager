@@ -15,7 +15,7 @@ versions:
       - Python (?<version>.+)
 
   - name: Dotnet
-    min: 6
+    min: 9
     win: dotnet --version
     unix: dotnet --version
     match:
