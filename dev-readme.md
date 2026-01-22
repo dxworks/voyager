@@ -5,7 +5,7 @@ CLI application locally.
 
 ## Prerequisites
 
--   Node.js **18.19.x**
+-   Node.js **24.13.0**
 -   npm (bundled with Node)
 
 ## Install dependencies
