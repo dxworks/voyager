@@ -19,8 +19,12 @@ export default defineConfig(
 
     // TypeScript recommended rules
     tseslint.configs.recommended,
+    {
+        rules: {
+            "@typescript-eslint/no-explicit-any": "off",
+        },
+    },
 
-    // Optional extras if you want (uncomment later):
     // tseslint.configs.strict,
     // tseslint.configs.stylistic,
 );

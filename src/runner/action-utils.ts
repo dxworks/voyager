@@ -1,6 +1,6 @@
 import fs from 'fs'
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const {minimatch} = require('minimatch')
+
+import {minimatch} from 'minimatch'
 
 export const cleanActionKey = 'clean'
 export const packageActionKey = 'pack'

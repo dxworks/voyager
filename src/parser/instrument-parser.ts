@@ -33,7 +33,7 @@ let commandVarProvider: VariableProvider
 let commandEnvVarProvider: VariableProvider
 let actionEnvVarProvider: VariableProvider
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+ 
 export function parseInstrument(instrumentsDirPath: string, instrumentDir: string, file: any): Instrument {
     initVariableProvider()
     const instrumentPath = path.resolve(instrumentsDirPath, instrumentDir)

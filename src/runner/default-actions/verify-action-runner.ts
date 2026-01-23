@@ -27,7 +27,7 @@ export async function runVerifyAction(verifyAction: DefaultAction, instrumentNam
             try {
                 await checkRequirement(command!, requirement)
                 instrumentDoctorReport.requirementsByName.set(requirement.name, true)
-            } catch (err) {
+            } catch {
                 instrumentDoctorReport.requirementsByName.set(requirement.name, false)
             }
         }
