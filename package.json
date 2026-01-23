@@ -27,13 +27,13 @@
   "scripts": {
     "build": "npm run clean && tsc -p tsconfig.build.json && npm run copy-files",
     "clean": "rimraf dist && rimraf --glob \\\"*.tsbuildinfo\\\"\"",
-    "clean:modules": "rm -rf ./node_modules package-lock.json",
+    "clean:modules": "rimraf node_modules package-lock.json",
     "copy-files": "cpy \"src/assets/**/*\" \"dist/assets\" --parents",
     "create": "npm run build && npm run test",
-    "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
     "local": "npm run build && npm link && npx dx-voyager --help",
-    "refresh": "rm -rf ./node_modules package-lock.json && npm install",
+    "refresh": "rimraf node_modules package-lock.json && npm install",
     "test": "jest --passWithNoTests",
     "test:dev": "jest --watch",
     "package": "npm run build && pkg . --output bin"
@@ -50,6 +50,7 @@
     "semver": "^7.7.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/adm-zip": "^0.5.0",
     "@types/archiver": "^7.0.0",
     "@types/cli-progress": "^3.11.6",
@@ -61,8 +62,6 @@
     "@types/node": "^25.0.10",
     "@types/semver": "^7.7.1",
     "@types/string-template": "^1.0.7",
-    "@typescript-eslint/eslint-plugin": "^8.53.1",
-    "@typescript-eslint/parser": "^8.53.1",
     "@yao-pkg/pkg": "^6.12.0",
     "cpy-cli": "^6.0.0",
     "cross-env": "^10.1.0",
@@ -74,6 +73,7 @@
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.53.1"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
