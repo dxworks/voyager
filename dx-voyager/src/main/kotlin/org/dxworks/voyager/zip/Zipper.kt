@@ -11,21 +11,20 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 
-
 class Zipper {
     companion object {
         private val log = logger<Zipper>()
     }
 
     fun zipFiles(files: List<FileAndAlias>, zipPath: String): List<FileAndAlias> {
-        return ZipArchiveOutputStream(FileOutputStream(zipPath)).use { archive ->
+        return ZipArchiveOutputStream(FileOutputStream(zipPath)).use { archive: ZipArchiveOutputStream ->
             files.filter {
                 zipFile(it.file, it.alias, archive)
             }
         }
     }
 
-    private fun zipFile(file: File, fileName: String, archive: ArchiveOutputStream): Boolean {
+    private fun zipFile(file: File, fileName: String, archive: ArchiveOutputStream<ZipArchiveEntry>): Boolean {
         if (file.isDirectory) {
             return file.listFiles()?.all {
                 zipFile(it, fileName + "/" + it.name, archive)
@@ -50,4 +49,3 @@ class Zipper {
         }
     }
 }
-
