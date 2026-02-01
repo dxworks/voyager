@@ -14,7 +14,7 @@ jobs:
       packages: write
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
 
       - name: Set variables
         id: set_variables
@@ -23,7 +23,7 @@ jobs:
           echo ::set-output name=currentDate::$currentDate
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '24.x'
 
@@ -34,7 +34,14 @@ jobs:
 
       - name: Prepare Voyager release
         run: |
-          voyenv init -cir release
+          if [ -f "voyenv.yml" ]; then
+            echo "Using existing voyenv.yml from repository root"
+            mkdir -p release
+            cp voyenv.yml release/
+          else
+            echo "No voyenv.yml found, initializing with voyenv"
+            voyenv init -ci release
+          fi
           cd release
           voyenv install
           zip -r voyager-full.zip voyager
