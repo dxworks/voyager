@@ -28,12 +28,9 @@ export function parseMission(file: any): void {
 }
 
 function parseMissionTargets(targetsObject: any): void {
-    const targets: string[] = []
-    const targetsMap = parseIntoMap(targetsObject)
-    targetsMap.forEach((value) => {
-        targets.push(value)
-    })
-    missionContext.targets = targets
+    if (Array.isArray(targetsObject)) {
+        missionContext.targets = targetsObject
+    }
 }
 
 function parseMissionMapping(mappingObject: any): void {
