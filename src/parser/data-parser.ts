@@ -63,7 +63,12 @@ function loadAndParseInstruments() {
     const instrumentsDirPath = path.resolve(<string>missionContext.getVariable(MISSION_ROOT_DIR), <string>missionContext.getVariable(INSTRUMENTS_DIR))
     const instrumentDirectories = getDirectories(instrumentsDirPath)
     instrumentDirectories.forEach((instrumentDir) => {
-        instruments.push(loadAndParseInstrument(instrumentsDirPath, instrumentDir))
+        const instrumentFilePath = path.resolve(instrumentsDirPath, instrumentDir, instrumentYml)
+        if (fs.existsSync(instrumentFilePath)) {
+            instruments.push(loadAndParseInstrument(instrumentsDirPath, instrumentDir))
+        } else {
+            console.log(`Skipping directory '${instrumentDir}': missing ${instrumentYml}`)
+        }
     })
     missionContext.instruments = instruments
 }
