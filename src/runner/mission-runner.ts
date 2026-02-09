@@ -133,9 +133,8 @@ export async function runMission(missionFilePath: string, actions: string[] | un
     loadAndParseData(missionFilePath)
 
     function getRunnableInstruments() {
-        return <Instrument[]>missionContext.runnableInstruments.map(runnableInstrument => missionContext.instruments.find((instrument) => instrument.id == runnableInstrument))
-            .filter(instrument => !!instrument)
-
+        const runnableSet = new Set(missionContext.runnableInstruments)
+        return missionContext.instruments.filter(instrument => runnableSet.has(instrument.id))
     }
 
     const instruments = missionContext.runAll ? missionContext.instruments : getRunnableInstruments()

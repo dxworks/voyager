@@ -6,4 +6,5 @@ export interface Instrument {
     version: string;
     instrumentPath: string;
     actions: Map<string, Action>;
+    runOrder: number;
 }

@@ -48,6 +48,7 @@ export function parseInstrument(instrumentsDirPath: string, instrumentDir: strin
         version: file.version,
         instrumentPath: instrumentPath,
         actions: actions,
+        runOrder: file.runOrder ?? 0,
     }
 }
 
