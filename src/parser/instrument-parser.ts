@@ -16,7 +16,7 @@ import {
     missionCommandVarProvider,
     missionEnvVarProvider,
 } from '../context/mission-variable-providers'
-import {isDefaultAction} from '../runner/action-utils'
+import {isDefaultAction, summaryActionKey} from '../runner/action-utils'
 import {missionContext} from '../context/MissionContext'
 import {
     INSTRUMENT_DIR_NAME,
@@ -103,12 +103,24 @@ function parseCommands(commandsObject: any, instrumentKey: string, actionKey: st
 }
 
 function parseDefaultAction(defaultActionObject: any, instrumentKey: string, actionKey: string): DefaultAction {
-    return {
+    const action: DefaultAction = {
         name: actionKey,
         commandsContext: parseCommands(defaultActionObject.commands, instrumentKey, actionKey),
         with: parseWith(defaultActionObject.with),
         produces: parseProduces(defaultActionObject.produces),
+        summaryFile: defaultActionObject.summaryFile
+            ? replaceMissionContextVariables(defaultActionObject.summaryFile)
+            : undefined,
     }
+
+    if (actionKey === summaryActionKey && action.summaryFile) {
+        const instrumentName = missionContext.getVariable(INSTRUMENT_NAME)!
+        missionContext.addVariable(`${instrumentName}Summary`, path.resolve(
+            missionContext.getVariable(INSTRUMENT_PATH)!, action.summaryFile
+        ))
+    }
+
+    return action
 }
 
 function parseWith(withObject: any): WithAction {

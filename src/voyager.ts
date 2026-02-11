@@ -2,9 +2,9 @@
 import {
     cleanMission,
     findAndRunMission,
-    openSummary,
     packMission,
     runMission,
+    summaryMission,
     unpackMission,
     verifyMission,
 } from './runner/mission-runner'
@@ -56,11 +56,10 @@ program
 
 program
     .command('summary')
-    .description('Opens the mission summary from the archive')
-    .requiredOption('-z, --zipPath <zipPath>')
-    .option('-l, --legacy', 'Use legacy summary')
-    .action((options: { zipPath: string, legacy?: boolean }) => {
-        openSummary(options.zipPath, !!options.legacy)
+    .description('Run summary actions for mission instruments')
+    .option('-m, --missionPath <missionPath>')
+    .action((options: { missionPath?: string }) => {
+        summaryMission(options.missionPath).then()
     })
 
 program.version("0.0.1")

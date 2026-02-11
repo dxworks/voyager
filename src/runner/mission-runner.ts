@@ -1,9 +1,10 @@
 import {Instrument} from '../model/Instrument'
 import {missionContext} from '../context/MissionContext'
 import {loadAndParseData} from '../parser/data-parser'
-import {cleanActionKey, packageActionKey, unpackActionKey, verifyActionKey} from './action-utils'
+import {cleanActionKey, packageActionKey, summaryActionKey, unpackActionKey, verifyActionKey} from './action-utils'
 import {DefaultAction} from '../model/Action'
 import {runCleanAction} from './default-actions/clean-action-runner'
+import {runSummaryAction} from './default-actions/summary-action-runner'
 import archiver, {Archiver} from 'archiver'
 import fs from 'fs-extra'
 import {getLogFilePath, getLogsStream, getTimeInSeconds} from '../report/logs-collector-utils'
@@ -18,7 +19,6 @@ import {RESULTS_ZIP_DIR, TARGET} from '../context/context-variable-provider'
 import AdmZip from 'adm-zip'
 import {runUnpackAction} from './default-actions/unpack-action-runner'
 import {runPackageAction} from './default-actions/package-action-runner'
-import {buildAndOpenLegacySummary, openMissionSummary} from './mission-summary-runner'
 import yaml from 'js-yaml'
 
 export async function cleanMission(missionFilePath?: string): Promise<void> {
@@ -101,12 +101,19 @@ function extractInitialMissionName(unpackedResultsPath: string): string {
     return ''
 }
 
-export function openSummary(zipPath: string, legacySummary: boolean): void {
-    if (legacySummary) {
-        buildAndOpenLegacySummary(zipPath)
-        return
+export async function summaryMission(missionFilePath?: string): Promise<void> {
+    const missionPath = findMissionFile(missionFilePath)
+    if (missionPath) {
+        loadAndParseData(missionPath)
+        console.log(`Running summary actions for mission ${missionContext.name}...`)
+        for (const instrument of missionContext.instruments) {
+            const summaryAction = instrument.actions.get(summaryActionKey) as DefaultAction | undefined
+            if (summaryAction) {
+                await runSummaryAction(summaryAction, instrument.instrumentPath, instrument.name)
+            }
+        }
+        console.log(`Summary actions for mission ${missionContext.name} completed.`)
     }
-    openMissionSummary(zipPath)
 }
 
 export function findMissionFile(missionFilePath?: string): string | null {
