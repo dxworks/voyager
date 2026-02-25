@@ -8,7 +8,8 @@ export interface Action {
 export interface DefaultAction extends Action {
     with?: WithAction;
     produces?: Map<string, string>
-    summaryFile?: string;
+    summaryMdFile?: string;
+    summaryHtmlFile?: string;
 }
 
 export interface WithAction {

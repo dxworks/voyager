@@ -38,6 +38,8 @@ export function parseInstrument(instrumentsDirPath: string, instrumentDir: strin
     initVariableProvider()
     const instrumentPath = path.resolve(instrumentsDirPath, instrumentDir)
     missionContext.addVariable(INSTRUMENT_NAME, file.name)
+    missionContext.addVariable(`${file.name}SummaryMd`, 'null')
+    missionContext.addVariable(`${file.name}SummaryHtml`, 'null')
     missionContext.addVariable(INSTRUMENT_DIR_NAME, instrumentDir)
     missionContext.addVariable(INSTRUMENT_PATH, instrumentPath)
     missionContext.addVariable(INSTRUMENT_RESULTS, path.resolve(<string>missionContext.getVariable(RESULTS_UNPACK_DIR), file.name))
@@ -103,21 +105,34 @@ function parseCommands(commandsObject: any, instrumentKey: string, actionKey: st
 }
 
 function parseDefaultAction(defaultActionObject: any, instrumentKey: string, actionKey: string): DefaultAction {
+    if (defaultActionObject.summaryFile !== undefined)
+        throw new Error(`Invalid field 'summaryFile' in action '${actionKey}' of instrument '${instrumentKey}'. Use 'summaryMdFile' and 'summaryHtmlFile'.`)
+
     const action: DefaultAction = {
         name: actionKey,
         commandsContext: parseCommands(defaultActionObject.commands, instrumentKey, actionKey),
         with: parseWith(defaultActionObject.with),
         produces: parseProduces(defaultActionObject.produces),
-        summaryFile: defaultActionObject.summaryFile
-            ? replaceMissionContextVariables(defaultActionObject.summaryFile)
+        summaryMdFile: defaultActionObject.summaryMdFile
+            ? replaceMissionContextVariables(defaultActionObject.summaryMdFile)
+            : undefined,
+        summaryHtmlFile: defaultActionObject.summaryHtmlFile
+            ? replaceMissionContextVariables(defaultActionObject.summaryHtmlFile)
             : undefined,
     }
 
-    if (actionKey === summaryActionKey && action.summaryFile) {
+    if (actionKey === summaryActionKey) {
         const instrumentName = missionContext.getVariable(INSTRUMENT_NAME)!
-        missionContext.addVariable(`${instrumentName}Summary`, path.resolve(
-            missionContext.getVariable(INSTRUMENT_PATH)!, action.summaryFile
-        ))
+
+        if (action.summaryMdFile)
+            missionContext.addVariable(`${instrumentName}SummaryMd`, path.resolve(
+                missionContext.getVariable(INSTRUMENT_PATH)!, action.summaryMdFile
+            ))
+
+        if (action.summaryHtmlFile)
+            missionContext.addVariable(`${instrumentName}SummaryHtml`, path.resolve(
+                missionContext.getVariable(INSTRUMENT_PATH)!, action.summaryHtmlFile
+            ))
     }
 
     return action
