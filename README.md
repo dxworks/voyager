@@ -19,6 +19,28 @@ or
 dxw voyager
 ```
 
+## Standalone executable (Node SEA)
+
+Build a local executable that runs without Node.js installed on the target machine:
+
+```bash
+npm run build:sea
+```
+
+Output files are created in `dist/sea/`:
+
+- `voyager.bundle.cjs` (single-file bundle used by SEA)
+- `sea-config.json` (generated SEA configuration)
+- `dx-voyager-<os>-<arch>[.exe]` (standalone executable)
+
+Examples:
+
+- Windows x64: `dist/sea/dx-voyager-win-x64.exe`
+- Linux x64: `dist/sea/dx-voyager-linux-x64`
+- macOS arm64: `dist/sea/dx-voyager-macos-arm64`
+
+Use Node.js 25.5+ for `node --build-sea`.
+
 ## Mission
 
 ### mission.yml

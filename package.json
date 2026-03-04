@@ -22,21 +22,25 @@
     "dist"
   ],
   "engines": {
-    "node": "^24.13.0"
+    "node": ">=24.13.0 <26"
   },
   "scripts": {
     "build": "npm run clean && tsc -p tsconfig.build.json && npm run copy-files",
+    "build:bundle": "npm run build && esbuild dist/src/voyager.js --bundle --platform=node --format=cjs --target=node24 --outfile=dist/sea/voyager.bundle.cjs",
+    "build:sea": "npm run build:bundle && node scripts/build-sea.mjs",
     "clean": "rimraf dist && rimraf --glob \\\"*.tsbuildinfo\\\"\"",
     "clean:modules": "rimraf node_modules package-lock.json",
     "copy-files": "cpy \"src/assets/**/*\" \"dist/assets\" --parents",
     "create": "npm run build && npm run test",
+    "create:sea": "npm run lint && npm run test && npm run build:sea",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
     "local": "npm run build && npm link && npx dx-voyager --help",
     "refresh": "rimraf node_modules package-lock.json && npm install",
     "test": "jest --passWithNoTests",
     "test:dev": "jest --watch",
-    "package": "npm run build && pkg . --target node20-win-x64 --output bin"
+    "package": "npm run build:sea",
+    "package:pkg": "npm run build && pkg . --target node20-win-x64 --output bin"
   },
   "dependencies": {
     "@dxworks/cli-common": "^0.1.1",
@@ -65,6 +69,7 @@
     "@yao-pkg/pkg": "^6.12.0",
     "cpy-cli": "^6.0.0",
     "cross-env": "^10.1.0",
+    "esbuild": "^0.25.11",
     "eslint": "^9.39.2",
     "jest": "^30.2.0",
     "json": "^11.0.0",
