@@ -20,6 +20,7 @@ import AdmZip from 'adm-zip'
 import {runUnpackAction} from './default-actions/unpack-action-runner'
 import {runPackageAction} from './default-actions/package-action-runner'
 import yaml from 'js-yaml'
+import {InstrumentSummary} from '../model/summary/InstrumentSummary'
 
 export async function cleanMission(missionFilePath?: string): Promise<void> {
     const missionPath = findMissionFile(missionFilePath)
@@ -109,7 +110,12 @@ export async function summaryMission(missionFilePath?: string): Promise<void> {
         for (const instrument of missionContext.instruments) {
             const summaryAction = instrument.actions.get(summaryActionKey) as DefaultAction | undefined
             if (summaryAction) {
+                const instrumentSummary = new InstrumentSummary()
+                missionContext.missionSummary.addInstrumentSummary(instrument.name, instrumentSummary)
+                const startTime = performance.now()
                 await runSummaryAction(summaryAction, instrument.instrumentPath, instrument.name)
+                const endTime = performance.now()
+                instrumentSummary.runningTime = getTimeInSeconds(startTime, endTime)
             }
         }
         console.log(`Summary actions for mission ${missionContext.name} completed.`)

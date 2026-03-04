@@ -36,7 +36,7 @@
     "refresh": "rimraf node_modules package-lock.json && npm install",
     "test": "jest --passWithNoTests",
     "test:dev": "jest --watch",
-    "package": "npm run build && pkg . --output bin"
+    "package": "npm run build && pkg . --target node20-win-x64 --output bin"
   },
   "dependencies": {
     "@dxworks/cli-common": "^0.1.1",
@@ -77,5 +77,11 @@
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
+  },
+  "pkg": {
+    "assets": [
+      "dist/assets/**/*",
+      "node_modules/axios/dist/**/*"
+    ]
   }
 }

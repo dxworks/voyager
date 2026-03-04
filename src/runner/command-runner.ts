@@ -4,13 +4,14 @@ import {missionContext} from '../context/MissionContext'
 import {spawn, SpawnOptions} from 'child_process'
 import fs from 'fs'
 import {CommandSummary} from '../model/summary/CommandSummary'
+import {InstrumentSummary} from '../model/summary/InstrumentSummary'
 import {getLogFilePath, getTimeInSeconds} from '../report/logs-collector-utils'
 import {centerText, maxLength} from '../report/mission-summary-generator'
 
 export async function runCommand(commandContext: CommandContext,
                                  commandPath: string,
                                  instrumentName: string): Promise<void> {
-    const instrumentSummary = missionContext.missionSummary.getInstrumentSummary(instrumentName)
+    const instrumentSummary = getOrCreateInstrumentSummary(instrumentName)
     const startTime = performance.now()
     const commandSummary = new CommandSummary()
     try {
@@ -22,6 +23,16 @@ export async function runCommand(commandContext: CommandContext,
     const endTime = performance.now()
     commandSummary.runningTime = getTimeInSeconds(startTime, endTime)
     instrumentSummary.addCommandSummary(commandContext.id, commandSummary)
+}
+
+function getOrCreateInstrumentSummary(instrumentName: string): InstrumentSummary {
+    const existingSummary = missionContext.missionSummary.instrumentsSummary.get(instrumentName)
+    if (existingSummary)
+        return existingSummary
+
+    const createdSummary = new InstrumentSummary()
+    missionContext.missionSummary.addInstrumentSummary(instrumentName, createdSummary)
+    return createdSummary
 }
 
 export function translateCommand(command: Command): string | undefined {
