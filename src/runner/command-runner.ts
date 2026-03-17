@@ -7,6 +7,7 @@ import {CommandSummary} from '../model/summary/CommandSummary'
 import {InstrumentSummary} from '../model/summary/InstrumentSummary'
 import {getLogFilePath, getTimeInSeconds} from '../report/logs-collector-utils'
 import {centerText, maxLength} from '../report/mission-summary-generator'
+import {replaceMissionContextVariables} from '../variable/variable-operations'
 
 export async function runCommand(commandContext: CommandContext,
                                  commandPath: string,
@@ -48,23 +49,29 @@ export function translateCommand(command: Command): string | undefined {
 
 function createEnv(environmentVariables?: Map<string, string>) {
     if (environmentVariables != null && environmentVariables.size != 0) {
-        const env = Object.fromEntries(environmentVariables)
+        const resolvedEnvVariables = new Map<string, string>()
+        environmentVariables.forEach((value, key) => {
+            resolvedEnvVariables.set(key, replaceMissionContextVariables(value))
+        })
+        const env = Object.fromEntries(resolvedEnvVariables)
         return Object.assign({}, env, process.env)
     } else
         return process.env
 }
 
 async function executeCommand(commandContext: CommandContext,
-                              path: string,
-                              logFilePath?: string): Promise<void> {
+                               path: string,
+                               logFilePath?: string): Promise<void> {
     const env = createEnv(commandContext.environment)
-    const command = typeof commandContext.command == 'string' ? <string>commandContext.command : translateCommand(<Command>commandContext.command)
+    const translatedCommand = typeof commandContext.command == 'string' ? <string>commandContext.command : translateCommand(<Command>commandContext.command)
+    const command = translatedCommand ? replaceMissionContextVariables(translatedCommand) : translatedCommand
+    const resolvedPath = replaceMissionContextVariables(path)
     if (!command) {
         console.warn('warn: No command defined for platform')
     }
     const options: SpawnOptions = {
         env: env,
-        cwd: path,
+        cwd: resolvedPath,
         stdio: ['ignore', 'pipe', 'pipe'],
         shell: true,
     }

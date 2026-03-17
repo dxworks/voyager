@@ -85,4 +85,28 @@ describe('summary action runner', () => {
         expect(fs.existsSync(path.join(commandDir, 'generated.txt'))).toBe(true)
         expect(fs.existsSync(path.join(instrumentPath, 'generated.txt'))).toBe(false)
     })
+
+    test('should resolve mission variables in summary command at execution time', async () => {
+        const instrumentPath = path.join(tempDir, 'tool')
+        const summaryDirectory = path.join(instrumentPath, 'summary')
+        const summaryMdPath = path.join(summaryDirectory, 'summary.md')
+        const summaryHtmlPath = path.join(summaryDirectory, 'summary.html')
+        fs.mkdirSync(instrumentPath, {recursive: true})
+        missionContext.addVariable('lateSummaryMdPath', summaryMdPath)
+        missionContext.addVariable('lateSummaryHtmlPath', summaryHtmlPath)
+        missionContext.missionSummary.addInstrumentSummary('Tool', new InstrumentSummary())
+
+        const result = await runSummaryAction({
+            name: 'summary',
+            summaryMdFile: 'summary/summary.md',
+            summaryHtmlFile: 'summary/summary.html',
+            commandsContext: [{
+                id: 'generate-summary',
+                command: 'node -e "const fs=require(\'fs\'); fs.mkdirSync(require(\'path\').dirname(process.argv[1]),{recursive:true}); fs.writeFileSync(process.argv[1],\'# summary\'); fs.writeFileSync(process.argv[2],\'<h1>summary</h1>\')" "${lateSummaryMdPath}" "${lateSummaryHtmlPath}"',
+            }],
+        }, instrumentPath, 'Tool')
+
+        expect(result.summaryMdFilePath).toBe(summaryMdPath)
+        expect(result.summaryHtmlFilePath).toBe(summaryHtmlPath)
+    })
 })

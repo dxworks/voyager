@@ -72,4 +72,21 @@ describe('command runner', () => {
         const missionLogContent = fs.readFileSync(missionLogPath).toString()
         expect(missionLogContent).toContain('hello-log')
     })
+
+    test('runCommand should resolve mission context variables at execution time', async () => {
+        const lateOutputPath = path.join(tempDir, 'late output.txt')
+        missionContext.addVariable('lateOutputPath', lateOutputPath)
+        missionContext.addVariable('lateEnvValue', 'resolved-at-runtime')
+
+        await runCommand({
+            id: 'late-variables',
+            command: 'node -e "require(\'fs\').writeFileSync(process.argv[1], process.env.LATE_ENV)" "${lateOutputPath}"',
+            environment: new Map([['LATE_ENV', '${lateEnvValue}']]),
+        }, tempDir, 'tool')
+
+        const summary = missionContext.missionSummary.getInstrumentSummary('tool').commandsSummary.get('late-variables')
+        expect(summary!.success).toBe(true)
+        expect(fs.existsSync(lateOutputPath)).toBe(true)
+        expect(fs.readFileSync(lateOutputPath).toString()).toBe('resolved-at-runtime')
+    })
 })
