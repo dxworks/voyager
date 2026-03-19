@@ -104,6 +104,7 @@ describe('instrument parser', () => {
                 [summaryActionKey]: {
                     summaryMdFile: 'summary/tool.md',
                     summaryHtmlFile: 'summary/tool.html',
+                    summaryCategory: 'Architecture',
                     commands: {},
                 },
             },
@@ -112,5 +113,23 @@ describe('instrument parser', () => {
         const instrumentPath = path.resolve(instrumentsDirPath, instrumentDir)
         expect(missionContext.getVariable('ToolSummaryMd')).toBe(path.resolve(instrumentPath, 'summary/tool.md'))
         expect(missionContext.getVariable('ToolSummaryHtml')).toBe(path.resolve(instrumentPath, 'summary/tool.html'))
+        expect(missionContext.getVariable('ToolSummaryCategory')).toBe('Architecture')
+    })
+
+    test('should keep summary category variable null when summaryCategory is missing', () => {
+        parseInstrument(instrumentsDirPath, instrumentDir, {
+            id: 'tool',
+            name: 'Tool',
+            version: '1.0.0',
+            actions: {
+                [summaryActionKey]: {
+                    summaryMdFile: 'summary/tool.md',
+                    summaryHtmlFile: 'summary/tool.html',
+                    commands: {},
+                },
+            },
+        })
+
+        expect(missionContext.getVariable('ToolSummaryCategory')).toBe('null')
     })
 })

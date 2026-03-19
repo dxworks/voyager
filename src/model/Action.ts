@@ -10,6 +10,7 @@ export interface DefaultAction extends Action {
     produces?: Map<string, string>
     summaryMdFile?: string;
     summaryHtmlFile?: string;
+    summaryCategory?: string;
 }
 
 export interface WithAction {

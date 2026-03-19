@@ -40,6 +40,7 @@ export function parseInstrument(instrumentsDirPath: string, instrumentDir: strin
     missionContext.addVariable(INSTRUMENT_NAME, file.name)
     missionContext.addVariable(`${file.name}SummaryMd`, 'null')
     missionContext.addVariable(`${file.name}SummaryHtml`, 'null')
+    missionContext.addVariable(`${file.name}SummaryCategory`, 'null')
     missionContext.addVariable(INSTRUMENT_DIR_NAME, instrumentDir)
     missionContext.addVariable(INSTRUMENT_PATH, instrumentPath)
     missionContext.addVariable(INSTRUMENT_RESULTS, path.resolve(<string>missionContext.getVariable(RESULTS_UNPACK_DIR), file.name))
@@ -119,6 +120,9 @@ function parseDefaultAction(defaultActionObject: any, instrumentKey: string, act
         summaryHtmlFile: defaultActionObject.summaryHtmlFile
             ? replaceMissionContextVariables(defaultActionObject.summaryHtmlFile)
             : undefined,
+        summaryCategory: defaultActionObject.summaryCategory
+            ? replaceMissionContextVariables(defaultActionObject.summaryCategory)
+            : undefined,
     }
 
     if (actionKey === summaryActionKey) {
@@ -133,6 +137,13 @@ function parseDefaultAction(defaultActionObject: any, instrumentKey: string, act
             missionContext.addVariable(`${instrumentName}SummaryHtml`, path.resolve(
                 missionContext.getVariable(INSTRUMENT_PATH)!, action.summaryHtmlFile
             ))
+
+        missionContext.addVariable(
+            `${instrumentName}SummaryCategory`,
+            action.summaryCategory && action.summaryCategory.trim().length > 0
+                ? action.summaryCategory
+                : 'null'
+        )
     }
 
     return action
