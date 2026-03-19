@@ -35,6 +35,6 @@ export interface Requirement {
 }
 
 export function instanceOfDefaultAction(object: any): boolean {
-    return 'with' in object
+    return !!object && typeof object === 'object' && 'with' in object
 }
 

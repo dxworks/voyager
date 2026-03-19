@@ -10,6 +10,10 @@ describe('model type guards', () => {
         expect(instanceOfDefaultAction({name: 'start'})).toBe(false)
     })
 
+    test('instanceOfDefaultAction should return false for undefined', () => {
+        expect(instanceOfDefaultAction(undefined)).toBe(false)
+    })
+
     test('instanceOfCommand should return true for command object keys', () => {
         expect(instanceOfCommand({windows: 'cmd /c echo ok'})).toBe(true)
         expect(instanceOfCommand({unix: 'echo ok'})).toBe(true)

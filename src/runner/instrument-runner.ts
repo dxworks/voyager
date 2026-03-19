@@ -24,7 +24,12 @@ export async function runInstrument(instrument: Instrument, archive: Archiver | 
 }
 
 async function defaultInstrumentRun(instrument: Instrument, archive: Archiver): Promise<void> {
-    await runAction(instrument.actions.get(startActionKey)!, archive, instrument.instrumentPath, instrument.name)
+    const startAction = instrument.actions.get(startActionKey)
+    if (startAction)
+        await runAction(startAction, archive, instrument.instrumentPath, instrument.name)
+    else
+        console.warn(`Instrument ${instrument.name}: no '${startActionKey}' action found. Skipping run phase.`)
+
     const packAction = <DefaultAction>instrument.actions.get(packageActionKey)
     if (packAction) {
         runPackageAction(instrument.name, archive, packAction)

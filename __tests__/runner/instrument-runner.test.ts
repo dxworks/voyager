@@ -85,4 +85,39 @@ describe('instrument runner', () => {
         expect(fs.existsSync(path.join(instrumentPath, 'custom.txt'))).toBe(true)
         expect(fs.existsSync(path.join(instrumentPath, 'start.txt'))).toBe(false)
     })
+
+    test('default run should skip when start action is missing', async () => {
+        const instrumentPath = path.join(tempDir, 'tool')
+        const reportsPath = path.join(tempDir, 'reports')
+        fs.mkdirSync(instrumentPath)
+        fs.mkdirSync(reportsPath)
+        fs.writeFileSync(path.join(reportsPath, 'result.txt'), 'ok')
+
+        const instrument: Instrument = {
+            id: 'tool',
+            name: 'Tool',
+            version: '1.0.0',
+            instrumentPath,
+            runOrder: 0,
+            actions: new Map([
+                ['pack', {
+                    name: 'pack',
+                    with: {
+                        locations: [<any>{source: 'reports', destination: 'bundle'}],
+                    },
+                }],
+            ]),
+        }
+
+        const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
+        const archive = new FakeArchive()
+
+        await runInstrument(instrument, <any>archive, false)
+
+        expect(warnSpy).toHaveBeenCalledWith("Instrument Tool: no 'start' action found. Skipping run phase.")
+        expect(missionContext.missionSummary.getInstrumentSummary('Tool')).toBeDefined()
+        expect(archive.directories.length).toBe(1)
+
+        warnSpy.mockRestore()
+    })
 })
