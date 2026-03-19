@@ -26,8 +26,10 @@ export async function cleanMission(missionFilePath?: string): Promise<void> {
     const missionPath = findMissionFile(missionFilePath)
     if (missionPath) {
         loadAndParseData(missionPath)
+        const cleanInstruments = getMissionScopedInstrumentsWithAction(cleanActionKey)
+        logExecutionOrder(cleanInstruments)
         console.log(`Start cleaning the mission ${missionContext.name}...`)
-        const cleanActions = missionContext.instruments.map(instrument => (<DefaultAction>instrument.actions.get(cleanActionKey)))
+        const cleanActions = cleanInstruments.map(instrument => (<DefaultAction>instrument.actions.get(cleanActionKey)))
             .filter(cleanAction => cleanAction != null)
         cleanActions.forEach(cleanAction => runCleanAction(cleanAction))
         console.log(`Mission ${missionContext.name} was cleaned successfully.`)
@@ -38,8 +40,10 @@ export async function verifyMission(missionFilePath?: string): Promise<void> {
     const missionPath = findMissionFile(missionFilePath)
     if (missionPath) {
         loadAndParseData(missionPath)
+        const verifyInstruments = getMissionScopedInstrumentsWithAction(verifyActionKey)
+        logExecutionOrder(verifyInstruments)
         console.log(`Start verifying the mission ${missionContext.name}...`)
-        await runVerifyActionsAndGetReport()
+        await runVerifyActionsAndGetReport(verifyInstruments)
         generateDoctorReportLogs()
     }
 }
@@ -48,9 +52,11 @@ export function packMission(missionFilePath?: string): void {
     const missionPath = findMissionFile(missionFilePath)
     if (missionPath) {
         loadAndParseData(missionPath)
+        const packInstruments = getMissionScopedInstrumentsWithAction(packageActionKey)
+        logExecutionOrder(packInstruments)
         console.log(`Start packing the mission ${missionContext.name}...`)
         const archive = archiver('zip', {zlib: {level: 9}})
-        missionContext.instruments.forEach(instrument => {
+        packInstruments.forEach(instrument => {
             const packAction = (<DefaultAction>instrument.actions.get(packageActionKey))
             runPackageAction(instrument.name, archive, packAction)
         })
@@ -69,6 +75,8 @@ export function unpackMission(missionFilePath?: string): void {
             console.warn(`The mission ${missionContext.name} does not contain mapping.`)
             return
         }
+        const unpackInstruments = getMissionScopedInstrumentsWithAction(unpackActionKey)
+        logExecutionOrder(unpackInstruments)
         getUnpackTargets().forEach(targetPath => {
             const archiveName = path.basename(targetPath).split('.')[0]
             console.log(`Unpacking ${archiveName}...`)
@@ -76,7 +84,7 @@ export function unpackMission(missionFilePath?: string): void {
             const unpackedDirPath = path.resolve(`./${path.basename(targetPath)}-results`)
             zip.extractAllTo(unpackedDirPath, true)
             const initialMissionName = missionContext.missionNameInZipFile ? archiveName : extractInitialMissionName(unpackedDirPath)
-            missionContext.instruments.filter(instrument => instrument.actions.has(unpackActionKey))
+            unpackInstruments
                 .forEach(instrument => runUnpackAction(<DefaultAction>instrument.actions.get(unpackActionKey), instrument.name, unpackedDirPath, initialMissionName))
             fs.remove(unpackedDirPath).then().catch((error) => console.error(`Error deleting folder ${unpackedDirPath}:`, error))
         })
@@ -106,8 +114,10 @@ export async function summaryMission(missionFilePath?: string): Promise<void> {
     const missionPath = findMissionFile(missionFilePath)
     if (missionPath) {
         loadAndParseData(missionPath)
+        const summaryInstruments = getMissionScopedInstrumentsWithAction(summaryActionKey)
+        logExecutionOrder(summaryInstruments)
         console.log(`Running summary actions for mission ${missionContext.name}...`)
-        for (const instrument of missionContext.instruments) {
+        for (const instrument of summaryInstruments) {
             const summaryAction = instrument.actions.get(summaryActionKey) as DefaultAction | undefined
             if (summaryAction) {
                 const instrumentSummary = new InstrumentSummary()
@@ -145,12 +155,8 @@ export async function runMission(missionFilePath: string, actions: string[] | un
 
     loadAndParseData(missionFilePath)
 
-    function getRunnableInstruments() {
-        const runnableSet = new Set(missionContext.runnableInstruments)
-        return missionContext.instruments.filter(instrument => runnableSet.has(instrument.id))
-    }
-
-    const instruments = missionContext.runAll ? missionContext.instruments : getRunnableInstruments()
+    const instruments = getMissionScopedInstruments()
+    logExecutionOrder(instruments)
     missionContext.logsStream = getLogsStream()
     let archive: Archiver | null = null
     const customRun = actions != undefined
@@ -236,4 +242,28 @@ function addHtmlToArchive(instruments: Instrument[], archive: archiver.Archiver)
     } catch (err) {
         console.error('Error reading/writing file:', err)
     }
+}
+
+function getMissionScopedInstruments(): Instrument[] {
+    if (missionContext.runAll)
+        return missionContext.instruments
+
+    const runnableSet = new Set(missionContext.runnableInstruments)
+    return missionContext.instruments.filter(instrument => runnableSet.has(instrument.id))
+}
+
+function getMissionScopedInstrumentsWithAction(actionKey: string): Instrument[] {
+    return getMissionScopedInstruments().filter(instrument => instrument.actions.has(actionKey))
+}
+
+function logExecutionOrder(instruments: Instrument[]): void {
+    console.log('Instrument execution order:')
+    if (instruments.length === 0) {
+        console.log('  (none)')
+        return
+    }
+
+    instruments.forEach((instrument, index) => {
+        console.log(`  ${index + 1}. ${instrument.name} (runOrder: ${instrument.runOrder})`)
+    })
 }

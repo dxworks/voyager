@@ -7,11 +7,13 @@ import {InstrumentDoctorReport} from '../../model/DoctorReport'
 import semver from 'semver/preload'
 import {missionContext} from '../../context/MissionContext'
 import {verifyActionKey} from '../action-utils'
+import {Instrument} from '../../model/Instrument'
 
 const regexGroup = /\(\?<(?<group>\w+)>\.\+\)/gm
 
-export async function runVerifyActionsAndGetReport(): Promise<void> {
-    for (const instrument of missionContext.instruments) {
+export async function runVerifyActionsAndGetReport(instruments?: Instrument[]): Promise<void> {
+    const instrumentsToVerify = instruments ?? missionContext.instruments
+    for (const instrument of instrumentsToVerify) {
         const verifyAction = (<DefaultAction>instrument.actions.get(verifyActionKey))
         if (verifyAction != null)
             await runVerifyAction(verifyAction, instrument.name)

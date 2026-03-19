@@ -131,4 +131,68 @@ describe('mission runner custom actions', () => {
 
         expect(fs.existsSync(zipPath)).toBe(true)
     })
+
+    test('runAll false should log and execute only runnable instruments', async () => {
+        const instrumentsDir = path.join(tempDir, 'instruments')
+        const alphaDir = path.join(instrumentsDir, 'alpha')
+        const betaDir = path.join(instrumentsDir, 'beta')
+        fs.mkdirSync(alphaDir, {recursive: true})
+        fs.mkdirSync(betaDir, {recursive: true})
+
+        writeYaml(path.join(tempDir, 'mission.yml'), {
+            mission: 'filtered-run',
+            runAll: false,
+            instrumentsDir: './instruments',
+            instruments: {
+                alpha: {actions: {}},
+            },
+        })
+
+        writeYaml(path.join(alphaDir, 'instrument.v2.yml'), {
+            id: 'alpha',
+            name: 'Alpha',
+            version: '1.0.0',
+            runOrder: 0,
+            actions: {
+                start: {
+                    commands: {
+                        run: {
+                            id: 'run',
+                            command: 'node -e "require(\'fs\').writeFileSync(\'alpha.txt\',\'1\')"',
+                        },
+                    },
+                },
+            },
+        })
+
+        writeYaml(path.join(betaDir, 'instrument.v2.yml'), {
+            id: 'beta',
+            name: 'Beta',
+            version: '1.0.0',
+            runOrder: 1,
+            actions: {
+                start: {
+                    commands: {
+                        run: {
+                            id: 'run',
+                            command: 'node -e "require(\'fs\').writeFileSync(\'beta.txt\',\'1\')"',
+                        },
+                    },
+                },
+            },
+        })
+
+        const missionFilePath = path.join(tempDir, 'mission.yml')
+        const logSpy = jest.spyOn(console, 'log').mockImplementation()
+
+        await runMission(missionFilePath, ['start'])
+
+        expect(fs.existsSync(path.join(alphaDir, 'alpha.txt'))).toBe(true)
+        expect(fs.existsSync(path.join(betaDir, 'beta.txt'))).toBe(false)
+        expect(logSpy).toHaveBeenCalledWith('Instrument execution order:')
+        expect(logSpy).toHaveBeenCalledWith('  1. Alpha (runOrder: 0)')
+        expect(logSpy).not.toHaveBeenCalledWith('  2. Beta (runOrder: 1)')
+
+        logSpy.mockRestore()
+    })
 })

@@ -79,11 +79,6 @@ function loadAndParseInstruments() {
         return a.name.localeCompare(b.name)
     })
 
-    console.log('Instrument execution order:')
-    instruments.forEach((instrument, index) => {
-        console.log(`  ${index + 1}. ${instrument.name} (runOrder: ${instrument.runOrder})`)
-    })
-
     missionContext.instruments = instruments
 }
 
