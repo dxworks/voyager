@@ -62,6 +62,41 @@ describe('data parser', () => {
         expect(missionContext.getVariable(RESULTS_UNPACK_DIR)).toBe(path.resolve(tempDir, './out/unpack'))
     })
 
+    test('loadAndParseMission should respect runAll false', () => {
+        const missionFilePath = path.join(tempDir, 'mission.yml')
+        writeYaml(missionFilePath, {
+            mission: 'beta',
+            runAll: false,
+            instruments: {
+                alpha: {actions: {}},
+                beta: {actions: {}},
+            },
+        })
+        missionContext.addVariable(MISSION_ROOT_DIR, tempDir)
+
+        loadAndParseMission(missionFilePath)
+
+        expect(missionContext.runAll).toBe(false)
+        expect(missionContext.runnableInstruments).toEqual(['alpha', 'beta'])
+    })
+
+    test('loadAndParseMission should support runsAll alias', () => {
+        const missionFilePath = path.join(tempDir, 'mission.yml')
+        writeYaml(missionFilePath, {
+            mission: 'beta',
+            runsAll: false,
+            instruments: {
+                alpha: {actions: {}},
+            },
+        })
+        missionContext.addVariable(MISSION_ROOT_DIR, tempDir)
+
+        loadAndParseMission(missionFilePath)
+
+        expect(missionContext.runAll).toBe(false)
+        expect(missionContext.runnableInstruments).toEqual(['alpha'])
+    })
+
     test('loadAndParseData should sort instruments by runOrder then by name and skip missing yaml', () => {
         const instrumentsDir = path.join(tempDir, 'instruments')
         fs.mkdirSync(path.join(instrumentsDir, 'alpha'), {recursive: true})

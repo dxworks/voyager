@@ -49,8 +49,9 @@ export function loadAndParseMission(filePath: string): void {
     parseIntoMap(file.variables).forEach((value, key) => missionContext.addVariable(key, value))
     if (file.instrumentsDir)
         missionContext.addVariable(INSTRUMENTS_DIR, path.resolve(<string>missionContext.getVariable(MISSION_ROOT_DIR), <string>file.instrumentsDir))
-    if (file.runAll)
-        missionContext.runAll = file.runAll
+    const runAllValue = file.runAll ?? file.runsAll
+    if (typeof runAllValue === 'boolean')
+        missionContext.runAll = runAllValue
     if (file.resultsPath)
         missionContext.addVariable(RESULTS_ZIP_DIR, path.resolve(<string>missionContext.getVariable(MISSION_ROOT_DIR), <string>file.resultsPath))
     if (file.resultsUnpackTarget)
