@@ -11,23 +11,23 @@ import {Instrument} from '../../model/Instrument'
 
 const regexGroup = /\(\?<(?<group>\w+)>\.\+\)/gm
 
-export async function runVerifyActionsAndGetReport(instruments?: Instrument[]): Promise<void> {
+export async function runVerifyActionsAndGetReport(instruments?: Instrument[], verbose = false): Promise<void> {
     const instrumentsToVerify = instruments ?? missionContext.instruments
     for (const instrument of instrumentsToVerify) {
         const verifyAction = (<DefaultAction>instrument.actions.get(verifyActionKey))
         if (verifyAction != null)
-            await runVerifyAction(verifyAction, instrument.name)
+            await runVerifyAction(verifyAction, instrument.name, verbose)
     }
 }
 
-export async function runVerifyAction(verifyAction: DefaultAction, instrumentName: string): Promise<void> {
+export async function runVerifyAction(verifyAction: DefaultAction, instrumentName: string, verbose = false): Promise<void> {
     const requirements = verifyAction.with?.requirements
     const instrumentDoctorReport = new InstrumentDoctorReport(instrumentName)
     if (requirements) {
         for (const requirement of requirements) {
             const command = typeof requirement.command == 'string' ? <string>requirement.command : translateCommand(<Command>requirement.command)
             try {
-                await checkRequirement(command!, requirement)
+                await checkRequirement(command!, requirement, verbose)
                 instrumentDoctorReport.requirementsByName.set(requirement.name, true)
             } catch {
                 instrumentDoctorReport.requirementsByName.set(requirement.name, false)
@@ -37,11 +37,13 @@ export async function runVerifyAction(verifyAction: DefaultAction, instrumentNam
     missionContext.doctorReport.addInstrumentDoctorReport(instrumentDoctorReport)
 }
 
-async function checkRequirement(command: string, requirement: Requirement): Promise<void> {
+async function checkRequirement(command: string, requirement: Requirement, verbose = false): Promise<void> {
     const options: SpawnOptions = {
         stdio: ['ignore', 'pipe', 'pipe'],
         shell: true,
     }
+    if (verbose)
+        console.log(`[verify] Running requirement command '${requirement.name}': ${command}`)
     return new Promise((resolve, reject) => {
         const childProcess = spawn(command, options)
         let output = ''

@@ -9,21 +9,33 @@ import {getLogFilePath, getTimeInSeconds} from '../report/logs-collector-utils'
 import {centerText, maxLength} from '../report/mission-summary-generator'
 import {replaceMissionContextVariables} from '../variable/variable-operations'
 
+interface RunCommandOptions {
+    verbose?: boolean
+}
+
 export async function runCommand(commandContext: CommandContext,
                                  commandPath: string,
-                                 instrumentName: string): Promise<void> {
+                                 instrumentName: string,
+                                 runOptions?: RunCommandOptions): Promise<void> {
     const instrumentSummary = getOrCreateInstrumentSummary(instrumentName)
     const startTime = performance.now()
     const commandSummary = new CommandSummary()
+    const commandLabel = `${instrumentName}/${commandContext.id}`
+    console.log(`[command] ${commandLabel} started`)
     try {
-        await executeCommand(commandContext, commandPath, getLogFilePath(instrumentName))
+        await executeCommand(commandContext, commandPath, getLogFilePath(instrumentName), runOptions)
     } catch (e) {
-        console.error(e)
+        const errorMessage = e instanceof Error ? e.message : String(e)
+        if (runOptions?.verbose)
+            console.error(e)
+        else
+            console.warn(`[command] ${commandLabel} failed: ${errorMessage}`)
         commandSummary.success = false
     }
     const endTime = performance.now()
     commandSummary.runningTime = getTimeInSeconds(startTime, endTime)
     instrumentSummary.addCommandSummary(commandContext.id, commandSummary)
+    console.log(`[command] ${commandLabel} ${commandSummary.success ? 'ok' : 'failed'} (${commandSummary.runningTime})`)
 }
 
 function getOrCreateInstrumentSummary(instrumentName: string): InstrumentSummary {
@@ -60,8 +72,9 @@ function createEnv(environmentVariables?: Map<string, string>) {
 }
 
 async function executeCommand(commandContext: CommandContext,
-                               path: string,
-                               logFilePath?: string): Promise<void> {
+                                 path: string,
+                                 logFilePath?: string,
+                                 runOptions?: RunCommandOptions): Promise<void> {
     const env = createEnv(commandContext.environment)
     const translatedCommand = typeof commandContext.command == 'string' ? <string>commandContext.command : translateCommand(<Command>commandContext.command)
     const command = translatedCommand ? replaceMissionContextVariables(translatedCommand) : translatedCommand
@@ -69,16 +82,20 @@ async function executeCommand(commandContext: CommandContext,
     if (!command) {
         console.warn('warn: No command defined for platform')
     }
-    const options: SpawnOptions = {
+    const spawnOptions: SpawnOptions = {
         env: env,
         cwd: resolvedPath,
         stdio: ['ignore', 'pipe', 'pipe'],
         shell: true,
     }
-    console.log(centerText('Running command', maxLength, '*'))
-    console.log('The command: "', command, '" is now running \n')
+    if (runOptions?.verbose) {
+        console.log(centerText('Running command', maxLength, '*'))
+        console.log(`Command: ${command ?? '<undefined>'}`)
+        console.log(`Working directory: ${resolvedPath}`)
+        console.log('')
+    }
     return new Promise((resolve, reject) => {
-        const childProcess = spawn(command!, options)
+        const childProcess = spawn(command!, spawnOptions)
 
         childProcess.stdout?.on('data', (data) => {
             const logs = data.toString()

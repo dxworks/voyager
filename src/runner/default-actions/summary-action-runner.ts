@@ -12,7 +12,8 @@ interface SummaryActionResult {
 export async function runSummaryAction(
     action: DefaultAction,
     instrumentPath: string,
-    instrumentName: string
+    instrumentName: string,
+    verbose = false
 ): Promise<SummaryActionResult> {
     const summaryMdFilePath = action.summaryMdFile
         ? path.resolve(instrumentPath, action.summaryMdFile)
@@ -32,7 +33,7 @@ export async function runSummaryAction(
 
     if (action.commandsContext && action.commandsContext.length > 0) {
         for (const commandContext of action.commandsContext) {
-            await runCommand(commandContext, commandContext.dir ?? instrumentPath, instrumentName)
+            await runCommand(commandContext, commandContext.dir ?? instrumentPath, instrumentName, {verbose})
         }
     }
 

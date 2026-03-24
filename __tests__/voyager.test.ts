@@ -67,7 +67,13 @@ describe('voyager cli wiring', () => {
     test('summary command should dispatch to summaryMission', () => {
         executeCli(['summary', '--missionPath', './mission.yml'])
 
-        expect(summaryMissionMock).toHaveBeenCalledWith('./mission.yml')
+        expect(summaryMissionMock).toHaveBeenCalledWith('./mission.yml', false)
+    })
+
+    test('summary command should forward verbose flag to summaryMission', () => {
+        executeCli(['summary', '--missionPath', './mission.yml', '--verbose'])
+
+        expect(summaryMissionMock).toHaveBeenCalledWith('./mission.yml', true)
     })
 
     test('verify command should dispatch to verifyMission using current wiring', () => {

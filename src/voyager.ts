@@ -15,51 +15,76 @@ program
     .description('Run mission')
     .option('-m, --missionPath <missionPath>')
     .option('-a, --actions <actions...>', 'Actions to run from the mission')
-    .action((options: { missionPath?: string, actions?: string[] }) => {
-        if (options.missionPath)
-            runMission(options.missionPath, options.actions).then()
-        else
-            findAndRunMission(options?.actions).then()
+    .option('-v, --verbose', 'Show full command details')
+    .action((options: { missionPath?: string, actions?: string[], verbose?: boolean }) => {
+        if (options.missionPath) {
+            if (options.verbose)
+                runMission(options.missionPath, options.actions, true).then()
+            else
+                runMission(options.missionPath, options.actions).then()
+        } else {
+            if (options.verbose)
+                findAndRunMission(options?.actions, true).then()
+            else
+                findAndRunMission(options?.actions).then()
+        }
     })
 
 program
     .command('clean')
     .description('Clean mission instruments')
     .option('-m, --missionPath <missionPath>')
-    .action((options: { missionPath?: string }) => {
-        cleanMission(options.missionPath).then()
+    .option('-v, --verbose', 'Show full command details')
+    .action((options: { missionPath?: string, verbose?: boolean }) => {
+        if (options.verbose)
+            cleanMission(options.missionPath, true).then()
+        else
+            cleanMission(options.missionPath).then()
     })
 
 program
     .command('verify <missionPath>')
     .description('Verify mission instruments requirements')
-    .option('-m, --missionPath')
-    .action((options: { missionPath?: string }) => {
-        verifyMission(options.missionPath).then()
+    .option('-m, --missionPath <missionPath>')
+    .option('-v, --verbose', 'Show full command details')
+    .action((missionPath: string, options: { missionPath?: string, verbose?: boolean }) => {
+        if (options.verbose)
+            verifyMission(options.missionPath ?? missionPath, true).then()
+        else
+            verifyMission(options.missionPath ?? missionPath).then()
     })
 
 program
     .command('pack')
     .description('Pack mission results')
     .option('-m, --missionPath <missionPath>')
-    .action((options: { missionPath?: string }) => {
-        packMission(options.missionPath)
+    .option('-v, --verbose', 'Show full command details')
+    .action((options: { missionPath?: string, verbose?: boolean }) => {
+        if (options.verbose)
+            packMission(options.missionPath, true)
+        else
+            packMission(options.missionPath)
     })
 
 program
     .command('unpack')
     .description('Unpack mission results archive')
     .option('-m, --missionPath <missionPath>')
-    .action((options: { missionPath?: string }) => {
-        unpackMission(options.missionPath)
+    .option('-v, --verbose', 'Show full command details')
+    .action((options: { missionPath?: string, verbose?: boolean }) => {
+        if (options.verbose)
+            unpackMission(options.missionPath, true)
+        else
+            unpackMission(options.missionPath)
     })
 
 program
     .command('summary')
     .description('Run summary actions for mission instruments')
     .option('-m, --missionPath <missionPath>')
-    .action((options: { missionPath?: string }) => {
-        summaryMission(options.missionPath).then()
+    .option('-v, --verbose', 'Show full command details for summary actions')
+    .action((options: { missionPath?: string, verbose?: boolean }) => {
+        summaryMission(options.missionPath, !!options.verbose).then()
     })
 
 program.version("0.0.1")

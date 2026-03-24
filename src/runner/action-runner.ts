@@ -8,20 +8,20 @@ import {runVerifyAction} from './default-actions/verify-action-runner'
 import {runSummaryAction} from './default-actions/summary-action-runner'
 
 
-export async function runAction(action: Action, archive: Archiver | null, instrumentPath: string, instrumentName: string): Promise<void> {
+export async function runAction(action: Action, archive: Archiver | null, instrumentPath: string, instrumentName: string, verbose = false): Promise<void> {
     if (instanceOfDefaultAction(action))
-        await runDefaultAction(<DefaultAction>action, archive, instrumentPath, instrumentName)
+        await runDefaultAction(<DefaultAction>action, archive, instrumentPath, instrumentName, verbose)
     else
-        await runCustomAction(action, instrumentPath, instrumentName)
+        await runCustomAction(action, instrumentPath, instrumentName, verbose)
 }
 
-async function runCustomAction(action: Action, instrumentPath: string, instrumentName: string) {
+async function runCustomAction(action: Action, instrumentPath: string, instrumentName: string, verbose = false) {
     for (const commandContext of action.commandsContext!) {
-        await runCommand(commandContext, commandContext.dir ? commandContext.dir : instrumentPath, instrumentName)
+        await runCommand(commandContext, commandContext.dir ? commandContext.dir : instrumentPath, instrumentName, {verbose})
     }
 }
 
-async function runDefaultAction(action: DefaultAction, archive: Archiver | null, instrumentPath: string, instrumentName: string) {
+async function runDefaultAction(action: DefaultAction, archive: Archiver | null, instrumentPath: string, instrumentName: string, verbose = false) {
     switch (action.name) {
         case cleanActionKey: {
             await runCleanAction(action)
@@ -32,11 +32,11 @@ async function runDefaultAction(action: DefaultAction, archive: Archiver | null,
             break
         }
         case verifyActionKey: {
-            await runVerifyAction(action, instrumentName)
+            await runVerifyAction(action, instrumentName, verbose)
             break
         }
         case summaryActionKey: {
-            await runSummaryAction(action, instrumentPath, instrumentName)
+            await runSummaryAction(action, instrumentPath, instrumentName, verbose)
             break
         }
     }

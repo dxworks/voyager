@@ -22,12 +22,14 @@ import {runPackageAction} from './default-actions/package-action-runner'
 import yaml from 'js-yaml'
 import {InstrumentSummary} from '../model/summary/InstrumentSummary'
 
-export async function cleanMission(missionFilePath?: string): Promise<void> {
+export async function cleanMission(missionFilePath?: string, verbose = false): Promise<void> {
     const missionPath = findMissionFile(missionFilePath)
     if (missionPath) {
         loadAndParseData(missionPath)
         const cleanInstruments = getMissionScopedInstrumentsWithAction(cleanActionKey)
         logExecutionOrder(cleanInstruments)
+        if (verbose)
+            console.log(`[verbose] Running '${cleanActionKey}' action for ${cleanInstruments.length} instrument(s)`)
         console.log(`Start cleaning the mission ${missionContext.name}...`)
         const cleanActions = cleanInstruments.map(instrument => (<DefaultAction>instrument.actions.get(cleanActionKey)))
             .filter(cleanAction => cleanAction != null)
@@ -36,24 +38,28 @@ export async function cleanMission(missionFilePath?: string): Promise<void> {
     }
 }
 
-export async function verifyMission(missionFilePath?: string): Promise<void> {
+export async function verifyMission(missionFilePath?: string, verbose = false): Promise<void> {
     const missionPath = findMissionFile(missionFilePath)
     if (missionPath) {
         loadAndParseData(missionPath)
         const verifyInstruments = getMissionScopedInstrumentsWithAction(verifyActionKey)
         logExecutionOrder(verifyInstruments)
+        if (verbose)
+            console.log(`[verbose] Running '${verifyActionKey}' action for ${verifyInstruments.length} instrument(s)`)
         console.log(`Start verifying the mission ${missionContext.name}...`)
-        await runVerifyActionsAndGetReport(verifyInstruments)
+        await runVerifyActionsAndGetReport(verifyInstruments, verbose)
         generateDoctorReportLogs()
     }
 }
 
-export function packMission(missionFilePath?: string): void {
+export function packMission(missionFilePath?: string, verbose = false): void {
     const missionPath = findMissionFile(missionFilePath)
     if (missionPath) {
         loadAndParseData(missionPath)
         const packInstruments = getMissionScopedInstrumentsWithAction(packageActionKey)
         logExecutionOrder(packInstruments)
+        if (verbose)
+            console.log(`[verbose] Running '${packageActionKey}' action for ${packInstruments.length} instrument(s)`)
         console.log(`Start packing the mission ${missionContext.name}...`)
         const archive = archiver('zip', {zlib: {level: 9}})
         packInstruments.forEach(instrument => {
@@ -66,7 +72,7 @@ export function packMission(missionFilePath?: string): void {
     }
 }
 
-export function unpackMission(missionFilePath?: string): void {
+export function unpackMission(missionFilePath?: string, verbose = false): void {
     const missionPath = findMissionFile(missionFilePath)
     if (missionPath) {
         loadAndParseData(missionPath)
@@ -77,6 +83,8 @@ export function unpackMission(missionFilePath?: string): void {
         }
         const unpackInstruments = getMissionScopedInstrumentsWithAction(unpackActionKey)
         logExecutionOrder(unpackInstruments)
+        if (verbose)
+            console.log(`[verbose] Running '${unpackActionKey}' action for ${unpackInstruments.length} instrument(s)`)
         getUnpackTargets().forEach(targetPath => {
             const archiveName = path.basename(targetPath).split('.')[0]
             console.log(`Unpacking ${archiveName}...`)
@@ -110,22 +118,25 @@ function extractInitialMissionName(unpackedResultsPath: string): string {
     return ''
 }
 
-export async function summaryMission(missionFilePath?: string): Promise<void> {
+export async function summaryMission(missionFilePath?: string, verbose = false): Promise<void> {
     const missionPath = findMissionFile(missionFilePath)
     if (missionPath) {
         loadAndParseData(missionPath)
         const summaryInstruments = getMissionScopedInstrumentsWithAction(summaryActionKey)
         logExecutionOrder(summaryInstruments)
         console.log(`Running summary actions for mission ${missionContext.name}...`)
-        for (const instrument of summaryInstruments) {
+        for (let i = 0; i < summaryInstruments.length; i++) {
+            const instrument = summaryInstruments[i]
             const summaryAction = instrument.actions.get(summaryActionKey) as DefaultAction | undefined
             if (summaryAction) {
+                logSummaryToolStart(i + 1, summaryInstruments.length, instrument.name)
                 const instrumentSummary = new InstrumentSummary()
                 missionContext.missionSummary.addInstrumentSummary(instrument.name, instrumentSummary)
                 const startTime = performance.now()
-                await runSummaryAction(summaryAction, instrument.instrumentPath, instrument.name)
+                await runSummaryAction(summaryAction, instrument.instrumentPath, instrument.name, verbose)
                 const endTime = performance.now()
                 instrumentSummary.runningTime = getTimeInSeconds(startTime, endTime)
+                logSummaryToolEnd(i + 1, summaryInstruments.length, instrument.name, instrumentSummary.runningTime)
             }
         }
         console.log(`Summary actions for mission ${missionContext.name} completed.`)
@@ -142,15 +153,15 @@ export function findMissionFile(missionFilePath?: string): string | null {
     return null
 }
 
-export async function findAndRunMission(actions: string[] | undefined): Promise<void> {
+export async function findAndRunMission(actions: string[] | undefined, verbose = false): Promise<void> {
     const missionFilePath = findMissionFile()
     if (missionFilePath == null)
         console.error('Mission YAML file could not be found in the current directory. Please specify the path of the file or make sure the name of the mission is \'mission.yml\'.')
     else
-        await runMission(missionFilePath, actions)
+        await runMission(missionFilePath, actions, verbose)
 }
 
-export async function runMission(missionFilePath: string, actions: string[] | undefined): Promise<void> {
+export async function runMission(missionFilePath: string, actions: string[] | undefined, verbose = false): Promise<void> {
     const startTime = performance.now()
 
     loadAndParseData(missionFilePath)
@@ -166,7 +177,7 @@ export async function runMission(missionFilePath: string, actions: string[] | un
     if (requirePackaging)
         archive = archiver('zip', {zlib: {level: 9}})
 
-    await runInstruments(instruments, actions, archive, customRun)
+    await runInstruments(instruments, actions, archive, customRun, verbose)
     const endTime = performance.now()
 
     missionContext.missionSummary.runningTime = getTimeInSeconds(startTime, endTime)
@@ -182,9 +193,9 @@ export async function runMission(missionFilePath: string, actions: string[] | un
     missionContext.logsStream.close()
 }
 
-async function runInstruments(instruments: Instrument[], actions: string[] | undefined, archive: Archiver | null, customRun: boolean) {
+async function runInstruments(instruments: Instrument[], actions: string[] | undefined, archive: Archiver | null, customRun: boolean, verbose = false) {
     for (const instrument of instruments) {
-        await runInstrument(instrument, archive, customRun, actions)
+        await runInstrument(instrument, archive, customRun, actions, verbose)
     }
 }
 
@@ -266,4 +277,17 @@ function logExecutionOrder(instruments: Instrument[]): void {
     instruments.forEach((instrument, index) => {
         console.log(`  ${index + 1}. ${instrument.name} (runOrder: ${instrument.runOrder})`)
     })
+}
+
+function logSummaryToolStart(index: number, total: number, instrumentName: string): void {
+    console.log('')
+    console.log('='.repeat(86))
+    console.log(`[summary ${index}/${total}] ${instrumentName}`)
+    console.log('-'.repeat(86))
+}
+
+function logSummaryToolEnd(index: number, total: number, instrumentName: string, runningTime: string): void {
+    console.log('-'.repeat(86))
+    console.log(`[summary ${index}/${total}] ${instrumentName} finished in ${runningTime}`)
+    console.log('='.repeat(86))
 }
