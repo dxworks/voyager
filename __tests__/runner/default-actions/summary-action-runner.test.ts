@@ -35,12 +35,12 @@ describe('summary action runner', () => {
             summaryMdFile: 'summary/summary.md',
             summaryHtmlFile: 'summary/summary.html',
             commandsContext: [{id: 'run', command: 'node -e "process.exit(2)"'}],
-        }, instrumentPath, 'Tool')
+        }, instrumentPath, 'tool')
 
         expect(result.summaryMdFilePath).toBe(path.join(instrumentPath, 'summary', 'summary.md'))
         expect(result.summaryHtmlFilePath).toBe(path.join(instrumentPath, 'summary', 'summary.html'))
-        expect(missionContext.getVariable('ToolSummaryMd')).toBe(path.join(instrumentPath, 'summary', 'summary.md'))
-        expect(missionContext.getVariable('ToolSummaryHtml')).toBe(path.join(instrumentPath, 'summary', 'summary.html'))
+        expect(missionContext.getVariable('toolSummaryMd')).toBe(path.join(instrumentPath, 'summary', 'summary.md'))
+        expect(missionContext.getVariable('toolSummaryHtml')).toBe(path.join(instrumentPath, 'summary', 'summary.html'))
         expect(missionContext.missionSummary.getInstrumentSummary('Tool').commandsSummary.size).toBe(0)
     })
 
@@ -55,13 +55,13 @@ describe('summary action runner', () => {
             summaryMdFile: 'summary/summary.md',
             summaryHtmlFile: 'summary/summary.html',
             commandsContext: [{id: 'run', command: 'node -e "process.exit(0)"'}],
-        }, instrumentPath, 'Tool')
+        }, instrumentPath, 'tool')
 
         expect(result.summaryMdFilePath).toBe(null)
         expect(result.summaryHtmlFilePath).toBe(null)
         expect(warnSpy).toHaveBeenCalledTimes(2)
-        expect(missionContext.getVariable('ToolSummaryMd')).toBe('null')
-        expect(missionContext.getVariable('ToolSummaryHtml')).toBe('null')
+        expect(missionContext.getVariable('toolSummaryMd')).toBe('null')
+        expect(missionContext.getVariable('toolSummaryHtml')).toBe('null')
     })
 
     test('should use command dir over instrument path when provided', async () => {
@@ -80,7 +80,7 @@ describe('summary action runner', () => {
                     command: 'node -e "require(\'fs\').writeFileSync(\'generated.txt\',\'ok\')"',
                 },
             ],
-        }, instrumentPath, 'Tool')
+        }, instrumentPath, 'tool')
 
         expect(fs.existsSync(path.join(commandDir, 'generated.txt'))).toBe(true)
         expect(fs.existsSync(path.join(instrumentPath, 'generated.txt'))).toBe(false)
@@ -104,7 +104,7 @@ describe('summary action runner', () => {
                 id: 'generate-summary',
                 command: 'node -e "const fs=require(\'fs\'); fs.mkdirSync(require(\'path\').dirname(process.argv[1]),{recursive:true}); fs.writeFileSync(process.argv[1],\'# summary\'); fs.writeFileSync(process.argv[2],\'<h1>summary</h1>\')" "${lateSummaryMdPath}" "${lateSummaryHtmlPath}"',
             }],
-        }, instrumentPath, 'Tool')
+        }, instrumentPath, 'tool')
 
         expect(result.summaryMdFilePath).toBe(summaryMdPath)
         expect(result.summaryHtmlFilePath).toBe(summaryHtmlPath)

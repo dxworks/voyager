@@ -102,18 +102,18 @@ describe('instrument parser', () => {
             version: '1.0.0',
             actions: {
                 [summaryActionKey]: {
-                    summaryMdFile: 'summary/tool.md',
-                    summaryHtmlFile: 'summary/tool.html',
-                    summaryCategory: 'Architecture',
+                    'md-file': 'summary/tool.md',
+                    'html-file': 'summary/tool.html',
+                    category: 'Architecture',
                     commands: {},
                 },
             },
         })
 
         const instrumentPath = path.resolve(instrumentsDirPath, instrumentDir)
-        expect(missionContext.getVariable('ToolSummaryMd')).toBe(path.resolve(instrumentPath, 'summary/tool.md'))
-        expect(missionContext.getVariable('ToolSummaryHtml')).toBe(path.resolve(instrumentPath, 'summary/tool.html'))
-        expect(missionContext.getVariable('ToolSummaryCategory')).toBe('Architecture')
+        expect(missionContext.getVariable('toolSummaryMd')).toBe(path.resolve(instrumentPath, 'summary/tool.md'))
+        expect(missionContext.getVariable('toolSummaryHtml')).toBe(path.resolve(instrumentPath, 'summary/tool.html'))
+        expect(missionContext.getVariable('toolSummaryCategory')).toBe('Architecture')
     })
 
     test('should keep summary category variable null when summaryCategory is missing', () => {
@@ -123,13 +123,77 @@ describe('instrument parser', () => {
             version: '1.0.0',
             actions: {
                 [summaryActionKey]: {
-                    summaryMdFile: 'summary/tool.md',
-                    summaryHtmlFile: 'summary/tool.html',
+                    'md-file': 'summary/tool.md',
+                    'html-file': 'summary/tool.html',
                     commands: {},
                 },
             },
         })
 
-        expect(missionContext.getVariable('ToolSummaryCategory')).toBe('null')
+        expect(missionContext.getVariable('toolSummaryCategory')).toBe('null')
+    })
+
+    test('should key summary variables by instrument id when id differs from name', () => {
+        parseInstrument(instrumentsDirPath, instrumentDir, {
+            id: 'jafax',
+            name: 'JaFaX',
+            version: '1.0.0',
+            actions: {
+                [summaryActionKey]: {
+                    'md-file': 'summary/tool.md',
+                    'html-file': 'summary/tool.html',
+                    category: 'Architecture',
+                    commands: {},
+                },
+            },
+        })
+
+        const instrumentPath = path.resolve(instrumentsDirPath, instrumentDir)
+        expect(missionContext.getVariable('jafaxSummaryMd')).toBe(path.resolve(instrumentPath, 'summary/tool.md'))
+        expect(missionContext.getVariable('jafaxSummaryHtml')).toBe(path.resolve(instrumentPath, 'summary/tool.html'))
+        expect(missionContext.getVariable('jafaxSummaryCategory')).toBe('Architecture')
+        expect(missionContext.getVariable('JaFaXSummaryMd')).toBe(null)
+    })
+
+    test('should throw when legacy summaryMdFile field is present', () => {
+        expect(() => parseInstrument(instrumentsDirPath, instrumentDir, {
+            id: 'tool',
+            name: 'Tool',
+            version: '1.0.0',
+            actions: {
+                summary: {
+                    summaryMdFile: 'summary/tool.md',
+                    commands: {},
+                },
+            },
+        })).toThrow("Invalid field 'summaryMdFile'")
+    })
+
+    test('should throw when legacy summaryHtmlFile field is present', () => {
+        expect(() => parseInstrument(instrumentsDirPath, instrumentDir, {
+            id: 'tool',
+            name: 'Tool',
+            version: '1.0.0',
+            actions: {
+                summary: {
+                    summaryHtmlFile: 'summary/tool.html',
+                    commands: {},
+                },
+            },
+        })).toThrow("Invalid field 'summaryHtmlFile'")
+    })
+
+    test('should throw when legacy summaryCategory field is present', () => {
+        expect(() => parseInstrument(instrumentsDirPath, instrumentDir, {
+            id: 'tool',
+            name: 'Tool',
+            version: '1.0.0',
+            actions: {
+                summary: {
+                    summaryCategory: 'Architecture',
+                    commands: {},
+                },
+            },
+        })).toThrow("Invalid field 'summaryCategory'")
     })
 })

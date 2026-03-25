@@ -133,7 +133,7 @@ export async function summaryMission(missionFilePath?: string, verbose = false):
                 const instrumentSummary = new InstrumentSummary()
                 missionContext.missionSummary.addInstrumentSummary(instrument.name, instrumentSummary)
                 const startTime = performance.now()
-                await runSummaryAction(summaryAction, instrument.instrumentPath, instrument.name, verbose)
+                await runSummaryAction(summaryAction, instrument.instrumentPath, instrument.id, verbose)
                 const endTime = performance.now()
                 instrumentSummary.runningTime = getTimeInSeconds(startTime, endTime)
                 logSummaryToolEnd(i + 1, summaryInstruments.length, instrument.name, instrumentSummary.runningTime)

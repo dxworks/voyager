@@ -67,7 +67,7 @@ describe('mission runner summary command', () => {
         await summaryMission(path.join(tempDir, 'mission.yml'))
 
         expect(runSummaryActionMock).toHaveBeenCalledTimes(1)
-        expect(runSummaryActionMock).toHaveBeenCalledWith(summaryAction, '/tmp/tool', 'Tool')
+        expect(runSummaryActionMock).toHaveBeenCalledWith(summaryAction, '/tmp/tool', 'tool')
         expect(missionContext.missionSummary.getInstrumentSummary('Tool').runningTime).not.toBe('')
         expect(missionContext.missionSummary.instrumentsSummary.has('NoSummaryTool')).toBe(false)
     })

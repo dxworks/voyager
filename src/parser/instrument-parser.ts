@@ -38,9 +38,9 @@ export function parseInstrument(instrumentsDirPath: string, instrumentDir: strin
     initVariableProvider()
     const instrumentPath = path.resolve(instrumentsDirPath, instrumentDir)
     missionContext.addVariable(INSTRUMENT_NAME, file.name)
-    missionContext.addVariable(`${file.name}SummaryMd`, 'null')
-    missionContext.addVariable(`${file.name}SummaryHtml`, 'null')
-    missionContext.addVariable(`${file.name}SummaryCategory`, 'null')
+    missionContext.addVariable(`${file.id}SummaryMd`, 'null')
+    missionContext.addVariable(`${file.id}SummaryHtml`, 'null')
+    missionContext.addVariable(`${file.id}SummaryCategory`, 'null')
     missionContext.addVariable(INSTRUMENT_DIR_NAME, instrumentDir)
     missionContext.addVariable(INSTRUMENT_PATH, instrumentPath)
     missionContext.addVariable(INSTRUMENT_RESULTS, path.resolve(<string>missionContext.getVariable(RESULTS_UNPACK_DIR), file.name))
@@ -106,40 +106,49 @@ function parseCommands(commandsObject: any, instrumentKey: string, actionKey: st
 }
 
 function parseDefaultAction(defaultActionObject: any, instrumentKey: string, actionKey: string): DefaultAction {
+    if (defaultActionObject.summaryMdFile !== undefined)
+        throw new Error(`Invalid field 'summaryMdFile' in action '${actionKey}' of instrument '${instrumentKey}'.`)
+
+    if (defaultActionObject.summaryHtmlFile !== undefined)
+        throw new Error(`Invalid field 'summaryHtmlFile' in action '${actionKey}' of instrument '${instrumentKey}'.`)
+
+    if (defaultActionObject.summaryCategory !== undefined)
+        throw new Error(`Invalid field 'summaryCategory' in action '${actionKey}' of instrument '${instrumentKey}'.`)
+
     if (defaultActionObject.summaryFile !== undefined)
-        throw new Error(`Invalid field 'summaryFile' in action '${actionKey}' of instrument '${instrumentKey}'. Use 'summaryMdFile' and 'summaryHtmlFile'.`)
+        throw new Error(`Invalid field 'summaryFile' in action '${actionKey}' of instrument '${instrumentKey}'.`)
 
     const action: DefaultAction = {
         name: actionKey,
         commandsContext: parseCommands(defaultActionObject.commands, instrumentKey, actionKey),
         with: parseWith(defaultActionObject.with),
         produces: parseProduces(defaultActionObject.produces),
-        summaryMdFile: defaultActionObject.summaryMdFile
-            ? replaceMissionContextVariables(defaultActionObject.summaryMdFile)
+        summaryMdFile: defaultActionObject['md-file']
+            ? replaceMissionContextVariables(defaultActionObject['md-file'])
             : undefined,
-        summaryHtmlFile: defaultActionObject.summaryHtmlFile
-            ? replaceMissionContextVariables(defaultActionObject.summaryHtmlFile)
+        summaryHtmlFile: defaultActionObject['html-file']
+            ? replaceMissionContextVariables(defaultActionObject['html-file'])
             : undefined,
-        summaryCategory: defaultActionObject.summaryCategory
-            ? replaceMissionContextVariables(defaultActionObject.summaryCategory)
+        summaryCategory: defaultActionObject.category
+            ? replaceMissionContextVariables(defaultActionObject.category)
             : undefined,
     }
 
     if (actionKey === summaryActionKey) {
-        const instrumentName = missionContext.getVariable(INSTRUMENT_NAME)!
+        const instrumentId = instrumentKey
 
         if (action.summaryMdFile)
-            missionContext.addVariable(`${instrumentName}SummaryMd`, path.resolve(
+            missionContext.addVariable(`${instrumentId}SummaryMd`, path.resolve(
                 missionContext.getVariable(INSTRUMENT_PATH)!, action.summaryMdFile
             ))
 
         if (action.summaryHtmlFile)
-            missionContext.addVariable(`${instrumentName}SummaryHtml`, path.resolve(
+            missionContext.addVariable(`${instrumentId}SummaryHtml`, path.resolve(
                 missionContext.getVariable(INSTRUMENT_PATH)!, action.summaryHtmlFile
             ))
 
         missionContext.addVariable(
-            `${instrumentName}SummaryCategory`,
+            `${instrumentId}SummaryCategory`,
             action.summaryCategory && action.summaryCategory.trim().length > 0
                 ? action.summaryCategory
                 : 'null'
