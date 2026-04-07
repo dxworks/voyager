@@ -21,6 +21,7 @@ import {runUnpackAction} from './default-actions/unpack-action-runner'
 import {runPackageAction} from './default-actions/package-action-runner'
 import yaml from 'js-yaml'
 import {InstrumentSummary} from '../model/summary/InstrumentSummary'
+import {generateMissionLockFile, getMissionLockFilePath} from '../report/mission-lockfile-generator'
 
 export async function cleanMission(missionFilePath?: string, verbose = false): Promise<void> {
     const missionPath = findMissionFile(missionFilePath)
@@ -184,8 +185,10 @@ export async function runMission(missionFilePath: string, actions: string[] | un
     if (requireVerifyActionReport)
         generateDoctorReportLogs()
     if (requirePackaging) {
+        const missionLockFilePath = generateMissionLockFile(instruments)
         addLogsAndHtmlReportToArchive(instruments, archive!)
         addMissionYmlToArchive(missionFilePath, archive!)
+        addMissionLockFileToArchive(missionLockFilePath, archive!)
         archive!.finalize().then(() => cleanLogsAndHtmlFileFromDisk(instruments))
         archive!.pipe(fs.createWriteStream(missionContext.getVariable(RESULTS_ZIP_DIR)!))
     }
@@ -214,6 +217,9 @@ function cleanLogsAndHtmlFileFromDisk(instruments: Instrument[]): void {
     const missionReportHtml = getHtmlFilePath('MissionReport')
     if (fs.existsSync(missionReportHtml))
         fs.unlinkSync(missionReportHtml)
+    const missionLockFilePath = getMissionLockFilePath()
+    if (fs.existsSync(missionLockFilePath))
+        fs.unlinkSync(missionLockFilePath)
 }
 
 function
@@ -230,6 +236,11 @@ addLogsAndHtmlReportToArchive(instruments: Instrument[], archive: archiver.Archi
 function addMissionYmlToArchive(missionFilePath: string, archive: archiver.Archiver): void {
     if (missionFilePath)
         archive.file(missionFilePath, {name: path.basename(missionFilePath)})
+}
+
+function addMissionLockFileToArchive(missionLockFilePath: string, archive: archiver.Archiver): void {
+    if (fs.existsSync(missionLockFilePath))
+        archive.file(missionLockFilePath, {name: path.basename(missionLockFilePath)})
 }
 
 function addHtmlToArchive(instruments: Instrument[], archive: archiver.Archiver): void {

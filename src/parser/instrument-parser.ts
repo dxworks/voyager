@@ -48,11 +48,28 @@ export function parseInstrument(instrumentsDirPath: string, instrumentDir: strin
     return {
         id: file.id,
         name: file.name,
-        version: file.version,
+        version: resolveInstrumentVersion(file.version, instrumentDir),
         instrumentPath: instrumentPath,
         actions: actions,
         runOrder: file.runOrder ?? 0,
     }
+}
+
+function resolveInstrumentVersion(instrumentVersion: unknown, instrumentDir: string): string {
+    const ymlVersion = typeof instrumentVersion === 'string' ? instrumentVersion.trim() : ''
+    if (ymlVersion.length > 0)
+        return ymlVersion
+
+    const versionFromDir = extractVersionFromInstrumentDir(instrumentDir)
+    if (versionFromDir)
+        return versionFromDir
+
+    return 'unknown'
+}
+
+function extractVersionFromInstrumentDir(instrumentDir: string): string | null {
+    const match = instrumentDir.match(/-v(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)-voyager$/)
+    return match ? match[1] : null
 }
 
 function parseInstrumentActions(actionObject: any, instrumentKey: string): Map<string, Action> {

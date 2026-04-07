@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'node:path'
+import yaml from 'js-yaml'
 
 import AdmZip from 'adm-zip'
 import {runMission} from '../../src/runner/mission-runner'
@@ -112,8 +113,27 @@ describe('mission runner integration default flow', () => {
 
         expect(entryNames).toContain('mission.yml')
         expect(entryNames).toContain('MissionReport.html')
+        expect(entryNames).toContain('voyager.lock.yml')
         expect(entryNames.some(name => name.endsWith('Tool.log'))).toBe(true)
         expect(entryNames.some(name => name.endsWith('default-flow.log'))).toBe(true)
+
+        const lockFileEntry = zip.getEntry('voyager.lock.yml')
+        expect(lockFileEntry).toBeDefined()
+        const lockFileContent = yaml.load(zip.readAsText(lockFileEntry!)) as {
+            mission: string
+            runningTime: string
+            tools: Array<{id: string, name: string, version: string, runningTime: string}>
+        }
+        expect(lockFileContent.mission).toBe('default-flow')
+        expect(lockFileContent.runningTime.endsWith('s')).toBe(true)
+        expect(lockFileContent.tools).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                id: 'tool-id',
+                name: 'Tool',
+                version: '1.0.0',
+            }),
+        ]))
+        expect(lockFileContent.tools[0].runningTime.endsWith('s')).toBe(true)
 
         const missionLogPath = path.join(tempDir, 'default-flow.log')
         expect(fs.existsSync(missionLogPath)).toBe(true)

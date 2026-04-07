@@ -155,6 +155,49 @@ describe('instrument parser', () => {
         expect(missionContext.getVariable('JaFaXSummaryMd')).toBe(null)
     })
 
+    test('should use version from instrument.v2.yml when available', () => {
+        const instrument = parseInstrument(instrumentsDirPath, 'dxworks.codeframe-v0.6.3-voyager', {
+            id: 'tool',
+            name: 'Tool',
+            version: '2.0.0',
+            actions: {
+                start: {
+                    commands: {},
+                },
+            },
+        })
+
+        expect(instrument.version).toBe('2.0.0')
+    })
+
+    test('should extract version from instrument directory name when missing from instrument.v2.yml', () => {
+        const instrument = parseInstrument(instrumentsDirPath, 'dxworks.depminer-v0.2.3-voyager', {
+            id: 'tool',
+            name: 'Tool',
+            actions: {
+                start: {
+                    commands: {},
+                },
+            },
+        })
+
+        expect(instrument.version).toBe('0.2.3')
+    })
+
+    test('should set unknown version when missing from yaml and directory name', () => {
+        const instrument = parseInstrument(instrumentsDirPath, 'blackduck-voyager-instrument-2026', {
+            id: 'tool',
+            name: 'Tool',
+            actions: {
+                start: {
+                    commands: {},
+                },
+            },
+        })
+
+        expect(instrument.version).toBe('unknown')
+    })
+
     test('should throw when legacy summaryMdFile field is present', () => {
         expect(() => parseInstrument(instrumentsDirPath, instrumentDir, {
             id: 'tool',
