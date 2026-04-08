@@ -1,0 +1,337 @@
+name: Voyager Cross OS Validation
+
+on:
+  workflow_dispatch:
+
+jobs:
+  define-matrix:
+    name: Define OS Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      oses: ${{ steps.set-matrix.outputs.oses }}
+    steps:
+      - name: Set matrix outputs
+        id: set-matrix
+        shell: bash
+        run: |
+          echo 'oses=["ubuntu-latest","windows-latest","macos-latest"]' >> "$GITHUB_OUTPUT"
+
+  validate:
+    name: Validate on ${{ matrix.os }}
+    needs: define-matrix
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(needs.define-matrix.outputs.oses) }}
+    steps:
+      - name: Checkout Voyager2 branch
+        uses: actions/checkout@v4
+        with:
+          ref: voyager2
+          path: voyager2-src
+
+      - name: Checkout Voyager1 branch
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: main
+          path: voyager1-src
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+          cache: maven
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '25.x'
+          cache: npm
+          cache-dependency-path: voyager2-src/package-lock.json
+          registry-url: https://npm.pkg.github.com
+          scope: '@dxworks'
+
+      - name: Build Voyager1
+        shell: bash
+        run: mvn -B -DskipTests package
+        working-directory: voyager1-src
+
+      - name: Build Voyager2
+        shell: bash
+        run: |
+          npm ci
+          npm run build
+        working-directory: voyager2-src
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Voyenv
+        shell: bash
+        run: npm i -g @dxworks/voyenv
+
+      - name: Prepare workspace and install instruments
+        shell: pwsh
+        run: |
+          $workspace = Join-Path $env:RUNNER_TEMP "voyager-cross-os"
+          if (Test-Path $workspace) {
+            Remove-Item -Path $workspace -Recurse -Force
+          }
+          New-Item -ItemType Directory -Path $workspace | Out-Null
+
+          Copy-Item -Path (Join-Path $env:GITHUB_WORKSPACE "voyager2-src/.github/cross-os/voyenv.yml") -Destination (Join-Path $workspace "voyenv.yml") -Force
+
+          Push-Location $workspace
+          voyenv install
+          Pop-Location
+
+          $sourceInstruments = Join-Path $workspace "voyager/instruments"
+          $targetInstruments = Join-Path $workspace "instruments"
+          if (-not (Test-Path $sourceInstruments)) {
+            throw "Expected instruments folder not found: $sourceInstruments"
+          }
+          New-Item -ItemType Directory -Path $targetInstruments -Force | Out-Null
+          Copy-Item -Path (Join-Path $sourceInstruments "*") -Destination $targetInstruments -Recurse -Force
+
+          @"
+          mission: cross-os-validation
+          target: ./targets
+          "@ | Set-Content -Path (Join-Path $workspace "mission.yml") -Encoding UTF8
+
+          "PARITY_WORKSPACE=$workspace" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Validate dual-manifest instruments
+        shell: pwsh
+        run: |
+          $instrumentDirs = Get-ChildItem -Path (Join-Path $env:PARITY_WORKSPACE "instruments") -Directory
+          if ($instrumentDirs.Count -eq 0) {
+            throw "No instrument directories found in instruments folder"
+          }
+
+          $invalid = @()
+          foreach ($dir in $instrumentDirs) {
+            $v1 = Join-Path $dir.FullName "instrument.yml"
+            $v2 = Join-Path $dir.FullName "instrument.v2.yml"
+            if (-not (Test-Path $v1) -or -not (Test-Path $v2)) {
+              $invalid += $dir.Name
+            }
+          }
+
+          if ($invalid.Count -gt 0) {
+            throw "Instruments missing either instrument.yml or instrument.v2.yml: $($invalid -join ', ')"
+          }
+
+      - name: Clone target repositories
+        shell: pwsh
+        run: |
+          $targetsDir = Join-Path $env:PARITY_WORKSPACE "targets"
+          New-Item -ItemType Directory -Path $targetsDir -Force | Out-Null
+
+          $repos = @(
+            @{ Name = "java"; Url = "https://github.com/Shivanshu1511/springboot-rest-api.git" },
+            @{ Name = "python"; Url = "https://github.com/theArjun/git-commits.git" },
+            @{ Name = "js-ts"; Url = "https://github.com/tkonsta/github_code_search_with_repo_prefix.git" },
+            @{ Name = "c-cpp"; Url = "https://github.com/francisrstokes/tiny-c-projects.git" },
+            @{ Name = "csharp"; Url = "https://github.com/oseifrimpongg/easy-csharp-projects.git" }
+          )
+
+          foreach ($repo in $repos) {
+            git clone --depth 1 $repo.Url (Join-Path $targetsDir $repo.Name)
+          }
+
+      - name: Run Voyager1
+        shell: pwsh
+        run: |
+          Push-Location $env:PARITY_WORKSPACE
+          $jarPath = Join-Path $env:GITHUB_WORKSPACE "voyager1-src/dx-voyager/target/dx-voyager.jar"
+          java -Xmx8g -jar $jarPath "mission.yml"
+
+          $defaultZip = Join-Path $env:PARITY_WORKSPACE "cross-os-validation-voyager-results.zip"
+          if (-not (Test-Path $defaultZip)) {
+            throw "Voyager1 did not produce expected archive: $defaultZip"
+          }
+
+          Move-Item -Path $defaultZip -Destination (Join-Path $env:PARITY_WORKSPACE "v1-results.zip") -Force
+
+          $missionLog = Join-Path $env:PARITY_WORKSPACE "cross-os-validation.log"
+          if (Test-Path $missionLog) {
+            Move-Item -Path $missionLog -Destination (Join-Path $env:PARITY_WORKSPACE "v1-mission.log") -Force
+          }
+          Pop-Location
+
+      - name: Run Voyager2
+        shell: pwsh
+        run: |
+          Push-Location $env:PARITY_WORKSPACE
+          $voyager2Cli = Join-Path $env:GITHUB_WORKSPACE "voyager2-src/dist/src/voyager.js"
+          node $voyager2Cli run -m "mission.yml"
+
+          $defaultZip = Join-Path $env:PARITY_WORKSPACE "cross-os-validation-voyager-results.zip"
+          if (-not (Test-Path $defaultZip)) {
+            throw "Voyager2 did not produce expected archive: $defaultZip"
+          }
+
+          Move-Item -Path $defaultZip -Destination (Join-Path $env:PARITY_WORKSPACE "v2-results.zip") -Force
+
+          $missionLog = Join-Path $env:PARITY_WORKSPACE "cross-os-validation.log"
+          if (Test-Path $missionLog) {
+            Move-Item -Path $missionLog -Destination (Join-Path $env:PARITY_WORKSPACE "v2-mission.log") -Force
+          }
+          Pop-Location
+
+      - name: Compare instrument outputs
+        shell: pwsh
+        run: |
+          $compareScriptPath = Join-Path $env:PARITY_WORKSPACE "compare-instruments.js"
+          @"
+          const fs = require('fs')
+          const path = require('path')
+          const crypto = require('crypto')
+
+          const AdmZip = require(path.resolve(process.argv[6], 'node_modules', 'adm-zip'))
+          const yaml = require(path.resolve(process.argv[6], 'node_modules', 'js-yaml'))
+
+          const v1ZipPath = process.argv[2]
+          const v2ZipPath = process.argv[3]
+          const instrumentsDir = process.argv[4]
+          const reportPath = process.argv[5]
+
+          function sha256(buffer) {
+            return crypto.createHash('sha256').update(buffer).digest('hex')
+          }
+
+          function getInstrumentNames(baseDir) {
+            const dirs = fs.readdirSync(baseDir, { withFileTypes: true }).filter(d => d.isDirectory())
+            const names = []
+            const missing = []
+
+            for (const dir of dirs) {
+              const current = path.join(baseDir, dir.name)
+              const v1Manifest = path.join(current, 'instrument.yml')
+              const v2Manifest = path.join(current, 'instrument.v2.yml')
+              if (!fs.existsSync(v1Manifest) || !fs.existsSync(v2Manifest)) {
+                missing.push(dir.name)
+                continue
+              }
+
+              const v1Name = (yaml.load(fs.readFileSync(v1Manifest, 'utf8')) || {}).name
+              const v2Name = (yaml.load(fs.readFileSync(v2Manifest, 'utf8')) || {}).name
+              if (!v1Name || !v2Name) {
+                throw new Error(`Missing instrument name in ${dir.name}`)
+              }
+              if (v1Name !== v2Name) {
+                throw new Error(`Instrument name mismatch in ${dir.name}: '${v1Name}' vs '${v2Name}'`)
+              }
+              names.push(v1Name)
+            }
+
+            if (missing.length > 0) {
+              throw new Error(`Missing dual manifests for: ${missing.join(', ')}`)
+            }
+            return Array.from(new Set(names))
+          }
+
+          function buildManifest(zipPath, instrumentNames) {
+            const zip = new AdmZip(zipPath)
+            const entries = zip.getEntries()
+            const manifest = new Map()
+            const matchedInstrumentNames = new Set()
+
+            for (const entry of entries) {
+              if (entry.isDirectory) continue
+              const name = entry.entryName.replace(/\\/g, '/')
+              const instrumentName = instrumentNames.find(i => name.startsWith(`${i}/`))
+              if (!instrumentName) continue
+
+              matchedInstrumentNames.add(instrumentName)
+              const content = entry.getData()
+              manifest.set(name, sha256(content))
+            }
+
+            return { manifest, matchedInstrumentNames }
+          }
+
+          function compare(a, b) {
+            const missingInB = []
+            const missingInA = []
+            const hashMismatch = []
+
+            for (const [file, hash] of a.entries()) {
+              if (!b.has(file)) {
+                missingInB.push(file)
+                continue
+              }
+              if (b.get(file) !== hash) {
+                hashMismatch.push(file)
+              }
+            }
+
+            for (const file of b.keys()) {
+              if (!a.has(file)) {
+                missingInA.push(file)
+              }
+            }
+
+            return { missingInB, missingInA, hashMismatch }
+          }
+
+          const instrumentNames = getInstrumentNames(instrumentsDir)
+          if (instrumentNames.length === 0) {
+            throw new Error('No instruments found to compare')
+          }
+
+          const v1 = buildManifest(v1ZipPath, instrumentNames)
+          const v2 = buildManifest(v2ZipPath, instrumentNames)
+
+          const diff = compare(v1.manifest, v2.manifest)
+
+          const reportLines = [
+            `Instrument count: ${instrumentNames.length}`,
+            `V1 compared files: ${v1.manifest.size}`,
+            `V2 compared files: ${v2.manifest.size}`,
+            `V1 matched instrument folders: ${Array.from(v1.matchedInstrumentNames).sort().join(', ')}`,
+            `V2 matched instrument folders: ${Array.from(v2.matchedInstrumentNames).sort().join(', ')}`,
+            `Missing in V2: ${diff.missingInB.length}`,
+            `Missing in V1: ${diff.missingInA.length}`,
+            `Hash mismatches: ${diff.hashMismatch.length}`,
+          ]
+
+          if (diff.missingInB.length > 0) {
+            reportLines.push('', 'Files missing in V2:', ...diff.missingInB.sort())
+          }
+          if (diff.missingInA.length > 0) {
+            reportLines.push('', 'Files missing in V1:', ...diff.missingInA.sort())
+          }
+          if (diff.hashMismatch.length > 0) {
+            reportLines.push('', 'Files with different content:', ...diff.hashMismatch.sort())
+          }
+
+          fs.writeFileSync(reportPath, reportLines.join('\n'))
+          console.log(reportLines.join('\n'))
+
+          const hasDifferences = diff.missingInB.length > 0 || diff.missingInA.length > 0 || diff.hashMismatch.length > 0
+          if (hasDifferences) {
+            process.exit(1)
+          }
+          "@ | Set-Content -Path $compareScriptPath -Encoding UTF8
+
+          node $compareScriptPath `
+            (Join-Path $env:PARITY_WORKSPACE "v1-results.zip") `
+            (Join-Path $env:PARITY_WORKSPACE "v2-results.zip") `
+            (Join-Path $env:PARITY_WORKSPACE "instruments") `
+            (Join-Path $env:PARITY_WORKSPACE "comparison-report.txt") `
+            (Join-Path $env:GITHUB_WORKSPACE "voyager2-src")
+
+      - name: Upload validation artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyager-cross-os-validation-${{ matrix.os }}
+          path: |
+            ${{ env.PARITY_WORKSPACE }}/v1-results.zip
+            ${{ env.PARITY_WORKSPACE }}/v2-results.zip
+            ${{ env.PARITY_WORKSPACE }}/comparison-report.txt
+            ${{ env.PARITY_WORKSPACE }}/v1-mission.log
+            ${{ env.PARITY_WORKSPACE }}/v2-mission.log
