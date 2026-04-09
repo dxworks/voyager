@@ -3,8 +3,11 @@ name: Build Voyager2 SEA Binaries
 on:
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
-  build:
+  build-core:
     name: Build ${{ matrix.target.id }}
     runs-on: ${{ matrix.target.runs_on }}
     strategy:
@@ -17,11 +20,53 @@ jobs:
           - id: linux-x64
             runs_on: ubuntu-latest
             output_file: dx-voyager-linux-x64
+
+    steps:
+      - name: Checkout voyager2 branch
+        uses: actions/checkout@v4
+        with:
+          ref: voyager2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '25.x'
+          cache: npm
+          cache-dependency-path: package-lock.json
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@dxworks'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build SEA binary
+        run: npm run build:sea
+
+      - name: Verify binary exists
+        run: |
+          node -e "require('node:fs').accessSync('dist/sea/${{ matrix.target.output_file }}')"
+
+      - name: Upload SEA binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyager2-${{ matrix.target.id }}
+          path: dist/sea/${{ matrix.target.output_file }}
+
+  build-macos:
+    name: Build ${{ matrix.target.id }}
+    runs-on: ${{ matrix.target.runs_on }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
           - id: macos-x64
-            runs_on: macos-13
+            runs_on: macos-15-intel
             output_file: dx-voyager-macos-x64
           - id: macos-arm64
-            runs_on: macos-14
+            runs_on: macos-15
             output_file: dx-voyager-macos-arm64
 
     steps:
@@ -48,9 +93,8 @@ jobs:
         run: npm run build:sea
 
       - name: Verify binary exists
-        shell: bash
         run: |
-          test -f "dist/sea/${{ matrix.target.output_file }}"
+          node -e "require('node:fs').accessSync('dist/sea/${{ matrix.target.output_file }}')"
 
       - name: Upload SEA binary artifact
         uses: actions/upload-artifact@v4
