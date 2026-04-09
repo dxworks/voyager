@@ -19,9 +19,11 @@ describe('summary models', () => {
         commandSummary.runningTime = '0.5s'
 
         instrumentSummary.runningTime = '1.0s'
+        instrumentSummary.finishedAt = '09.04.2026 17:40'
         instrumentSummary.addCommandSummary('lint', commandSummary)
 
         expect(instrumentSummary.runningTime).toBe('1.0s')
+        expect(instrumentSummary.finishedAt).toBe('09.04.2026 17:40')
         expect(instrumentSummary.commandsSummary.get('lint')!.runningTime).toBe('0.5s')
     })
 

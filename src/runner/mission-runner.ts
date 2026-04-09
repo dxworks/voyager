@@ -7,7 +7,7 @@ import {runCleanAction} from './default-actions/clean-action-runner'
 import {runSummaryAction} from './default-actions/summary-action-runner'
 import archiver, {Archiver} from 'archiver'
 import fs from 'fs-extra'
-import {getLogFilePath, getLogsStream, getTimeInSeconds} from '../report/logs-collector-utils'
+import {getCurrentDateTime, getLogFilePath, getLogsStream, getTimeInSeconds} from '../report/logs-collector-utils'
 import {generateMissionSummary} from '../report/mission-summary-generator'
 import path from 'node:path'
 import {generateHtmlReport} from '../report/html/html-report-generator'
@@ -137,6 +137,7 @@ export async function summaryMission(missionFilePath?: string, verbose = false):
                 await runSummaryAction(summaryAction, instrument.instrumentPath, instrument.id, verbose)
                 const endTime = performance.now()
                 instrumentSummary.runningTime = getTimeInSeconds(startTime, endTime)
+                instrumentSummary.finishedAt = getCurrentDateTime()
                 logSummaryToolEnd(i + 1, summaryInstruments.length, instrument.name, instrumentSummary.runningTime)
             }
         }
