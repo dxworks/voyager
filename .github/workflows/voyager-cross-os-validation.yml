@@ -157,7 +157,7 @@ jobs:
           New-Item -ItemType Directory -Path $targetInstruments -Force | Out-Null
           Copy-Item -Path (Join-Path $sourceInstruments "*") -Destination $targetInstruments -Recurse -Force
 
-          @'
+          @"
           mission: cross-os-validation
           target: ./targets
           "@ | Set-Content -Path (Join-Path $env:PARITY_WORKSPACE "mission.yml") -Encoding UTF8
@@ -245,7 +245,7 @@ jobs:
         shell: pwsh
         run: |
           $compareScriptPath = Join-Path $env:PARITY_WORKSPACE "compare-instruments.js"
-          @"
+          @'
           const fs = require('fs')
           const path = require('path')
           const crypto = require('crypto')
