@@ -2,6 +2,18 @@ name: Voyager Cross OS Validation
 
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Voyager2 release tag containing voyager2-full bundle
+        required: true
+        default: v2.0.0
+      release_asset:
+        description: Release asset zip file name
+        required: true
+        default: voyager2-full.zip
+
+permissions:
+  contents: read
 
 jobs:
   define-matrix:
@@ -68,11 +80,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Voyenv
-        shell: bash
-        run: npm i -g @dxworks/voyenv
-
-      - name: Prepare workspace and install instruments
+      - name: Prepare workspace
         shell: pwsh
         run: |
           $workspace = Join-Path $env:RUNNER_TEMP "voyager-cross-os"
@@ -81,26 +89,49 @@ jobs:
           }
           New-Item -ItemType Directory -Path $workspace | Out-Null
 
-          Copy-Item -Path (Join-Path $env:GITHUB_WORKSPACE "voyager2-src/.github/cross-os/voyenv.yml") -Destination (Join-Path $workspace "voyenv.yml") -Force
+          "PARITY_WORKSPACE=$workspace" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-          Push-Location $workspace
-          voyenv install
-          Pop-Location
+      - name: Download instruments from Voyager2 release asset
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $downloadDir = Join-Path $env:PARITY_WORKSPACE "release-asset"
+          New-Item -ItemType Directory -Path $downloadDir -Force | Out-Null
 
-          $sourceInstruments = Join-Path $workspace "voyager/instruments"
-          $targetInstruments = Join-Path $workspace "instruments"
-          if (-not (Test-Path $sourceInstruments)) {
-            throw "Expected instruments folder not found: $sourceInstruments"
+          gh release download "${{ inputs.release_tag }}" --repo "${{ github.repository }}" --pattern "${{ inputs.release_asset }}" --dir "$downloadDir"
+
+          $zipPath = Join-Path $downloadDir "${{ inputs.release_asset }}"
+          if (-not (Test-Path $zipPath)) {
+            throw "Release asset not found at expected path: $zipPath"
           }
+
+          $extractDir = Join-Path $env:PARITY_WORKSPACE "release-unpacked"
+          Expand-Archive -Path $zipPath -DestinationPath $extractDir -Force
+
+          $candidateA = Join-Path $extractDir "voyager2-full"
+          $candidateB = Join-Path $extractDir "voyager"
+          if (Test-Path $candidateA) {
+            $releaseRoot = $candidateA
+          } elseif (Test-Path $candidateB) {
+            $releaseRoot = $candidateB
+          } else {
+            throw "Could not find voyager2-full or voyager directory in extracted release asset"
+          }
+
+          $sourceInstruments = Join-Path $releaseRoot "instruments"
+          if (-not (Test-Path $sourceInstruments)) {
+            throw "Expected instruments folder not found in release asset: $sourceInstruments"
+          }
+
+          $targetInstruments = Join-Path $env:PARITY_WORKSPACE "instruments"
           New-Item -ItemType Directory -Path $targetInstruments -Force | Out-Null
           Copy-Item -Path (Join-Path $sourceInstruments "*") -Destination $targetInstruments -Recurse -Force
 
           @"
           mission: cross-os-validation
           target: ./targets
-          "@ | Set-Content -Path (Join-Path $workspace "mission.yml") -Encoding UTF8
-
-          "PARITY_WORKSPACE=$workspace" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "@ | Set-Content -Path (Join-Path $env:PARITY_WORKSPACE "mission.yml") -Encoding UTF8
 
       - name: Validate dual-manifest instruments
         shell: pwsh
