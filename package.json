@@ -28,7 +28,7 @@
     "build": "npm run clean && tsc -p tsconfig.build.json && npm run copy-files",
     "build:bundle": "npm run build && esbuild dist/src/voyager.js --bundle --platform=node --format=cjs --target=node24 --outfile=dist/sea/voyager.bundle.cjs",
     "build:sea": "npm run build:bundle && node scripts/build-sea.mjs",
-    "clean": "rimraf dist && rimraf --glob \\\"*.tsbuildinfo\\\"\"",
+    "clean": "rimraf dist && rimraf --glob \"*.tsbuildinfo\"",
     "clean:modules": "rimraf node_modules package-lock.json",
     "copy-files": "cpy \"src/assets/**/*\" \"dist/assets\" --parents",
     "create": "npm run build && npm run test",

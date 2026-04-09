@@ -69,6 +69,7 @@ describe('mission runner summary command', () => {
         expect(runSummaryActionMock).toHaveBeenCalledTimes(1)
         expect(runSummaryActionMock).toHaveBeenCalledWith(summaryAction, '/tmp/tool', 'tool')
         expect(missionContext.missionSummary.getInstrumentSummary('Tool').runningTime).not.toBe('')
+        expect(missionContext.missionSummary.getInstrumentSummary('Tool').finishedAt).toMatch(/^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}$/)
         expect(missionContext.missionSummary.instrumentsSummary.has('NoSummaryTool')).toBe(false)
     })
 })

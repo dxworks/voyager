@@ -12,6 +12,7 @@ interface MissionLockfileInstrument {
     name: string
     version: string
     runningTime: string
+    finishedAt: string
 }
 
 interface MissionLockfile {
@@ -39,6 +40,7 @@ export function generateMissionLockFile(instruments: Instrument[]): string {
                     name: instrument.name,
                     version: instrument.version,
                     runningTime: instrumentSummary.runningTime,
+                    finishedAt: instrumentSummary.finishedAt,
                 }
             })
             .filter((instrument): instrument is MissionLockfileInstrument => instrument != null),

@@ -122,7 +122,7 @@ describe('mission runner integration default flow', () => {
         const lockFileContent = yaml.load(zip.readAsText(lockFileEntry!)) as {
             mission: string
             runningTime: string
-            tools: Array<{id: string, name: string, version: string, runningTime: string}>
+            tools: Array<{id: string, name: string, version: string, runningTime: string, finishedAt: string}>
         }
         expect(lockFileContent.mission).toBe('default-flow')
         expect(lockFileContent.runningTime.endsWith('s')).toBe(true)
@@ -134,6 +134,7 @@ describe('mission runner integration default flow', () => {
             }),
         ]))
         expect(lockFileContent.tools[0].runningTime.endsWith('s')).toBe(true)
+        expect(lockFileContent.tools[0].finishedAt).toMatch(/^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}$/)
 
         const missionLogPath = path.join(tempDir, 'default-flow.log')
         expect(fs.existsSync(missionLogPath)).toBe(true)

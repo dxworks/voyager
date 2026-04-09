@@ -11,6 +11,17 @@ export function getTimeInSeconds(startTime: number, endTime: number): string {
     return ((endTime - startTime) / 1000).toFixed(1) + 's'
 }
 
+export function getCurrentDateTime(): string {
+    const now = new Date()
+    const day = String(now.getDate()).padStart(2, '0')
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const year = String(now.getFullYear())
+    const hours = String(now.getHours()).padStart(2, '0')
+    const minutes = String(now.getMinutes()).padStart(2, '0')
+
+    return `${day}.${month}.${year} ${hours}:${minutes}`
+}
+
 export function getLogsStream(): fs.WriteStream {
     const logFilePath = getLogFilePath(missionContext.name)
     const logStream = fs.createWriteStream(logFilePath, {flags: 'a'})

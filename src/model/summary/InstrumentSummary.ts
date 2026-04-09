@@ -4,6 +4,7 @@ export class InstrumentSummary {
 
     private _commandsSummary: Map<string, CommandSummary> = new Map<string, CommandSummary>()
     private _runningTime = ''
+    private _finishedAt = ''
 
 
     get commandsSummary(): Map<string, CommandSummary> {
@@ -20,6 +21,14 @@ export class InstrumentSummary {
 
     set runningTime(value: string) {
         this._runningTime = value
+    }
+
+    get finishedAt(): string {
+        return this._finishedAt
+    }
+
+    set finishedAt(value: string) {
+        this._finishedAt = value
     }
 
 

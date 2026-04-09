@@ -3,7 +3,7 @@ import {Archiver} from 'archiver'
 import {packageActionKey, startActionKey} from './action-utils'
 import {InstrumentSummary} from '../model/summary/InstrumentSummary'
 import {missionContext} from '../context/MissionContext'
-import {getTimeInSeconds} from '../report/logs-collector-utils'
+import {getCurrentDateTime, getTimeInSeconds} from '../report/logs-collector-utils'
 import {runAction} from './action-runner'
 import {DefaultAction} from '../model/Action'
 import {runPackageAction} from './default-actions/package-action-runner'
@@ -20,6 +20,7 @@ export async function runInstrument(instrument: Instrument, archive: Archiver | 
         await defaultInstrumentRun(instrument, archive!, verbose)
     const endTime = performance.now()
     instrumentSummary.runningTime = getTimeInSeconds(startTime, endTime)
+    instrumentSummary.finishedAt = getCurrentDateTime()
     console.log(centerText('Finished running ' + instrument.name, maxLength, '-'))
 }
 
