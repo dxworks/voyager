@@ -3,6 +3,10 @@ name: Voyager Cross OS Validation
 on:
   workflow_dispatch:
     inputs:
+      release_repo:
+        description: Repository that owns the release
+        required: true
+        default: dxworks/voyager
       release_tag:
         description: Voyager2 release tag containing voyager2-full bundle
         required: true
@@ -13,7 +17,7 @@ on:
         default: voyager2-full.zip
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   define-matrix:
@@ -98,14 +102,14 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
 
-          $repo = "${{ github.repository }}"
+          $repo = "${{ inputs.release_repo }}"
           $tag = "${{ inputs.release_tag }}"
           $assetName = "${{ inputs.release_asset }}"
 
           $downloadDir = Join-Path $env:PARITY_WORKSPACE "release-asset"
           New-Item -ItemType Directory -Path $downloadDir -Force | Out-Null
 
-          $releasesJson = gh api "repos/$repo/releases?per_page=100"
+          $releasesJson = gh api "repos/$repo/releases" --paginate
           if ($LASTEXITCODE -ne 0) {
             throw "Failed to list releases for repository '$repo'"
           }
