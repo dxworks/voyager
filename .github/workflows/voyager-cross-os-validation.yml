@@ -96,12 +96,37 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          $ErrorActionPreference = 'Stop'
+
+          $repo = "${{ github.repository }}"
+          $tag = "${{ inputs.release_tag }}"
+          $assetName = "${{ inputs.release_asset }}"
+
           $downloadDir = Join-Path $env:PARITY_WORKSPACE "release-asset"
           New-Item -ItemType Directory -Path $downloadDir -Force | Out-Null
 
-          gh release download "${{ inputs.release_tag }}" --repo "${{ github.repository }}" --pattern "${{ inputs.release_asset }}" --dir "$downloadDir"
+          $releasesJson = gh api "repos/$repo/releases?per_page=100"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to list releases for repository '$repo'"
+          }
 
-          $zipPath = Join-Path $downloadDir "${{ inputs.release_asset }}"
+          $releases = $releasesJson | ConvertFrom-Json
+          $release = $releases | Where-Object { $_.tag_name -eq $tag } | Select-Object -First 1
+          if (-not $release) {
+            throw "Release with tag '$tag' not found in repository '$repo'"
+          }
+
+          $asset = $release.assets | Where-Object { $_.name -eq $assetName } | Select-Object -First 1
+          if (-not $asset) {
+            throw "Asset '$assetName' not found in release '$tag'"
+          }
+
+          $zipPath = Join-Path $downloadDir $assetName
+          gh api -H "Accept: application/octet-stream" "repos/$repo/releases/assets/$($asset.id)" > $zipPath
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to download release asset '$assetName' from release '$tag'"
+          }
+
           if (-not (Test-Path $zipPath)) {
             throw "Release asset not found at expected path: $zipPath"
           }
