@@ -375,7 +375,7 @@ jobs:
           if (hasDifferences) {
             process.exit(1)
           }
-          "@ | Set-Content -Path $compareScriptPath -Encoding UTF8
+          '@ | Set-Content -Path $compareScriptPath -Encoding UTF8
 
           node $compareScriptPath `
             (Join-Path $env:PARITY_WORKSPACE "v1-results.zip") `
