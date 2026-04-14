@@ -28,7 +28,7 @@ describe('package action runner', () => {
         const archive = new FakeArchive()
         fs.writeFileSync(path.join(tempDir, 'Tool.log'), 'logs')
 
-        runPackageAction('Tool', <any>archive, <DefaultAction>{
+        runPackageAction('Tool', 'Tool', <any>archive, <DefaultAction>{
             name: 'pack',
             with: {
                 locations: [],
@@ -45,7 +45,7 @@ describe('package action runner', () => {
         fs.writeFileSync(path.join(sourceDir, 'b.txt'), 'x')
         const archive = new FakeArchive()
 
-        runPackageAction('Tool', <any>archive, <DefaultAction>{
+        runPackageAction('Tool', 'Tool', <any>archive, <DefaultAction>{
             name: 'pack',
             with: {
                 locations: [{source: 'results', destination: 'out', files: ['*.json']}],
@@ -62,7 +62,7 @@ describe('package action runner', () => {
         fs.mkdirSync(sourceDir)
         const archive = new FakeArchive()
 
-        runPackageAction('Tool', <any>archive, <DefaultAction>{
+        runPackageAction('Tool', 'Tool', <any>archive, <DefaultAction>{
             name: 'pack',
             with: {
                 locations: [<any>{source: 'all-results', destination: 'bundle'}],

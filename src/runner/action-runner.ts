@@ -8,9 +8,9 @@ import {runVerifyAction} from './default-actions/verify-action-runner'
 import {runSummaryAction} from './default-actions/summary-action-runner'
 
 
-export async function runAction(action: Action, archive: Archiver | null, instrumentPath: string, instrumentName: string, verbose = false): Promise<void> {
+export async function runAction(action: Action, archive: Archiver | null, instrumentPath: string, instrumentName: string, verbose = false, instrumentId?: string): Promise<void> {
     if (instanceOfDefaultAction(action))
-        await runDefaultAction(<DefaultAction>action, archive, instrumentPath, instrumentName, verbose)
+        await runDefaultAction(<DefaultAction>action, archive, instrumentPath, instrumentName, verbose, instrumentId)
     else
         await runCustomAction(action, instrumentPath, instrumentName, verbose)
 }
@@ -21,14 +21,14 @@ async function runCustomAction(action: Action, instrumentPath: string, instrumen
     }
 }
 
-async function runDefaultAction(action: DefaultAction, archive: Archiver | null, instrumentPath: string, instrumentName: string, verbose = false) {
+async function runDefaultAction(action: DefaultAction, archive: Archiver | null, instrumentPath: string, instrumentName: string, verbose = false, instrumentId?: string) {
     switch (action.name) {
         case cleanActionKey: {
             await runCleanAction(action)
             break
         }
         case packageActionKey: {
-            runPackageAction(instrumentName!, archive!, action)
+            runPackageAction(instrumentId ?? instrumentName, instrumentName, archive!, action)
             break
         }
         case verifyActionKey: {

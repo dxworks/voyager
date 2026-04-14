@@ -65,7 +65,7 @@ export function packMission(missionFilePath?: string, verbose = false): void {
         const archive = archiver('zip', {zlib: {level: 9}})
         packInstruments.forEach(instrument => {
             const packAction = (<DefaultAction>instrument.actions.get(packageActionKey))
-            runPackageAction(instrument.name, archive, packAction)
+            runPackageAction(instrument.id, instrument.name, archive, packAction)
         })
         archive.finalize().then()
         archive.pipe(fs.createWriteStream(missionContext.getVariable(RESULTS_ZIP_DIR)!))

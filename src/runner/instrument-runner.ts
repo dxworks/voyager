@@ -27,13 +27,13 @@ export async function runInstrument(instrument: Instrument, archive: Archiver | 
 async function defaultInstrumentRun(instrument: Instrument, archive: Archiver, verbose = false): Promise<void> {
     const startAction = instrument.actions.get(startActionKey)
     if (startAction)
-        await runAction(startAction, archive, instrument.instrumentPath, instrument.name, verbose)
+        await runAction(startAction, archive, instrument.instrumentPath, instrument.name, verbose, instrument.id)
     else
         console.warn(`Instrument ${instrument.name}: no '${startActionKey}' action found. Skipping run phase.`)
 
     const packAction = <DefaultAction>instrument.actions.get(packageActionKey)
     if (packAction) {
-        runPackageAction(instrument.name, archive, packAction)
+        runPackageAction(instrument.id, instrument.name, archive, packAction)
     }
 }
 
@@ -43,6 +43,6 @@ export async function customInstrumentRun(instrument: Instrument, archive: Archi
             .map(actionKey => instrument.actions.get(actionKey))
             .filter(action => action != null)
         for (const action of actions)
-            await runAction(action!, archive, instrument.instrumentPath, instrument.name, verbose)
+            await runAction(action!, archive, instrument.instrumentPath, instrument.name, verbose, instrument.id)
     }
 }

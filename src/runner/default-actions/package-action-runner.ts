@@ -7,9 +7,9 @@ import fs from 'fs'
 import {getLogFilePath} from '../../report/logs-collector-utils'
 import {getMatchingFilesFromDir} from '../action-utils'
 
-export function runPackageAction(instrumentName: string, archive: Archiver, action: DefaultAction): void {
-    addLogFileToArchive(getLogFilePath(instrumentName), archive)
-    const instrumentResultsDirectory = instrumentName
+export function runPackageAction(instrumentResultKey: string, instrumentLogKey: string, archive: Archiver, action: DefaultAction): void {
+    addLogFileToArchive(getLogFilePath(instrumentLogKey), archive)
+    const instrumentResultsDirectory = instrumentResultKey
     const locations: Location[] = action.with!.locations!
     locations.forEach(location => {
         const destinationDirectory = location.destination ? path.join(instrumentResultsDirectory, location.destination) : instrumentResultsDirectory
