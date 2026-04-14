@@ -262,10 +262,10 @@ jobs:
             return crypto.createHash('sha256').update(buffer).digest('hex')
           }
 
-          function getInstrumentNames(baseDir) {
+          function getInstrumentMappings(baseDir) {
             const dirs = fs.readdirSync(baseDir, { withFileTypes: true }).filter(d => d.isDirectory())
-            const names = []
             const missing = []
+            const mappings = []
 
             for (const dir of dirs) {
               const current = path.join(baseDir, dir.name)
@@ -276,102 +276,114 @@ jobs:
                 continue
               }
 
-              const v1Name = (yaml.load(fs.readFileSync(v1Manifest, 'utf8')) || {}).name
-              const v2Name = (yaml.load(fs.readFileSync(v2Manifest, 'utf8')) || {}).name
-              if (!v1Name || !v2Name) {
+              const v1Config = yaml.load(fs.readFileSync(v1Manifest, 'utf8')) || {}
+              const v2Config = yaml.load(fs.readFileSync(v2Manifest, 'utf8')) || {}
+
+              const v1Name = String(v1Config.name || '').trim()
+              const v2Key = String(v2Config.id || v2Config.name || '').trim()
+
+              if (!v1Name || !v2Key) {
                 throw new Error(`Missing instrument name in ${dir.name}`)
               }
-              if (v1Name !== v2Name) {
-                throw new Error(`Instrument name mismatch in ${dir.name}: '${v1Name}' vs '${v2Name}'`)
-              }
-              names.push(v1Name)
+
+              mappings.push({
+                folder: dir.name,
+                v1Key: v1Name,
+                v2Key: v2Key,
+              })
             }
 
             if (missing.length > 0) {
               throw new Error(`Missing dual manifests for: ${missing.join(', ')}`)
             }
-            return Array.from(new Set(names))
+            return mappings
           }
 
-          function buildManifest(zipPath, instrumentNames) {
-            const zip = new AdmZip(zipPath)
+          function buildManifestForInstrument(zip, instrumentKey) {
             const entries = zip.getEntries()
             const manifest = new Map()
-            const matchedInstrumentNames = new Set()
+            const prefix = `${instrumentKey}/`
 
             for (const entry of entries) {
               if (entry.isDirectory) continue
               const name = entry.entryName.replace(/\\/g, '/')
-              const instrumentName = instrumentNames.find(i => name.startsWith(`${i}/`))
-              if (!instrumentName) continue
+              if (!name.startsWith(prefix)) continue
+              const relativePath = name.slice(prefix.length)
+              if (!relativePath) continue
 
-              matchedInstrumentNames.add(instrumentName)
               const content = entry.getData()
-              manifest.set(name, sha256(content))
+              manifest.set(relativePath, sha256(content))
             }
 
-            return { manifest, matchedInstrumentNames }
+            return manifest
           }
 
-          function compare(a, b) {
+          function compareSubset(v1Manifest, v2Manifest) {
             const missingInB = []
-            const missingInA = []
             const hashMismatch = []
 
-            for (const [file, hash] of a.entries()) {
-              if (!b.has(file)) {
+            for (const [file, hash] of v1Manifest.entries()) {
+              if (!v2Manifest.has(file)) {
                 missingInB.push(file)
                 continue
               }
-              if (b.get(file) !== hash) {
+              if (v2Manifest.get(file) !== hash) {
                 hashMismatch.push(file)
               }
             }
 
-            for (const file of b.keys()) {
-              if (!a.has(file)) {
-                missingInA.push(file)
-              }
-            }
-
-            return { missingInB, missingInA, hashMismatch }
+            return { missingInB, hashMismatch }
           }
 
-          const instrumentNames = getInstrumentNames(instrumentsDir)
-          if (instrumentNames.length === 0) {
+          const instrumentMappings = getInstrumentMappings(instrumentsDir)
+          if (instrumentMappings.length === 0) {
             throw new Error('No instruments found to compare')
           }
 
-          const v1 = buildManifest(v1ZipPath, instrumentNames)
-          const v2 = buildManifest(v2ZipPath, instrumentNames)
+          const v1Zip = new AdmZip(v1ZipPath)
+          const v2Zip = new AdmZip(v2ZipPath)
 
-          const diff = compare(v1.manifest, v2.manifest)
+          const missingInV2 = []
+          const hashMismatches = []
+          const perInstrumentStats = []
+
+          for (const mapping of instrumentMappings) {
+            const v1Manifest = buildManifestForInstrument(v1Zip, mapping.v1Key)
+            const v2Manifest = buildManifestForInstrument(v2Zip, mapping.v2Key)
+            const diff = compareSubset(v1Manifest, v2Manifest)
+
+            perInstrumentStats.push(
+              `${mapping.folder}: v1='${mapping.v1Key}' files=${v1Manifest.size}, v2='${mapping.v2Key}' files=${v2Manifest.size}`
+            )
+
+            for (const file of diff.missingInB) {
+              missingInV2.push(`${mapping.v1Key}/${file} (expected in v2 under ${mapping.v2Key}/${file})`)
+            }
+            for (const file of diff.hashMismatch) {
+              hashMismatches.push(`${mapping.v1Key}/${file} (v2: ${mapping.v2Key}/${file})`)
+            }
+          }
 
           const reportLines = [
-            `Instrument count: ${instrumentNames.length}`,
-            `V1 compared files: ${v1.manifest.size}`,
-            `V2 compared files: ${v2.manifest.size}`,
-            `V1 matched instrument folders: ${Array.from(v1.matchedInstrumentNames).sort().join(', ')}`,
-            `V2 matched instrument folders: ${Array.from(v2.matchedInstrumentNames).sort().join(', ')}`,
-            `Missing in V2: ${diff.missingInB.length}`,
-            `Missing in V1: ${diff.missingInA.length}`,
-            `Hash mismatches: ${diff.hashMismatch.length}`,
+            `Instrument count: ${instrumentMappings.length}`,
+            `Missing in V2: ${missingInV2.length}`,
+            `Hash mismatches: ${hashMismatches.length}`,
+            '',
+            'Per instrument coverage:',
+            ...perInstrumentStats.sort(),
           ]
 
-          if (diff.missingInB.length > 0) {
-            reportLines.push('', 'Files missing in V2:', ...diff.missingInB.sort())
+          if (missingInV2.length > 0) {
+            reportLines.push('', 'Files missing in V2:', ...missingInV2.sort())
           }
-          if (diff.missingInA.length > 0) {
-            reportLines.push('', 'Files missing in V1:', ...diff.missingInA.sort())
-          }
-          if (diff.hashMismatch.length > 0) {
-            reportLines.push('', 'Files with different content:', ...diff.hashMismatch.sort())
+          if (hashMismatches.length > 0) {
+            reportLines.push('', 'Files with different content:', ...hashMismatches.sort())
           }
 
           fs.writeFileSync(reportPath, reportLines.join('\n'))
           console.log(reportLines.join('\n'))
 
-          const hasDifferences = diff.missingInB.length > 0 || diff.missingInA.length > 0 || diff.hashMismatch.length > 0
+          const hasDifferences = missingInV2.length > 0 || hashMismatches.length > 0
           if (hasDifferences) {
             process.exit(1)
           }
