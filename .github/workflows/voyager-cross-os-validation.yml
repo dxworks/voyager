@@ -336,42 +336,11 @@ jobs:
             return value
           }
 
-          function removeVolatileFields(value) {
-            if (Array.isArray(value))
-              return value.map(removeVolatileFields)
-
-            if (value !== null && typeof value === 'object') {
-              const cleanedObject = {}
-              for (const [key, fieldValue] of Object.entries(value)) {
-                if (key === 'started_at' || key === 'input_path' || key === 'ended_at' || key === 'duration_seconds')
-                  continue
-                cleanedObject[key] = removeVolatileFields(fieldValue)
-              }
-              return cleanedObject
-            }
-
-            return value
-          }
-
           function hashInstrumentFile(relativePath, contentBuffer) {
             if (relativePath === 'results/test-repos-raw.json') {
               const parsed = JSON.parse(contentBuffer.toString('utf8'))
               const normalized = normalizeJson(parsed)
               return sha256(Buffer.from(JSON.stringify(normalized)))
-            }
-
-            if (relativePath === 'results/targets.jsonl') {
-              const lines = contentBuffer
-                .toString('utf8')
-                .split(/\r?\n/)
-                .map(line => line.trim())
-                .filter(line => line.length > 0)
-
-              const normalizedLines = lines
-                .map(line => JSON.stringify(normalizeJson(removeVolatileFields(JSON.parse(line)))))
-                .sort()
-
-              return sha256(Buffer.from(normalizedLines.join('\n')))
             }
 
             return sha256(contentBuffer)
@@ -427,6 +396,7 @@ jobs:
               const relativePath = name.slice(prefix.length)
               if (!relativePath) continue
               if (!relativePath.startsWith(resultsPrefix)) continue
+              if (relativePath === 'results/targets.jsonl') continue
               if (relativePath === 'results/logs.txt') continue
               if (relativePath === 'results/missing_files_logs.txt') continue
 
@@ -515,125 +485,6 @@ jobs:
             (Join-Path $env:PARITY_WORKSPACE "comparison-report.txt") `
             (Join-Path $env:GITHUB_WORKSPACE "voyager2-src")
 
-      - name: Collect codeframe debug artifacts on failure
-        if: failure()
-        shell: pwsh
-        run: |
-          $debugDir = Join-Path $env:PARITY_WORKSPACE "debug"
-          New-Item -ItemType Directory -Path $debugDir -Force | Out-Null
-
-          $extractScriptPath = Join-Path $env:PARITY_WORKSPACE "extract-codeframe-debug.js"
-          @'
-          const fs = require('fs')
-          const path = require('path')
-
-          const AdmZip = require(path.resolve(process.argv[5], 'node_modules', 'adm-zip'))
-
-          const v1ZipPath = process.argv[2]
-          const v2ZipPath = process.argv[3]
-          const outputDir = process.argv[4]
-
-          function normalizeJson(value) {
-            if (Array.isArray(value)) {
-              const normalizedArray = value.map(normalizeJson)
-              return normalizedArray.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
-            }
-
-            if (value !== null && typeof value === 'object') {
-              const sortedKeys = Object.keys(value).sort()
-              const normalizedObject = {}
-              for (const key of sortedKeys) {
-                normalizedObject[key] = normalizeJson(value[key])
-              }
-              return normalizedObject
-            }
-
-            return value
-          }
-
-          function removeVolatileFields(value) {
-            if (Array.isArray(value))
-              return value.map(removeVolatileFields)
-
-            if (value !== null && typeof value === 'object') {
-              const cleanedObject = {}
-              for (const [key, fieldValue] of Object.entries(value)) {
-                if (key === 'started_at' || key === 'input_path' || key === 'ended_at' || key === 'duration_seconds')
-                  continue
-                cleanedObject[key] = removeVolatileFields(fieldValue)
-              }
-              return cleanedObject
-            }
-
-            return value
-          }
-
-          function extractCodeframeJsonl(zipPath) {
-            const zip = new AdmZip(zipPath)
-            const entries = zip.getEntries().filter(e => !e.isDirectory)
-
-            const exact = entries.find(e => e.entryName.replace(/\\/g, '/') === 'codeframe/results/targets.jsonl')
-            if (exact)
-              return exact.getData().toString('utf8')
-
-            const fallback = entries.find(e => e.entryName.replace(/\\/g, '/').endsWith('/results/targets.jsonl'))
-            if (fallback)
-              return fallback.getData().toString('utf8')
-
-            return ''
-          }
-
-          function normalizeJsonl(content) {
-            return content
-              .split(/\r?\n/)
-              .map(line => line.trim())
-              .filter(line => line.length > 0)
-              .map(line => JSON.stringify(normalizeJson(removeVolatileFields(JSON.parse(line)))))
-              .sort()
-          }
-
-          const v1Raw = extractCodeframeJsonl(v1ZipPath)
-          const v2Raw = extractCodeframeJsonl(v2ZipPath)
-
-          fs.writeFileSync(path.join(outputDir, 'codeframe-v1-raw.jsonl'), v1Raw)
-          fs.writeFileSync(path.join(outputDir, 'codeframe-v2-raw.jsonl'), v2Raw)
-
-          const v1Normalized = normalizeJsonl(v1Raw)
-          const v2Normalized = normalizeJsonl(v2Raw)
-
-          fs.writeFileSync(path.join(outputDir, 'codeframe-v1-normalized.jsonl'), v1Normalized.join('\n'))
-          fs.writeFileSync(path.join(outputDir, 'codeframe-v2-normalized.jsonl'), v2Normalized.join('\n'))
-
-          const v1Set = new Set(v1Normalized)
-          const v2Set = new Set(v2Normalized)
-
-          const missingInV2 = v1Normalized.filter(line => !v2Set.has(line))
-          const extraInV2 = v2Normalized.filter(line => !v1Set.has(line))
-
-          const summary = [
-            `v1 raw lines: ${v1Raw.split(/\r?\n/).filter(Boolean).length}`,
-            `v2 raw lines: ${v2Raw.split(/\r?\n/).filter(Boolean).length}`,
-            `v1 normalized lines: ${v1Normalized.length}`,
-            `v2 normalized lines: ${v2Normalized.length}`,
-            `normalized missing in v2: ${missingInV2.length}`,
-            `normalized extra in v2: ${extraInV2.length}`,
-            '',
-            'first 20 normalized lines missing in v2:',
-            ...missingInV2.slice(0, 20),
-            '',
-            'first 20 normalized lines extra in v2:',
-            ...extraInV2.slice(0, 20),
-          ]
-
-          fs.writeFileSync(path.join(outputDir, 'codeframe-diff-summary.txt'), summary.join('\n'))
-          '@ | Set-Content -Path $extractScriptPath -Encoding UTF8
-
-          node $extractScriptPath `
-            (Join-Path $env:PARITY_WORKSPACE "v1-results.zip") `
-            (Join-Path $env:PARITY_WORKSPACE "v2-results.zip") `
-            $debugDir `
-            (Join-Path $env:GITHUB_WORKSPACE "voyager2-src")
-
       - name: Upload validation artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -645,8 +496,3 @@ jobs:
             ${{ env.PARITY_WORKSPACE }}/comparison-report.txt
             ${{ env.PARITY_WORKSPACE }}/v1-mission.log
             ${{ env.PARITY_WORKSPACE }}/v2-mission.log
-            ${{ env.PARITY_WORKSPACE }}/debug/codeframe-v1-raw.jsonl
-            ${{ env.PARITY_WORKSPACE }}/debug/codeframe-v2-raw.jsonl
-            ${{ env.PARITY_WORKSPACE }}/debug/codeframe-v1-normalized.jsonl
-            ${{ env.PARITY_WORKSPACE }}/debug/codeframe-v2-normalized.jsonl
-            ${{ env.PARITY_WORKSPACE }}/debug/codeframe-diff-summary.txt
