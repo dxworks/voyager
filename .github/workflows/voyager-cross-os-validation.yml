@@ -262,6 +262,34 @@ jobs:
             return crypto.createHash('sha256').update(buffer).digest('hex')
           }
 
+          function normalizeJson(value) {
+            if (Array.isArray(value)) {
+              const normalizedArray = value.map(normalizeJson)
+              return normalizedArray.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
+            }
+
+            if (value !== null && typeof value === 'object') {
+              const sortedKeys = Object.keys(value).sort()
+              const normalizedObject = {}
+              for (const key of sortedKeys) {
+                normalizedObject[key] = normalizeJson(value[key])
+              }
+              return normalizedObject
+            }
+
+            return value
+          }
+
+          function hashInstrumentFile(relativePath, contentBuffer) {
+            if (relativePath === 'results/test-repos-raw.json') {
+              const parsed = JSON.parse(contentBuffer.toString('utf8'))
+              const normalized = normalizeJson(parsed)
+              return sha256(Buffer.from(JSON.stringify(normalized)))
+            }
+
+            return sha256(contentBuffer)
+          }
+
           function getInstrumentMappings(baseDir) {
             const dirs = fs.readdirSync(baseDir, { withFileTypes: true }).filter(d => d.isDirectory())
             const missing = []
@@ -312,9 +340,11 @@ jobs:
               const relativePath = name.slice(prefix.length)
               if (!relativePath) continue
               if (!relativePath.startsWith(resultsPrefix)) continue
+              if (relativePath === 'results/logs.txt') continue
+              if (relativePath === 'results/missing_files_logs.txt') continue
 
               const content = entry.getData()
-              manifest.set(relativePath, sha256(content))
+              manifest.set(relativePath, hashInstrumentFile(relativePath, content))
             }
 
             return manifest
