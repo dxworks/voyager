@@ -267,6 +267,16 @@ jobs:
             Get-ChildItem -Path $dir.FullName -File -Filter "*.log" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
           }
 
+      - name: Reset targets before Voyager2
+        shell: pwsh
+        run: |
+          $targetsDir = Join-Path $env:PARITY_WORKSPACE "targets"
+          $targetRepos = Get-ChildItem -Path $targetsDir -Directory
+          foreach ($repoDir in $targetRepos) {
+            git -C $repoDir.FullName reset --hard HEAD
+            git -C $repoDir.FullName clean -fdx
+          }
+
       - name: Run Voyager2
         shell: pwsh
         run: |
@@ -333,7 +343,7 @@ jobs:
             if (value !== null && typeof value === 'object') {
               const cleanedObject = {}
               for (const [key, fieldValue] of Object.entries(value)) {
-                if (key === 'started_at' || key === 'input_path')
+                if (key === 'started_at' || key === 'input_path' || key === 'ended_at' || key === 'duration_seconds')
                   continue
                 cleanedObject[key] = removeVolatileFields(fieldValue)
               }
@@ -548,7 +558,7 @@ jobs:
             if (value !== null && typeof value === 'object') {
               const cleanedObject = {}
               for (const [key, fieldValue] of Object.entries(value)) {
-                if (key === 'started_at' || key === 'input_path')
+                if (key === 'started_at' || key === 'input_path' || key === 'ended_at' || key === 'duration_seconds')
                   continue
                 cleanedObject[key] = removeVolatileFields(fieldValue)
               }
