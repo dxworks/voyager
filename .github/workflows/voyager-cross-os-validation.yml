@@ -326,6 +326,23 @@ jobs:
             return value
           }
 
+          function removeVolatileFields(value) {
+            if (Array.isArray(value))
+              return value.map(removeVolatileFields)
+
+            if (value !== null && typeof value === 'object') {
+              const cleanedObject = {}
+              for (const [key, fieldValue] of Object.entries(value)) {
+                if (key === 'started_at' || key === 'input_path')
+                  continue
+                cleanedObject[key] = removeVolatileFields(fieldValue)
+              }
+              return cleanedObject
+            }
+
+            return value
+          }
+
           function hashInstrumentFile(relativePath, contentBuffer) {
             if (relativePath === 'results/test-repos-raw.json') {
               const parsed = JSON.parse(contentBuffer.toString('utf8'))
@@ -341,7 +358,7 @@ jobs:
                 .filter(line => line.length > 0)
 
               const normalizedLines = lines
-                .map(line => JSON.stringify(normalizeJson(JSON.parse(line))))
+                .map(line => JSON.stringify(normalizeJson(removeVolatileFields(JSON.parse(line)))))
                 .sort()
 
               return sha256(Buffer.from(normalizedLines.join('\n')))
