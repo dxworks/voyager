@@ -30,7 +30,7 @@ jobs:
         id: set-matrix
         shell: bash
         run: |
-          echo 'oses=["ubuntu-latest","windows-latest","macos-latest"]' >> "$GITHUB_OUTPUT"
+          echo 'oses=["ubuntu-latest","windows-latest","macos-13"]' >> "$GITHUB_OUTPUT"
 
   validate:
     name: Validate on ${{ matrix.os }}
@@ -69,6 +69,11 @@ jobs:
           cache-dependency-path: voyager2-src/package-lock.json
           registry-url: https://npm.pkg.github.com
           scope: '@dxworks'
+
+      - name: Set up .NET runtime
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
 
       - name: Build Voyager1
         shell: bash
@@ -157,9 +162,11 @@ jobs:
           New-Item -ItemType Directory -Path $targetInstruments -Force | Out-Null
           Copy-Item -Path (Join-Path $sourceInstruments "*") -Destination $targetInstruments -Recurse -Force
 
+          $targetsPath = Join-Path $env:PARITY_WORKSPACE "targets"
+
           @"
           mission: cross-os-validation
-          target: ./targets
+          target: $targetsPath
           "@ | Set-Content -Path (Join-Path $env:PARITY_WORKSPACE "mission.yml") -Encoding UTF8
 
       - name: Validate dual-manifest instruments
@@ -201,6 +208,32 @@ jobs:
             git clone --depth 1 $repo.Url (Join-Path $targetsDir $repo.Name)
           }
 
+      - name: Validate targets workspace
+        shell: pwsh
+        run: |
+          $targetsDir = Join-Path $env:PARITY_WORKSPACE "targets"
+          if (-not (Test-Path $targetsDir)) {
+            throw "Targets directory does not exist: $targetsDir"
+          }
+
+          $targetRepos = Get-ChildItem -Path $targetsDir -Directory
+          if ($targetRepos.Count -lt 5) {
+            throw "Expected 5 target repositories, found $($targetRepos.Count)"
+          }
+
+      - name: Clean instrument outputs before Voyager1
+        shell: pwsh
+        run: |
+          $instrumentDirs = Get-ChildItem -Path (Join-Path $env:PARITY_WORKSPACE "instruments") -Directory
+          foreach ($dir in $instrumentDirs) {
+            $resultsDir = Join-Path $dir.FullName "results"
+            if (Test-Path $resultsDir) {
+              Get-ChildItem -Path $resultsDir -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+            }
+
+            Get-ChildItem -Path $dir.FullName -File -Filter "*.log" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+          }
+
       - name: Run Voyager1
         shell: pwsh
         run: |
@@ -220,6 +253,19 @@ jobs:
             Move-Item -Path $missionLog -Destination (Join-Path $env:PARITY_WORKSPACE "v1-mission.log") -Force
           }
           Pop-Location
+
+      - name: Clean instrument outputs before Voyager2
+        shell: pwsh
+        run: |
+          $instrumentDirs = Get-ChildItem -Path (Join-Path $env:PARITY_WORKSPACE "instruments") -Directory
+          foreach ($dir in $instrumentDirs) {
+            $resultsDir = Join-Path $dir.FullName "results"
+            if (Test-Path $resultsDir) {
+              Get-ChildItem -Path $resultsDir -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+            }
+
+            Get-ChildItem -Path $dir.FullName -File -Filter "*.log" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+          }
 
       - name: Run Voyager2
         shell: pwsh
