@@ -30,7 +30,7 @@ jobs:
         id: set-matrix
         shell: bash
         run: |
-          echo 'oses=["ubuntu-latest","windows-latest","macos-13"]' >> "$GITHUB_OUTPUT"
+          echo 'oses=["ubuntu-latest","windows-latest","macos-latest"]' >> "$GITHUB_OUTPUT"
 
   validate:
     name: Validate on ${{ matrix.os }}
@@ -331,6 +331,20 @@ jobs:
               const parsed = JSON.parse(contentBuffer.toString('utf8'))
               const normalized = normalizeJson(parsed)
               return sha256(Buffer.from(JSON.stringify(normalized)))
+            }
+
+            if (relativePath === 'results/targets.jsonl') {
+              const lines = contentBuffer
+                .toString('utf8')
+                .split(/\r?\n/)
+                .map(line => line.trim())
+                .filter(line => line.length > 0)
+
+              const normalizedLines = lines
+                .map(line => JSON.stringify(normalizeJson(JSON.parse(line))))
+                .sort()
+
+              return sha256(Buffer.from(normalizedLines.join('\n')))
             }
 
             return sha256(contentBuffer)
