@@ -303,6 +303,7 @@ jobs:
             const entries = zip.getEntries()
             const manifest = new Map()
             const prefix = `${instrumentKey}/`
+            const resultsPrefix = 'results/'
 
             for (const entry of entries) {
               if (entry.isDirectory) continue
@@ -310,6 +311,7 @@ jobs:
               if (!name.startsWith(prefix)) continue
               const relativePath = name.slice(prefix.length)
               if (!relativePath) continue
+              if (!relativePath.startsWith(resultsPrefix)) continue
 
               const content = entry.getData()
               manifest.set(relativePath, sha256(content))
