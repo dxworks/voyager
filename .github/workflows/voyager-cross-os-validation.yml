@@ -192,32 +192,61 @@ jobs:
       - name: Clone target repositories
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           $targetsDir = Join-Path $env:PARITY_WORKSPACE "targets"
           New-Item -ItemType Directory -Path $targetsDir -Force | Out-Null
 
-          $repos = @(
-            @{ Name = "java"; Url = "https://github.com/Shivanshu1511/springboot-rest-api.git" },
-            @{ Name = "python"; Url = "https://github.com/theArjun/git-commits.git" },
-            @{ Name = "js-ts"; Url = "https://github.com/tkonsta/github_code_search_with_repo_prefix.git" },
-            @{ Name = "c-cpp"; Url = "https://github.com/francisrstokes/tiny-c-projects.git" },
-            @{ Name = "csharp"; Url = "https://github.com/oseifrimpongg/easy-csharp-projects.git" }
-          )
+          $targetsConfigPath = Join-Path $env:GITHUB_WORKSPACE "voyager2-src/.github/cross-os/targets.json"
+          if (-not (Test-Path $targetsConfigPath)) {
+            throw "Targets config not found: $targetsConfigPath"
+          }
+
+          $repos = Get-Content -Path $targetsConfigPath -Raw | ConvertFrom-Json
+          if ($repos.Count -eq 0) {
+            throw "No target repositories configured in $targetsConfigPath"
+          }
 
           foreach ($repo in $repos) {
-            git clone --depth 1 $repo.Url (Join-Path $targetsDir $repo.Name)
+            git clone --depth 1 $repo.url (Join-Path $targetsDir $repo.name)
+            if ($LASTEXITCODE -ne 0) {
+              throw "Failed to clone target repository: $($repo.url)"
+            }
           }
 
       - name: Validate targets workspace
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           $targetsDir = Join-Path $env:PARITY_WORKSPACE "targets"
           if (-not (Test-Path $targetsDir)) {
             throw "Targets directory does not exist: $targetsDir"
           }
 
+          $targetsConfigPath = Join-Path $env:GITHUB_WORKSPACE "voyager2-src/.github/cross-os/targets.json"
+          if (-not (Test-Path $targetsConfigPath)) {
+            throw "Targets config not found: $targetsConfigPath"
+          }
+
+          $configuredRepos = Get-Content -Path $targetsConfigPath -Raw | ConvertFrom-Json
+          if ($configuredRepos.Count -eq 0) {
+            throw "No target repositories configured in $targetsConfigPath"
+          }
+
+          $expectedNames = $configuredRepos | ForEach-Object { $_.name } | Sort-Object
+          $expectedCount = $expectedNames.Count
+
           $targetRepos = Get-ChildItem -Path $targetsDir -Directory
-          if ($targetRepos.Count -lt 5) {
-            throw "Expected 5 target repositories, found $($targetRepos.Count)"
+          $actualNames = $targetRepos | ForEach-Object { $_.Name } | Sort-Object
+          $actualCount = $actualNames.Count
+
+          if ($actualCount -ne $expectedCount) {
+            throw "Expected $expectedCount target repositories, found $actualCount"
+          }
+
+          $nameDiff = Compare-Object -ReferenceObject $expectedNames -DifferenceObject $actualNames
+          if ($nameDiff) {
+            $details = $nameDiff | ForEach-Object { "$($_.SideIndicator) $($_.InputObject)" }
+            throw "Target repository names mismatch: $($details -join ', ')"
           }
 
       - name: Clean instrument outputs before Voyager1
