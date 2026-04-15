@@ -67,7 +67,6 @@ jobs:
           node-version: '25.x'
           cache: npm
           cache-dependency-path: voyager2-src/package-lock.json
-          registry-url: https://npm.pkg.github.com
           scope: '@dxworks'
 
       - name: Set up .NET runtime
