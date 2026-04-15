@@ -33,7 +33,6 @@ jobs:
           node-version: '25.x'
           cache: npm
           cache-dependency-path: package-lock.json
-          registry-url: 'https://npm.pkg.github.com'
           scope: '@dxworks'
 
       - name: Install dependencies
@@ -81,7 +80,6 @@ jobs:
           node-version: '25.x'
           cache: npm
           cache-dependency-path: package-lock.json
-          registry-url: 'https://npm.pkg.github.com'
           scope: '@dxworks'
 
       - name: Install dependencies
