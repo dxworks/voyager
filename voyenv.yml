@@ -4,27 +4,27 @@ voyager_version: v1.6.2
 
 instruments:
   - name: dxworks/inspector-git
-    tag: v1.6.0-voyager
+    tag: v1.7.0-voyager
     asset: iglog.zip
   - name: dxworks/insider
-    tag: v2.12.0-voyager
+    tag: v2.13.0-voyager
     asset: insider-voyager.zip
   - name: dxworks/dude
-    tag: v1.2.5-voyager
+    tag: v1.2.6-voyager
     asset: dude-voyager.zip
   - name: dxworks/lizard
     tag: v1.19.2-voyager
   - name: dxworks/honeydew
-    tag: v3.2.3-voyager
+    tag: v3.2.5-voyager
     asset: honeydew.zip
   - name: dxworks/jafax
-    tag: v0.5.0-voyager
+    tag: v0.5.1-voyager
     asset: jafax.zip
   - name: dxworks/depminer
-    tag: v0.2.3-voyager
+    tag: v0.3.1-voyager
     asset: depminer.zip
   - name: dxworks/codeframe
-    tag: v0.6.4-voyager
+    tag: v0.6.5-voyager
     asset: codeframe-voyager.zip
 
 tokens:
