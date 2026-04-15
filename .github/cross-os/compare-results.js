@@ -37,7 +37,7 @@ function normalizeJson(value) {
 }
 
 function hashInstrumentFile(relativePath, contentBuffer) {
-    if (relativePath === 'results/test-repos-raw.json') {
+    if (relativePath === 'results/test-repos-raw.json' || relativePath === 'results/targets-raw.json') {
         const parsed = JSON.parse(contentBuffer.toString('utf8'))
         const normalized = normalizeJson(parsed)
         return sha256(Buffer.from(JSON.stringify(normalized)))
