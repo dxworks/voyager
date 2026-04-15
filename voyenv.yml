@@ -18,7 +18,7 @@ instruments:
     tag: v3.2.5-voyager
     asset: honeydew.zip
   - name: dxworks/jafax
-    tag: v0.5.1-voyager
+    tag: v0.5.0-voyager
     asset: jafax.zip
   - name: dxworks/depminer
     tag: v0.3.1-voyager
