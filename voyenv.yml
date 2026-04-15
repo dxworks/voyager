@@ -5,7 +5,7 @@ voyager_version: v1.6.2
 instruments:
   - name: dxworks/inspector-git
     tag: v1.7.0-voyager
-    asset: iglog.zip
+    asset: iglog-voyager.zip
   - name: dxworks/insider
     tag: v2.13.0-voyager
     asset: insider-voyager.zip
@@ -22,7 +22,7 @@ instruments:
     asset: jafax.zip
   - name: dxworks/depminer
     tag: v0.3.1-voyager
-    asset: depminer.zip
+    asset: depminer-voyager.zip
   - name: dxworks/codeframe
     tag: v0.6.5-voyager
     asset: codeframe-voyager.zip
