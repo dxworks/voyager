@@ -1,76 +1,65 @@
-# Instrument YAML File
-
-The **instrument YAML file** defines an instrument, its metadata, and the actions it can execute.
-
-This document describes:
-- the supported YAML structure,
-- each supported field,
-- how the instrument definition is interpreted at runtime.
-
----
-
-## Top-Level Fields
-
-### `name`
-
-**Type:** `string`  
-**Required:** Yes
-
+# Official Instruments
+This is a list of official Voyager instruments that the dxworks team recognizes.
+## Software Metadata
+### [Git Log](https://github.com/dxworks/voyager-git-log-instrument)
 ```yaml
-name: instrument_name
+  - name: dxworks/voyager-git-log-instrument
+    tag: v1.0.0
+    asset: git-log.zip
+```
+### [Iglog](https://github.com/dxworks/inspector-git)
+```yaml
+  - name: dxworks/inspector-git
+    asset: iglog.zip
 ```
 
-**Description:**  
-Human-readable name of the instrument. It is used for identification in logs, reports, and runtime context.
-
----
-
-### `id`
-
-**Type:** `string`  
-**Required:** Yes
-
+## Code Analyzers
+### [Insider](https://github.com/dxworks/insider)
 ```yaml
-id: instrument_id
+  - name: dxworks/insider
+    asset: insider-voyager.zip
 ```
 
-**Description:**  
-Unique identifier of the instrument. This value is used internally to reference the instrument, including variable scoping and configuration lookup.
-
----
-
-### `version`
-
-**Type:** `string`  
-**Required:** No (recommended)
-
+### [DuDe](https://github.com/dxworks/dude)
 ```yaml
-version: X.X.X
+  - name: dxworks/dude
+    asset: dude-voyager.zip
 ```
 
-**Description:**  
-Version string of the instrument, used for informational and reporting purposes.
-
----
-
-### `actions`
-
-**Type:** `map<string, ActionConfig>`  
-**Required:** Yes
-
+### [Lizard](https://github.com/dxworks/lizard)
 ```yaml
-actions:
-  start:
-    commands:
-      - id: run
-        command: echo "Hello"
+  - name: dxworks/lizard
+#    tag: v1.17.9-voyager
 ```
 
-**Description:**  
-Defines the set of actions supported by the instrument. Each action represents a logical execution step and may define commands, parameters, environment variables, and additional execution configuration.
+### [Metrix++](https://github.com/dxworks/metrixplusplus)
+```yaml
+  - name: dxworks/metrixplusplus
+#    tag: v1.7.1-voyager
+```
 
-#### Runtime behavior
+## Fact Extractors
+### [Honeydew](https://github.com/dxworks/honeydew)
+```yaml
+  - name: dxworks/honeydew
+    asset: honeydew.zip
+```
 
-Actions determine how an instrument is executed. When an instrument runs, its actions are invoked and their associated commands are executed in sequence. Some action names correspond to built-in default actions (such as `verify`, `pack`, `unpack`, and `clean`) and support additional configuration specific to their purpose.
+### [JaFaX](https://github.com/dxworks/jafax)
+```yaml
+  - name: dxworks/jafax
+    asset: jafax.zip
+```
 
----
+## Library Extractors
+### [MaMi](https://github.com/dxworks/maven-miner)
+```yaml
+  - name: dxworks/maven-miner
+    asset: maven-miner-voyager.zip
+```
+
+### [NoMi](https://github.com/dxworks/npm-miner)
+```yaml
+  - name: dxworks/npm-miner
+    asset: npm-miner-voyager.zip
+```
