@@ -43,11 +43,11 @@ program
     })
 
 program
-    .command('verify <missionPath>')
+    .command('verify [missionPath]')
     .description('Verify mission instruments requirements')
     .option('-m, --missionPath <missionPath>')
     .option('-v, --verbose', 'Show full command details')
-    .action((missionPath: string, options: { missionPath?: string, verbose?: boolean }) => {
+    .action((missionPath: string | undefined, options: { missionPath?: string, verbose?: boolean }) => {
         if (options.verbose)
             verifyMission(options.missionPath ?? missionPath, true).then()
         else
