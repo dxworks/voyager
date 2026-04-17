@@ -24,7 +24,7 @@ instruments:
     tag: v0.3.1-voyager
     asset: depminer-voyager.zip
   - name: dxworks/codeframe
-    tag: v0.6.5-voyager
+    tag: v0.6.6-voyager
     asset: codeframe-voyager.zip
 
 tokens:
