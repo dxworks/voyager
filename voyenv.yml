@@ -13,7 +13,7 @@ instruments:
     tag: v1.2.6-voyager
     asset: dude-voyager.zip
   - name: dxworks/lizard
-    tag: v1.19.2-voyager
+    tag: v1.22.2-voyager
   - name: dxworks/honeydew
     tag: v3.2.6-voyager
     asset: honeydew.zip
