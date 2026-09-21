@@ -7,7 +7,7 @@ instruments:
     tag: v1.7.0-voyager
     asset: iglog-voyager.zip
   - name: dxworks/insider
-    tag: v2.13.0-voyager
+    tag: v2.13.1-voyager
     asset: insider-voyager.zip
   - name: dxworks/dude
     tag: v1.2.6-voyager
