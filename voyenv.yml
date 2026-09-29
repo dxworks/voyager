@@ -21,7 +21,7 @@ instruments:
     tag: v0.6.1-voyager
     asset: jafax.zip
   - name: dxworks/depminer
-    tag: v0.3.1-voyager
+    tag: v0.5.2-voyager
     asset: depminer-voyager.zip
   - name: dxworks/codeframe
     tag: v0.8.1-voyager
