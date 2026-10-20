@@ -18,7 +18,7 @@ if "%~1"=="" (
   set "MODE=verify"
   set "V2_ARGS=%*"
 ) else if /I "%~1"=="run" (
-  set "MODE=explicit"
+  set "MODE=default_run"
   set "V2_ARGS=%*"
 ) else if /I "%~1"=="clean" (
   set "MODE=explicit"

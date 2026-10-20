@@ -74,7 +74,10 @@ elif [[ "$1" == "doctor" ]]; then
 elif [[ "$1" == "verify" ]]; then
     mode="verify"
     v2_args=("$@")
-elif [[ "$1" == "run" || "$1" == "clean" || "$1" == "pack" || "$1" == "unpack" || "$1" == "summary" || "$1" == "help" || "$1" == "--help" || "$1" == "-h" || "$1" == "--version" || "$1" == "-V" ]]; then
+elif [[ "$1" == "run" ]]; then
+    mode="default_run"
+    v2_args=("$@")
+elif [[ "$1" == "clean" || "$1" == "pack" || "$1" == "unpack" || "$1" == "summary" || "$1" == "help" || "$1" == "--help" || "$1" == "-h" || "$1" == "--version" || "$1" == "-V" ]]; then
     mode="explicit"
     v2_args=("$@")
 else
