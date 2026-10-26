@@ -151,20 +151,22 @@ jobs:
         env:
           TAG: ${{ github.ref }}
 
-      - name: Prepare Release Notes
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          mkdir -p releaseNotes
-          touch ${{ github.workspace }}/releaseNotes/v${{ steps.semver_parser.outputs.semver }}.md
-
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
-        with:
-          name: Voyager ${{ steps.semver_parser.outputs.semver }}
-          body_path: ${{ github.workspace }}/releaseNotes/v${{ steps.semver_parser.outputs.semver }}.md
-          body: ""
-          prerelease: false
-          draft: true
-          fail_on_unmatched_files: true
-          files: release/voyager2-full.zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          NAME: Voyager ${{ steps.semver_parser.outputs.semver }}
+        run: |
+          # Always a draft on the tagged commit; a re-run of the tag replaces the zip in that same draft
+          if IS_DRAFT=$(gh release view "$TAG" --json isDraft -q .isDraft 2>/dev/null); then
+            if [ "$IS_DRAFT" != "true" ]; then
+              echo "::error::Release $TAG is already published; it is left unchanged"
+              exit 1
+            fi
+            gh release edit "$TAG" --target "$GITHUB_SHA" --title "$NAME"
+            gh release upload "$TAG" release/voyager2-full.zip --clobber
+          else
+            gh release create "$TAG" release/voyager2-full.zip --draft --target "$GITHUB_SHA" --title "$NAME" --notes ""
+          fi
