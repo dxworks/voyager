@@ -69,8 +69,13 @@ export function packMission(missionFilePath?: string, verbose = false): void {
         })
         archive.finalize().then()
         fs.mkdirSync(path.dirname(missionContext.getVariable(RESULTS_ZIP_DIR)!), {recursive: true})
-        archive.pipe(fs.createWriteStream(missionContext.getVariable(RESULTS_ZIP_DIR)!))
-        console.log(`Mission ${missionContext.name} was packed successfully.`)
+        const resultsZipStream = fs.createWriteStream(missionContext.getVariable(RESULTS_ZIP_DIR)!)
+        resultsZipStream.on('finish', () => console.log(`Mission ${missionContext.name} was packed successfully.`))
+        resultsZipStream.on('error', (error) => {
+            console.error(`Mission ${missionContext.name} could not be packed: ${error.message}`)
+            process.exitCode = 1
+        })
+        archive.pipe(resultsZipStream)
     }
 }
 
