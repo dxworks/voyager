@@ -1,0 +1,170 @@
+name: Create Voyager2 Release
+
+on:
+  pull_request:
+    branches:
+      - voyager2
+  push:
+    tags:
+      - 'v2.*'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build-v2:
+    name: Build Voyager2 ${{ matrix.target.id }}
+    runs-on: ${{ matrix.target.runs_on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - id: win-x64
+            runs_on: windows-latest
+            output_file: dx-voyager-win-x64.exe
+          - id: linux-x64
+            runs_on: ubuntu-latest
+            output_file: dx-voyager-linux-x64
+          - id: macos-x64
+            runs_on: macos-15-intel
+            output_file: dx-voyager-macos-x64
+          - id: macos-arm64
+            runs_on: macos-15
+            output_file: dx-voyager-macos-arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '25.x'
+          cache: npm
+          cache-dependency-path: package-lock.json
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@dxworks'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fill Version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          # Voyager2's version, from the release tag
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v v="$VERSION" '!/^program\.version\(/ {print} /^program\.version\(/ {print "program.version(\"" v "\")"}' src/voyager.ts > src/voyager.ts.tmp
+          mv src/voyager.ts.tmp src/voyager.ts
+
+      - name: Build SEA binary
+        run: npm run build:sea
+
+      - name: Verify binary exists
+        run: |
+          node -e "require('node:fs').accessSync('dist/sea/${{ matrix.target.output_file }}')"
+
+      - name: Sign macOS binary
+        if: runner.os == 'macOS'
+        run: codesign --sign - --force dist/sea/${{ matrix.target.output_file }}
+
+      - name: Upload SEA binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyager2-${{ matrix.target.id }}
+          path: dist/sea/${{ matrix.target.output_file }}
+          retention-days: 1
+
+  package:
+    name: Package Voyager2
+    runs-on: ubuntu-latest
+    needs: build-v2
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      - name: Setup Voyenv
+        run: |
+          npm i -g @dxworks/voyenv
+          voyenv -v
+
+      - name: Download Voyager2 binaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: voyager2-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Prepare Voyager2 release
+        run: |
+          mkdir -p release
+          cp voyenv.yml release/
+          cd release
+          voyenv install
+          mv voyager voyager2-full
+          cp ../voyager.sh voyager2-full/voyager.sh
+          cp ../voyager.bat voyager2-full/voyager.bat
+          cp ../artifacts/dx-voyager-win-x64.exe voyager2-full/
+          cp ../artifacts/dx-voyager-linux-x64 voyager2-full/
+          cp ../artifacts/dx-voyager-macos-x64 voyager2-full/
+          cp ../artifacts/dx-voyager-macos-arm64 voyager2-full/
+          chmod +x voyager2-full/voyager.sh
+          chmod +x voyager2-full/dx-voyager-linux-x64
+          chmod +x voyager2-full/dx-voyager-macos-x64
+          chmod +x voyager2-full/dx-voyager-macos-arm64
+          zip -r voyager2-full.zip voyager2-full
+
+      - name: Upload Voyager2 package
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyager2-full
+          path: release/voyager2-full.zip
+
+      - name: Delete older packages of this PR
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_BRANCH: ${{ github.head_ref }}
+        run: |
+          # Keep only the newest PR build: remove the package zips of this PR's earlier runs
+          gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?name=voyager2-full" \
+            -q '.artifacts[] | select(.workflow_run.head_branch == env.PR_BRANCH and .workflow_run.id < (env.GITHUB_RUN_ID | tonumber)) | .id' \
+            | while read -r id; do gh api -X DELETE "repos/$GITHUB_REPOSITORY/actions/artifacts/$id"; done
+
+      - name: Extract Semver
+        if: startsWith(github.ref, 'refs/tags/')
+        id: semver_parser
+        run: |
+          semver=${TAG#"refs/tags/v"}
+          echo "semver=$semver" >> "$GITHUB_OUTPUT"
+        env:
+          TAG: ${{ github.ref }}
+
+      - name: Prepare Release Notes
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          mkdir -p releaseNotes
+          touch ${{ github.workspace }}/releaseNotes/v${{ steps.semver_parser.outputs.semver }}.md
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Voyager ${{ steps.semver_parser.outputs.semver }}
+          body_path: ${{ github.workspace }}/releaseNotes/v${{ steps.semver_parser.outputs.semver }}.md
+          body: ""
+          prerelease: false
+          draft: true
+          fail_on_unmatched_files: true
+          files: release/voyager2-full.zip
