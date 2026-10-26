@@ -68,6 +68,7 @@ export function packMission(missionFilePath?: string, verbose = false): void {
             runPackageAction(instrument.id, instrument.name, archive, packAction)
         })
         archive.finalize().then()
+        fs.mkdirSync(path.dirname(missionContext.getVariable(RESULTS_ZIP_DIR)!), {recursive: true})
         archive.pipe(fs.createWriteStream(missionContext.getVariable(RESULTS_ZIP_DIR)!))
         console.log(`Mission ${missionContext.name} was packed successfully.`)
     }
@@ -191,6 +192,7 @@ export async function runMission(missionFilePath: string, actions: string[] | un
         addMissionYmlToArchive(missionFilePath, archive!)
         addMissionLockFileToArchive(missionLockFilePath, archive!)
         archive!.finalize().then(() => cleanLogsAndHtmlFileFromDisk(instruments))
+        fs.mkdirSync(path.dirname(missionContext.getVariable(RESULTS_ZIP_DIR)!), {recursive: true})
         archive!.pipe(fs.createWriteStream(missionContext.getVariable(RESULTS_ZIP_DIR)!))
     }
     generateMissionSummary()
