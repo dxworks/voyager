@@ -112,7 +112,7 @@ Add `-m path/to/my-mission.yml` if the run used one.
 |---------------------------------------------|-----------------------------------------------------------------|------------------------------|
 | *(none)*                                    | V2 `run` with `mission.yml` from the current folder             | V1 runs `mission.yml`        |
 | `run`                                       | V2 runs the instruments and writes the results zip              | V1 runs the same mission     |
-| `<mission>` (a path without `-m`)           | Passed to V2 as `run <mission>`. V2 takes a mission only with `-m`, so it stops | V1 runs the mission |
+| `<mission>` (a path without `-m`)           | V2 `run -m <mission>`, the V1 form `voyager.sh <mission>`        | V1 runs the mission          |
 | `doctor`, `verify`                          | V2 `verify`: checks the instruments' requirements               | V1 `doctor`                  |
 | `summary`                                   | V2 makes the summaries                                          | no fallback                  |
 | `clean`                                     | V2 runs the instruments' `clean` actions (results of earlier runs) | no fallback               |

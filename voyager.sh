@@ -80,6 +80,10 @@ elif [[ "$1" == "run" ]]; then
 elif [[ "$1" == "clean" || "$1" == "pack" || "$1" == "unpack" || "$1" == "summary" || "$1" == "help" || "$1" == "--help" || "$1" == "-h" || "$1" == "--version" || "$1" == "-V" ]]; then
     mode="explicit"
     v2_args=("$@")
+elif [[ "$1" != -* ]]; then
+    # A bare mission path (V1's form): V2 takes a mission only with -m
+    mode="default_run"
+    v2_args=(run -m "$@")
 else
     mode="default_run"
     v2_args=(run "$@")

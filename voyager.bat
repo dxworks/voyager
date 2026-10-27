@@ -49,7 +49,13 @@ if "%~1"=="" (
   set "V2_ARGS=%*"
 ) else (
   set "MODE=default_run"
-  set "V2_ARGS=run %*"
+  set "FIRST_ARG=%~1"
+  rem A bare mission path (V1's form): V2 takes a mission only with -m
+  if "!FIRST_ARG:~0,1!"=="-" (
+    set "V2_ARGS=run %*"
+  ) else (
+    set "V2_ARGS=run -m %*"
+  )
 )
 
 if exist "%V2_EXE%" (
