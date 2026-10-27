@@ -12,8 +12,7 @@ if "%~1"=="" (
   set "V2_ARGS=run"
 ) else if /I "%~1"=="doctor" (
   set "MODE=verify"
-  shift
-  set "V2_ARGS=verify %*"
+  call :verifyArgs %*
 ) else if /I "%~1"=="verify" (
   set "MODE=verify"
   set "V2_ARGS=%*"
@@ -91,6 +90,16 @@ if /I "!MODE!"=="default_run" (
 )
 
 exit /b !V2_EXIT!
+
+rem "verify" plus the words after "doctor" (%* ignores shift)
+:verifyArgs
+set "V2_ARGS=verify"
+shift
+:verifyArgsLoop
+if "%~1"=="" goto :eof
+set "V2_ARGS=!V2_ARGS! %1"
+shift
+goto :verifyArgsLoop
 
 :extractVerifyMissionPath
 set "MISSION_PATH="
