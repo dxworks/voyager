@@ -69,12 +69,8 @@ if exist "%V2_EXE%" (
 
 if /I "!MODE!"=="verify" (
   echo Falling back to Voyager1 doctor command...
-  call :extractVerifyMissionPath %*
-  if defined MISSION_PATH (
-    java -Xmx8g -jar "%SCRIPT_DIR%dx-voyager.jar" doctor "%MISSION_PATH%"
-  ) else (
-    java -Xmx8g -jar "%SCRIPT_DIR%dx-voyager.jar" doctor
-  )
+  rem V1's doctor takes a check list, not a mission: it uses its own .doctor.yml
+  java -Xmx8g -jar "%SCRIPT_DIR%dx-voyager.jar" doctor
   exit /b %ERRORLEVEL%
 )
 
@@ -100,27 +96,6 @@ if "%~1"=="" goto :eof
 set "V2_ARGS=!V2_ARGS! %1"
 shift
 goto :verifyArgsLoop
-
-:extractVerifyMissionPath
-set "MISSION_PATH="
-if /I "%~1"=="verify" shift
-if /I "%~1"=="doctor" shift
-:verifyLoop
-if "%~1"=="" goto :eof
-if /I "%~1"=="-m" (
-  if not "%~2"=="" set "MISSION_PATH=%~2"
-  goto :eof
-)
-if /I "%~1"=="--missionPath" (
-  if not "%~2"=="" set "MISSION_PATH=%~2"
-  goto :eof
-)
-if not "%~1:~0,1%"=="-" (
-  set "MISSION_PATH=%~1"
-  goto :eof
-)
-shift
-goto :verifyLoop
 
 :extractRunMissionPath
 set "MISSION_PATH="

@@ -25,27 +25,6 @@ case "${uname_s}" in
         ;;
 esac
 
-extract_verify_mission_path() {
-    local args=("$@")
-    local start=0
-
-    if [[ ${#args[@]} -gt 0 && ( "${args[0]}" == "verify" || "${args[0]}" == "doctor" ) ]]; then
-        start=1
-    fi
-
-    for ((i=start; i<${#args[@]}; i++)); do
-        if [[ "${args[$i]}" == "-m" || "${args[$i]}" == "--missionPath" ]]; then
-            if (( i + 1 < ${#args[@]} )); then
-                echo "${args[$((i + 1))]}"
-                return
-            fi
-        elif [[ "${args[$i]}" != -* ]]; then
-            echo "${args[$i]}"
-            return
-        fi
-    done
-}
-
 extract_run_mission_path() {
     local args=("$@")
 
@@ -104,12 +83,8 @@ fi
 
 if [[ "${mode}" == "verify" ]]; then
     echo "Falling back to Voyager1 doctor command..."
-    mission_path="$(extract_verify_mission_path "${orig_args[@]}")"
-    if [[ -n "${mission_path}" ]]; then
-        java -Xmx8g -jar "${SCRIPT_DIR}/dx-voyager.jar" doctor "${mission_path}"
-    else
-        java -Xmx8g -jar "${SCRIPT_DIR}/dx-voyager.jar" doctor
-    fi
+    # V1's doctor takes a check list, not a mission: it uses its own .doctor.yml
+    java -Xmx8g -jar "${SCRIPT_DIR}/dx-voyager.jar" doctor
     exit $?
 fi
 
