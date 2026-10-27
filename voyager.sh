@@ -27,6 +27,7 @@ esac
 
 extract_run_mission_path() {
     local args=("$@")
+    local in_actions=0
 
     for ((i=0; i<${#args[@]}; i++)); do
         if [[ "${args[$i]}" == "-m" || "${args[$i]}" == "--missionPath" ]]; then
@@ -34,11 +35,19 @@ extract_run_mission_path() {
                 echo "${args[$((i + 1))]}"
                 return
             fi
+        elif [[ "${args[$i]}" == "-a" || "${args[$i]}" == "--actions" ]]; then
+            # -a, --actions <actions...>: the words after it are action names, not the mission
+            in_actions=1
         elif [[ "${args[$i]}" == "run" ]]; then
             continue
         elif [[ "${args[$i]}" != -* ]]; then
+            if (( in_actions )); then
+                continue
+            fi
             echo "${args[$i]}"
             return
+        else
+            in_actions=0
         fi
     done
 }

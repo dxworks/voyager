@@ -71,18 +71,18 @@ if /I "!MODE!"=="verify" (
   echo Falling back to Voyager1 doctor command...
   rem V1's doctor takes a check list, not a mission: it uses its own .doctor.yml
   java -Xmx8g -jar "%SCRIPT_DIR%dx-voyager.jar" doctor
-  exit /b %ERRORLEVEL%
+  exit /b !ERRORLEVEL!
 )
 
 if /I "!MODE!"=="default_run" (
   echo Falling back to Voyager1 mission run...
   call :extractRunMissionPath %*
   if defined MISSION_PATH (
-    java -Xmx8g -jar "%SCRIPT_DIR%dx-voyager.jar" "%MISSION_PATH%"
+    java -Xmx8g -jar "%SCRIPT_DIR%dx-voyager.jar" "!MISSION_PATH!"
   ) else (
     java -Xmx8g -jar "%SCRIPT_DIR%dx-voyager.jar"
   )
-  exit /b %ERRORLEVEL%
+  exit /b !ERRORLEVEL!
 )
 
 exit /b !V2_EXIT!
@@ -99,6 +99,7 @@ goto :verifyArgsLoop
 
 :extractRunMissionPath
 set "MISSION_PATH="
+set "IN_ACTIONS="
 :runLoop
 if "%~1"=="" goto :eof
 if /I "%~1"=="-m" (
@@ -109,13 +110,29 @@ if /I "%~1"=="--missionPath" (
   if not "%~2"=="" set "MISSION_PATH=%~2"
   goto :eof
 )
+rem -a, --actions <actions...>: the words after it are action names, not the mission
+if /I "%~1"=="-a" (
+  set "IN_ACTIONS=1"
+  shift
+  goto :runLoop
+)
+if /I "%~1"=="--actions" (
+  set "IN_ACTIONS=1"
+  shift
+  goto :runLoop
+)
 if /I "%~1"=="run" (
   shift
   goto :runLoop
 )
-if not "%~1:~0,1%"=="-" (
-  set "MISSION_PATH=%~1"
-  goto :eof
+set "RUN_ARG=%~1"
+if not "!RUN_ARG:~0,1!"=="-" (
+  if not defined IN_ACTIONS (
+    set "MISSION_PATH=%~1"
+    goto :eof
+  )
+) else (
+  set "IN_ACTIONS="
 )
 shift
 goto :runLoop
