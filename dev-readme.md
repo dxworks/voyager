@@ -5,7 +5,8 @@ CLI application locally.
 
 ## Prerequisites
 
--   Node.js **24.13.0**
+-   Node.js **25** (`nvm use` reads it from `.nvmrc`; building the
+    single-file programs with `npm run build:sea` needs Node 25)
 -   npm (bundled with Node)
 
 ## Install dependencies
