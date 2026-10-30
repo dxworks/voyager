@@ -2,8 +2,9 @@
 
 #### VOYAGER_HOME Folder
 Download a Voyager archive and unzip it to a folder of your choosing. We will call this folder `VOYAGER_HOME`. 
-The latest Voyager archive with all instruments is available [here](https://github.com/dxworks/voyager/releases/download/v1.6.0/voyager-full.zip).
+The latest Voyager archive with all instruments is available [here](https://github.com/dxworks/voyager/releases/download/v1.6.2/voyager-full.zip).
 If you want to run Voyager in Docker, please visit our [Voyager Docker Quickstart Guide](docker-quickstart.md).
+For the Voyager 2 package (Voyager 2 with Voyager 1 as fallback), see [Voyager 2 Package](voyager2-package.md).
 
 ## Prepare TARGET Folder
 The `TARGET` folder is the folder that Voyager will analyze. The children of the `TARGET` folder should be folders that are git repositories.

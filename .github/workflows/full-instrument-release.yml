@@ -1,0 +1,97 @@
+name: Full Instrument Release
+
+on:
+  - workflow_dispatch
+  - repository_dispatch
+
+jobs:
+  full-realease:
+    name: Create Full Instruments Release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set variables
+        id: set_variables
+        run: |
+          currentDate=$(date +"%Y-%m-%d")
+          echo ::set-output name=currentDate::$currentDate
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Setup Voyenv
+        run: | 
+          npm i -g @dxworks/voyenv
+          voyenv -v
+
+      - name: Prepare Voyager release
+        run: |
+          if [ -f "voyenv.yml" ]; then
+            echo "Using existing voyenv.yml from repository root"
+            mkdir -p release
+            cp voyenv.yml release/
+          else
+            echo "No voyenv.yml found, initializing with voyenv"
+            voyenv init -ci release
+          fi
+          cd release
+          voyenv install
+          zip -r voyager-full.zip voyager
+
+      - id: target_release
+        name: Read target release from voyenv.yml
+        run: |
+          release=$(yq '.full_release_tag // ""' release/voyenv.yml)
+          if [ -z "$release" ]; then
+            echo "voyenv.yml has no full_release_tag: using the latest Voyager release"
+          fi
+          echo "release=$release" >> $GITHUB_OUTPUT
+
+      - id: latest_release
+        if: steps.target_release.outputs.release == ''
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          repository: ${{ github.repository }}
+
+      - name: Upload New Release Asset
+        run: |
+          gh release upload ${{ steps.target_release.outputs.release || steps.latest_release.outputs.release }} release/voyager-full.zip --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+#      - name: Set up QEMU
+#        uses: docker/setup-qemu-action@v1
+#
+#      - name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v1
+#
+#      - name: Docker meta
+#        id: meta
+#        uses: docker/metadata-action@v3
+#        with:
+#          images: name/app
+#          labels: |
+#            releaseDate=${{ steps.set_variables.outputs.currentDate }}
+#            version=${{ steps.latest_release.outputs.release }}
+#
+#      - name: Login to DockerHub
+#        uses: docker/login-action@v1
+#        with:
+#          username: ${{ secrets.DOCKER_USERNAME }}
+#          password: ${{ secrets.DOCKER_PASSWORD }}
+#
+#      - name: Build and push
+#        uses: docker/build-push-action@v2
+#        with:
+#          context: .
+#          push: true
+#          tags: dxworks/voyager:latest,dxworks/voyager:${{ steps.latest_release.outputs.release }},dxworks/voyager:${{ steps.set_variables.outputs.currentDate }}
+#          labels: ${{ steps.meta.outputs.labels }}

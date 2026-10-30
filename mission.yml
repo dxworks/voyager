@@ -1,0 +1,32 @@
+# The name of the mission *required
+# e.g. mission: my-project
+mission:
+
+# The path to the target folder.
+# The target folder should contain all repositories *required
+# e.g. target: /home/me/repos  (Windows: target: C:\Users\me\repos)
+target:
+
+# Voyager runs all instruments found in instrumentsDir.
+# Here you can set, per instrument (the id in its instrument.v2.yml) and action,
+# parameters and environment variables, e.g.:
+#   lizard:
+#     actions:
+#       start:
+#         parameters:
+#           name: value
+#         environment:
+#           NAME: value
+instruments:
+
+# A map of environment variables, name to value, for all instruments, e.g.:
+#   NAME: value
+environment:
+
+# Path to the directory containing the instruments
+# Default: ./instruments
+instrumentsDir:
+
+# Path to the result archive file
+# Default: ./${mission}-voyager-results.zip
+resultsPath:
