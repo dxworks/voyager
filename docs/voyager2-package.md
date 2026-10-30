@@ -145,6 +145,6 @@ Two GitHub workflows build it, as for V1:
 1. Builds the four V2 programs with Node.js 25 (single executable applications). The Mac programs get an ad-hoc signature. For a tag, V2's `--version` prints the tag's version; other builds print `dev`.
 2. Downloads V1's `dx-voyager.zip` (`V1_VERSION` in the workflow, `v1.6.2`), copies the launchers over V1's own `voyager.sh` and `voyager.bat`, adds the V2 programs, and zips the `voyager` folder as `dx-voyager.zip`.
 
-The Full Instrument Release runs `voyenv install` on `voyenv.yml`. It installs the engine from the release named by `voyager_version` and the instruments, each at its `tag`, and zips them as `voyager-full.zip`.
+The Full Instrument Release runs `voyenv install` on `voyenv.yml`. It installs the engine from the release named by `voyager_version` (the file named by `voyager_asset`, `dx-voyager.zip`) and the instruments, each at its `tag`, and zips them as `voyager-full.zip`.
 
 To release V2: set `voyager_version` in `voyenv.yml` on `main` to the new tag, push the tag, publish the draft release, then run the Full Instrument Release. The pins are set by hand. V2 is built from the commit the workflow runs on.
