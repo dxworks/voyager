@@ -1,7 +1,7 @@
 import {missionContext} from '../../src/context/MissionContext'
 import {CommandSummary} from '../../src/model/summary/CommandSummary'
 import {InstrumentSummary} from '../../src/model/summary/InstrumentSummary'
-import {centerText, generateMissionSummary, padLine} from '../../src/report/mission-summary-generator'
+import {centerText, generateMissionSummary, hasFailedCommand, logInstrumentsResult, padLine} from '../../src/report/mission-summary-generator'
 import {resetMissionContext} from '../utils/mission-context.utils'
 
 describe('mission summary generator', () => {
@@ -33,6 +33,34 @@ describe('mission summary generator', () => {
         expect(output).toContain('ToolA')
         expect(output).toContain('SUCCESS')
         expect(output).toContain('Elapsed Time')
+    })
+
+    test('logInstrumentsResult should list the succeeded and the failed instruments', () => {
+        const logSpy = jest.spyOn(console, 'log').mockImplementation()
+
+        logInstrumentsResult(['ToolA', 'ToolB', 'ToolC'], ['ToolB'])
+
+        expect(logSpy.mock.calls[0][0]).toBe('Instruments succeeded (2): ToolA, ToolC')
+        expect(logSpy.mock.calls[1][0]).toBe('Instruments failed (1): ToolB')
+    })
+
+    test('logInstrumentsResult should say none when no instrument failed', () => {
+        const logSpy = jest.spyOn(console, 'log').mockImplementation()
+
+        logInstrumentsResult(['ToolA'], [])
+
+        expect(logSpy.mock.calls[1][0]).toBe('Instruments failed (0): none')
+    })
+
+    test('hasFailedCommand should be true only when a command failed', () => {
+        const instrumentSummary = new InstrumentSummary()
+        instrumentSummary.addCommandSummary('ok', new CommandSummary())
+        expect(hasFailedCommand(instrumentSummary)).toBe(false)
+
+        const failedCommand = new CommandSummary()
+        failedCommand.success = false
+        instrumentSummary.addCommandSummary('failed', failedCommand)
+        expect(hasFailedCommand(instrumentSummary)).toBe(true)
     })
 
     test('padLine should prepend indentation when frontTab is true', () => {
