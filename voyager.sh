@@ -100,12 +100,27 @@ fi
 if [[ "${mode}" == "default_run" ]]; then
     echo "Falling back to Voyager1 mission run..."
     mission_path="$(extract_run_mission_path "${orig_args[@]}")"
+    # V1 stops on fields only V2 reads: give it an adapted copy of the mission (V1's default is ./mission.yml)
+    adapter_input="${mission_path:-mission.yml}"
+    adapted_path=""
+    if [[ -f "${adapter_input}" ]]; then
+        adapter_output="$(java -cp "${SCRIPT_DIR}/dx-voyager.jar" "${SCRIPT_DIR}/MissionAdapter.java" "${adapter_input}")"
+        if [[ $? -eq 0 && -n "${adapter_output}" && "${adapter_output}" != "${adapter_input}" ]]; then
+            adapted_path="${adapter_output}"
+            mission_path="${adapted_path}"
+        fi
+    fi
     if [[ -n "${mission_path}" ]]; then
         java -Xmx8g -jar "${SCRIPT_DIR}/dx-voyager.jar" "${mission_path}"
     else
         java -Xmx8g -jar "${SCRIPT_DIR}/dx-voyager.jar"
     fi
-    exit $?
+    v1_exit_code=$?
+    adapted_dir="$(dirname "${adapted_path}")"
+    if [[ -n "${adapted_path}" && "$(basename "${adapted_dir}")" == voyager-v1-mission* ]]; then
+        rm -rf "${adapted_dir}"
+    fi
+    exit ${v1_exit_code}
 fi
 
 exit ${v2_exit_code}

@@ -77,12 +77,15 @@ if /I "!MODE!"=="verify" (
 if /I "!MODE!"=="default_run" (
   echo Falling back to Voyager1 mission run...
   call :extractRunMissionPath %*
+  call :adaptMission
   if defined MISSION_PATH (
     java -Xmx8g -jar "%SCRIPT_DIR%dx-voyager.jar" "!MISSION_PATH!"
   ) else (
     java -Xmx8g -jar "%SCRIPT_DIR%dx-voyager.jar"
   )
-  exit /b !ERRORLEVEL!
+  set "V1_EXIT=!ERRORLEVEL!"
+  if defined ADAPTED_PATH if not "!ADAPTED_PATH:voyager-v1-mission=!"=="!ADAPTED_PATH!" for %%D in ("!ADAPTED_PATH!") do rmdir /s /q "%%~dpD" 2>nul
+  exit /b !V1_EXIT!
 )
 
 exit /b !V2_EXIT!
@@ -136,3 +139,18 @@ if not "!RUN_ARG:~0,1!"=="-" (
 )
 shift
 goto :runLoop
+
+rem V1 stops on fields only V2 reads: give it an adapted copy of the mission (V1's default is mission.yml)
+:adaptMission
+set "ADAPTED_PATH="
+set "ADAPTER_INPUT=!MISSION_PATH!"
+if not defined ADAPTER_INPUT set "ADAPTER_INPUT=mission.yml"
+if not exist "!ADAPTER_INPUT!" goto :eof
+for /f "delims=" %%P in ('java -cp "%SCRIPT_DIR%dx-voyager.jar" "%SCRIPT_DIR%MissionAdapter.java" "!ADAPTER_INPUT!"') do set "ADAPTED_PATH=%%P"
+if not defined ADAPTED_PATH goto :eof
+if "!ADAPTED_PATH!"=="!ADAPTER_INPUT!" (
+  set "ADAPTED_PATH="
+  goto :eof
+)
+set "MISSION_PATH=!ADAPTED_PATH!"
+goto :eof

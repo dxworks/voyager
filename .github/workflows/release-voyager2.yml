@@ -111,6 +111,7 @@ jobs:
           unzip -q ../v1/dx-voyager.zip
           cp ../voyager.sh voyager/voyager.sh
           cp ../voyager.bat voyager/voyager.bat
+          cp ../MissionAdapter.java voyager/MissionAdapter.java
           # Our .config.yml, .doctor.yml and mission.yml replace V1's (doctor minimums of today's instruments)
           cp ../.config.yml ../.doctor.yml ../mission.yml voyager/
           cp ../artifacts/dx-voyager-win-x64.exe voyager/
