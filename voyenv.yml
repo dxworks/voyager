@@ -2,6 +2,9 @@ name: voyager
 
 voyager_version: v1.6.2
 
+# The Voyager release that the Full Instrument Release (full-instrument-release.yml) uploads voyager-full.zip into
+full_release_tag: v1.6.2
+
 instruments:
   - name: dxworks/inspector-git
     tag: v1.7.0-voyager
