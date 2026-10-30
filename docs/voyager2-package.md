@@ -43,7 +43,7 @@ V2 itself needs nothing installed. The instruments and V1 need these on the `PAT
 | .NET SDK 10 | honeydew                                                                                      |
 | git         | inspector-git; the target folders are git repositories                                        |
 
-`.doctor.yml` comes with V1. Its minimum versions (Java 11, Python 3.9, .NET 6, git 2.12) are lower than what the instruments above need.
+`.doctor.yml` is V1's version check list. Its minimum versions are the ones above: Java 21, Python 3.9, .NET 10, git 2.12.
 
 !!! note "Mac"
     The Mac programs carry an ad-hoc signature, not a Developer ID signature.

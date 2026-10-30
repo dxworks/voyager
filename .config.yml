@@ -1,0 +1,16 @@
+# Specifies if voyager should run the instruments and commands according to the mission
+# or should it run all found instruments with all commands
+# default true
+runsAll:
+
+# A map of runtime name to a path that will be added to the PATH env variable
+# for voyager missions
+runtimes:
+  voyenv-runtimes-path: 'runtimes/paths'
+
+# A map of environment variables, name to value, for voyager missions
+environment:
+
+# A default value for the instruments directory
+# Default: ./instruments
+instrumentsDir:
