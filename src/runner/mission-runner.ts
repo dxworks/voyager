@@ -1,7 +1,7 @@
 import {Instrument} from '../model/Instrument'
 import {missionContext} from '../context/MissionContext'
 import {loadAndParseData} from '../parser/data-parser'
-import {cleanActionKey, packageActionKey, summaryActionKey, unpackActionKey, verifyActionKey} from './action-utils'
+import {cleanActionKey, packageActionKey, startActionKey, summaryActionKey, unpackActionKey, verifyActionKey} from './action-utils'
 import {DefaultAction} from '../model/Action'
 import {runCleanAction} from './default-actions/clean-action-runner'
 import {runSummaryAction} from './default-actions/summary-action-runner'
@@ -182,9 +182,12 @@ export async function runMission(missionFilePath: string, actions: string[] | un
 
     const instruments = getMissionScopedInstruments()
     logExecutionOrder(instruments)
+    deleteLogsOfLastRun(instruments)
     missionContext.logsStream = getLogsStream()
     let archive: Archiver | null = null
     const customRun = actions != undefined
+    if (!customRun || actions.includes(startActionKey))
+        deleteSummariesOfLastRun(instruments)
     const requireVerifyActionReport = customRun ? !!actions.includes(verifyActionKey) : false
     const requirePackaging = customRun ? !!actions.includes(packageActionKey) : true
 
@@ -218,6 +221,23 @@ function logRunResult(instruments: Instrument[]): void {
         .filter(({summary}) => summary != undefined && summary.commandsSummary.size > 0)
     logInstrumentsResult(ranInstrumentSummaries.map(({name}) => name),
         ranInstrumentSummaries.filter(({summary}) => hasFailedCommand(summary!)).map(({name}) => name))
+}
+
+// The mission and instrument logs are appended to while a run goes on; start them empty
+function deleteLogsOfLastRun(instruments: Instrument[]): void {
+    [missionContext.name, ...instruments.map(instrument => instrument.name)]
+        .forEach(name => fs.rmSync(getLogFilePath(name), {force: true}))
+}
+
+// The summary action skips an instrument whose summary files exist, and the run packs them:
+// delete them before the instruments produce new results, so neither shows the last run's summary
+function deleteSummariesOfLastRun(instruments: Instrument[]): void {
+    instruments.forEach(instrument => {
+        const summaryAction = instrument.actions.get(summaryActionKey) as DefaultAction | undefined
+        const summaryFiles = [summaryAction?.summaryMdFile, summaryAction?.summaryHtmlFile]
+        summaryFiles.filter((file): file is string => !!file)
+            .forEach(file => fs.rmSync(path.resolve(instrument.instrumentPath, file), {force: true}))
+    })
 }
 
 async function runInstruments(instruments: Instrument[], actions: string[] | undefined, archive: Archiver | null, customRun: boolean, verbose = false) {
