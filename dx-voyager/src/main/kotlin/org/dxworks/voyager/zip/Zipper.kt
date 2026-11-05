@@ -26,9 +26,10 @@ class Zipper {
 
     private fun zipFile(file: File, fileName: String, archive: ArchiveOutputStream<ZipArchiveEntry>): Boolean {
         if (file.isDirectory) {
-            return file.listFiles()?.all {
+            // map, not all: one bad file must not stop the rest of the folder from being zipped
+            return file.listFiles()?.map {
                 zipFile(it, fileName + "/" + it.name, archive)
-            } ?: true
+            }?.all { it } ?: true
         }
         if (!file.exists()) {
             log.warn("File ${file.path} does not exist")
