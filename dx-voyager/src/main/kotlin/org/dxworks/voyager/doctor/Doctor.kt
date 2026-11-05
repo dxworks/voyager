@@ -11,6 +11,8 @@ import org.dxworks.voyager.utils.yamlMapper
 import org.slf4j.LoggerFactory
 import java.nio.file.Paths
 
+// Tools print versions like "2.50.1 (Apple Git-155)", "2.43.0.windows.1" or "1.8.0_381": compare only the numbers
+private val leadingVersion = Regex("""\d+(\.\d+){0,2}""")
 
 fun versionDoctor(doctorFile: String): Boolean {
     val log = LoggerFactory.getLogger("VersionDoctor")
@@ -37,6 +39,7 @@ fun versionDoctor(doctorFile: String): Boolean {
             val version = rule.match.map { it.toRegex() }
                 .mapNotNull { it.find(std) ?: it.find(err) }.firstOrNull()
                 ?.let { it.groups[versionGroupName] }?.value
+                ?.let { leadingVersion.find(it)?.value }
                 ?: run {
                     log.warn("${rule.name} version check failed because there was no match")
                     null
