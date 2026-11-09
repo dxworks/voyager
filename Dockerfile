@@ -5,6 +5,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0-noble
 
 RUN apt-get update && \
+    apt-get upgrade -y --no-install-recommends && \
     apt-get install -y --no-install-recommends openjdk-21-jre-headless python3 git unzip && \
     rm -rf /var/lib/apt/lists/*
 
