@@ -46,7 +46,7 @@ The `TARGET` directory is the absolute path to the `voyager-target` folder defin
 ## Prepare Docker run
 The `dxworks/voyager` image is executable and needs 2 volumes to be mounted:
 
-1. the `TARGET` path that needs to be mounted at `/usr/project`
+1. the `TARGET` path that needs to be mounted at `/usr/project`, read-only (`:ro`), so nothing in the container can change your code
 2. The `results` folder, that needs to be mounted at `/usr/voyager/results`
 
 ## Run voyager
@@ -56,7 +56,7 @@ To run voyager, run the following command from the `TARGET` directory:
 
 ```shell
 mkdir results
-docker run -v $(PWD):/usr/project -v $(PWD)/results:/usr/voyager/results dxworks/voyager
+docker run -v $(PWD):/usr/project:ro -v $(PWD)/results:/usr/voyager/results dxworks/voyager
 ```
 Alternatively, you can adjust the volume mounts to point to the `TARGET` folder and to a result folder.
 
@@ -73,7 +73,7 @@ services:
     image: dxworks/voyager
     volumes:
       - ./results:/usr/voyager/results # please mount a new folder where the result archive will be added
-      - .:/usr/project # please input the target folder you want to analyse
+      - .:/usr/project:ro # please input the target folder you want to analyse (read-only: Voyager never changes your code)
 #      - ${custom-mission-path}: /usr/voyager/mission.yml
 
 #    Add any environment variables you would pass to the mission.yml. For example:
