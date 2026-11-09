@@ -1,19 +1,12 @@
-FROM eclipse-temurin:11-jdk
+# Lowest versions that fit what the instruments need, the same ones .doctor.yml checks:
+# .NET 10 SDK (honeydew targets net10.0 and loads projects through MSBuild, which needs the SDK),
+# Java 21 (iglog and insider are built for 21), Python 3 (lizard) and git (iglog, doctor).
+# The .NET image is Ubuntu 24.04, so Java, Python and git come from Ubuntu's own packages.
+FROM mcr.microsoft.com/dotnet/sdk:10.0-noble
 
-RUN apt-get update
-
-# Install python 3
-RUN apt-get -y install python3 wget unzip dpkg
-
-# Install dotnet sdk 6
-RUN wget https://packages.microsoft.com/config/ubuntu/21.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-RUN dpkg -i packages-microsoft-prod.deb
-RUN rm packages-microsoft-prod.deb
-
-RUN apt-get update; \
-    apt-get install -y apt-transport-https && \
-    apt-get update && \
-    apt-get install -y dotnet-sdk-6.0
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends openjdk-21-jre-headless python3 git unzip && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy and setup Voyager
 COPY release/voyager-full.zip /usr
