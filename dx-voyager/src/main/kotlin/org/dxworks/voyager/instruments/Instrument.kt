@@ -24,6 +24,7 @@ import kotlin.concurrent.thread
 data class Instrument(val path: String, val configuration: InstrumentConfiguration) {
     companion object {
         private val log = logger<Instrument>()
+        private const val outputReaderTimeoutMillis = 10_000L
     }
 
     private val missionControl = MissionControl.get()
@@ -108,10 +109,12 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
                         repo,
                         identifier
                     )
-                    val (errorsBuilder, logger) = setupLogger(identifier, process)
+                    val (errorsBuilder, logger, outputReaders) = setupLogger(identifier, process)
                     instrumentLogger = logger
                     val processExitValue = process.waitFor()
                     val stop = System.currentTimeMillis()
+                    // The readers can still have output to process. Don't wait forever: a background child can keep the streams open
+                    outputReaders.forEach { it.join(outputReaderTimeoutMillis) }
                     if (processExitValue == 0) {
                         log.info("thread $thread Command $identifier completed")
                         CommandExecutionResult(command, stop - start)
@@ -157,25 +160,27 @@ data class Instrument(val path: String, val configuration: InstrumentConfigurati
         }
     }
 
-    private fun setupLogger(identifier: String, process: Process): Pair<StringBuilder, InstrumentLogger> {
-        val stringBuilder = StringBuilder()
+    private fun setupLogger(identifier: String, process: Process): Triple<StringBuffer, InstrumentLogger, List<Thread>> {
+        val errorsBuffer = StringBuffer()
         val instrumentLogger = InstrumentLogger(configuration.name)
-        LoggerFactory.getLogger(identifier).apply {
-            thread {
-                process.inputStream.reader().forEachLine {
-                    info("thread $thread _${configuration.name}_ $it")
-                    instrumentLogger.logger.info("thread $thread $it")
+        val outputReaders = LoggerFactory.getLogger(identifier).run {
+            listOf(
+                thread {
+                    process.inputStream.reader().forEachLine {
+                        info("thread $thread _${configuration.name}_ $it")
+                        instrumentLogger.logger.info("thread $thread $it")
+                    }
+                },
+                thread {
+                    process.errorStream.reader().forEachLine {
+                        info("thread $thread _${configuration.name}_ $it")
+                        instrumentLogger.logger.info("thread $thread $it")
+                        errorsBuffer.appendLine("thread $thread _${configuration.name}_ $it")
+                    }
                 }
-            }
-            thread {
-                process.errorStream.reader().forEachLine {
-                    info("thread $thread _${configuration.name}_ $it")
-                    instrumentLogger.logger.info("thread $thread $it")
-                    stringBuilder.appendLine("thread $thread _${configuration.name}_ $it")
-                }
-            }
+            )
         }
-        return stringBuilder to instrumentLogger
+        return Triple(errorsBuffer, instrumentLogger, outputReaders)
     }
 
     private fun getCommandIdentifier(command: Command, index: Int) =

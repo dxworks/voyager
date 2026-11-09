@@ -19,13 +19,19 @@ import java.nio.file.Paths
 import java.util.*
 import kotlin.system.exitProcess
 
-private val log = LoggerFactory.getLogger("Main")
+// Lazy, so the Java check in main() runs before the logging library loads (it needs Java 11 or newer)
+private val log by lazy { LoggerFactory.getLogger("Main") }
 val version by lazy {
     Properties().apply { load(object {}::class.java.classLoader.getResourceAsStream("maven.properties")) }["version"]
 }
 
 
 fun main(args: Array<String>) {
+    // A mission needs Java 21 because the instruments do. Doctor and --version only need Voyager to start,
+    // so doctor can still list everything that is missing.
+    val firstArg = args.firstOrNull()
+    checkJava(if (firstArg == doctorCommandArg || firstArg in versionCommandArgs) 11 else 21)
+
     if (args.isNotEmpty()) {
         when {
             args[0] == doctorCommandArg -> {
@@ -69,6 +75,11 @@ fun main(args: Array<String>) {
         exitProcess(1)
     }
 
+    // Empty the result locations of this mission's instruments before anything runs, so files left
+    // behind by an earlier or crashed mission (possibly another client's) can't land in this zip.
+    clean(instrumentsByThread.values.flatten()
+        .mapNotNull { it.getResults()?.results }.flatten()
+        .map { it.file }.distinct().filter { it.exists() })
 
     val (lonelyThreadInstruments, threadedInstruments) = instrumentsByThread.entries.partition { it.key == lonelyThreadId }
     val deferred = threadedInstruments.map { GlobalScope.async { it.value.map(Instrument::run) } }
@@ -98,6 +109,16 @@ fun main(args: Array<String>) {
         .filter { it != missionControl.missionFile && it.nameWithoutExtension != missionReport })
 
     log.info("Results written to ${missionControl.resultsPath}")
+}
+
+private fun checkJava(minimum: Int) {
+    val found = System.getProperty("java.specification.version") ?: return
+    val major = found.removePrefix("1.").substringBefore('.').toIntOrNull() ?: return
+    if (major < minimum) {
+        System.err.println("Voyager needs Java 21. Found: Java $found.")
+        if (major >= 11) System.err.println("Run 'voyager doctor' to see what else is missing.")
+        exitProcess(1)
+    }
 }
 
 private fun getInitialisedMissionControl(args: Array<String>): MissionControl {

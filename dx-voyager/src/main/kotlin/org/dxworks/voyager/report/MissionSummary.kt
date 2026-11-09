@@ -72,15 +72,15 @@ data class MissionSummary(
         val duration = Duration.ofMillis(millis)
         val sb = StringBuilder()
         val days = duration.toDays()
-        val hours = duration.toHours()
-        val minutes = duration.toMinutes()
+        val hours = duration.toHoursPart()
+        val minutes = duration.toMinutesPart()
         if (days > 0)
             sb.append("$days d ")
         if (hours > 0)
             sb.append("$hours h ")
         if (minutes > 0)
             sb.append("$minutes m ")
-        sb.append("${duration.seconds}.${duration.toMillis()} s")
+        sb.append("${duration.toSecondsPart()}.${duration.toMillisPart().toString().padStart(3, '0')} s")
         return sb.toString()
     }
 }

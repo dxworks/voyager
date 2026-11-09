@@ -1,6 +1,6 @@
 versions:
   - name: Java
-    min: 11
+    min: 21
     win: java -version
     unix: java -version
     match:
@@ -15,7 +15,7 @@ versions:
       - Python (?<version>.+)
 
   - name: Dotnet
-    min: 9
+    min: 10
     win: dotnet --version
     unix: dotnet --version
     match:

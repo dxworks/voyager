@@ -5,7 +5,7 @@ services:
     image: dxworks/voyager
     volumes:
       - ./results:/usr/voyager/results # please mount a new folder where the result archive will be added
-      - .:/usr/project # please input the target folder you want to analyse
+      - .:/usr/project:ro # please input the target folder you want to analyse (read-only: Voyager never changes your code)
 #      - ${custom-mission-path}: /usr/voyager/mission.yml
 
 #    Add any environment variables you would pass to the mission.yml. For example:
