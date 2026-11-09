@@ -69,6 +69,11 @@ fun main(args: Array<String>) {
         exitProcess(1)
     }
 
+    // Empty the result locations of this mission's instruments before anything runs, so files left
+    // behind by an earlier or crashed mission (possibly another client's) can't land in this zip.
+    clean(instrumentsByThread.values.flatten()
+        .mapNotNull { it.getResults()?.results }.flatten()
+        .map { it.file }.distinct().filter { it.exists() })
 
     val (lonelyThreadInstruments, threadedInstruments) = instrumentsByThread.entries.partition { it.key == lonelyThreadId }
     val deferred = threadedInstruments.map { GlobalScope.async { it.value.map(Instrument::run) } }
