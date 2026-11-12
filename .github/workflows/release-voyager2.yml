@@ -25,9 +25,8 @@ jobs:
           - id: linux-x64
             runs_on: ubuntu-latest
             output_file: dx-voyager-linux-x64
-          - id: macos-x64
-            runs_on: macos-15-intel
-            output_file: dx-voyager-macos-x64
+          # No Intel Mac (macos-x64) build: Node 25's single executables crash at start on Intel
+          # Macs, and V2 has no Intel Mac users (user, 2026-11-12). There the launcher runs V1.
           - id: macos-arm64
             runs_on: macos-15
             output_file: dx-voyager-macos-arm64
@@ -181,11 +180,9 @@ jobs:
           cp ../.config.yml ../.doctor.yml ../mission.yml voyager/
           cp ../artifacts/dx-voyager-win-x64.exe voyager/
           cp ../artifacts/dx-voyager-linux-x64 voyager/
-          cp ../artifacts/dx-voyager-macos-x64 voyager/
           cp ../artifacts/dx-voyager-macos-arm64 voyager/
           chmod +x voyager/voyager.sh
           chmod +x voyager/dx-voyager-linux-x64
-          chmod +x voyager/dx-voyager-macos-x64
           chmod +x voyager/dx-voyager-macos-arm64
           zip -r dx-voyager.zip voyager
 

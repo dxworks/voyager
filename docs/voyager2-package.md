@@ -11,7 +11,6 @@ voyager
     voyager.sh                  launcher for Mac / Linux
     voyager.bat                 launcher for Windows
     dx-voyager-macos-arm64      V2 for Mac (Apple Silicon)
-    dx-voyager-macos-x64        V2 for Mac (Intel)
     dx-voyager-linux-x64        V2 for Linux
     dx-voyager-win-x64.exe      V2 for Windows
     dx-voyager.jar              V1
@@ -46,9 +45,8 @@ V2 itself needs nothing installed. The instruments and V1 need these on the `PAT
 `.doctor.yml` is V1's version check list. Its minimum versions are the ones above: Java 21, Python 3.9, .NET 10, git 2.12.
 
 !!! note "Mac"
-    The Mac programs carry an ad-hoc signature, not a Developer ID signature.
-    If the zip was downloaded with a browser, macOS may block V2 ("Apple could not verify ..."), and the launcher then runs the mission with V1.
-    To let V2 run, choose Open Anyway in System Settings › Privacy & Security, run the command again and confirm.
+    V2's Mac program is for Apple Silicon. It is signed with a Developer ID and notarized by Apple, so macOS lets it run even when the zip was downloaded with a browser (the first start checks with Apple online).
+    There is no V2 program for Intel Macs: there the launcher runs the mission with V1.
 
 ## Run a Mission
 
@@ -142,9 +140,9 @@ Two GitHub workflows build it, as for V1:
 
 `release-voyager2.yml` makes the engine zip, without instruments:
 
-1. Builds the four V2 programs with Node.js 25 (single executable applications). The Mac programs get an ad-hoc signature. For a tag, V2's `--version` prints the tag's version; other builds print `dev`.
+1. Builds the three V2 programs with Node.js 25 (single executable applications): Windows, Linux, Mac (Apple Silicon). The Mac program is signed with the Developer ID and notarized (secrets `MACOS_CERT_P12_BASE64`, `MACOS_CERT_PASSWORD`, `APPLE_API_KEY_P8`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER_ID`); without them it gets an ad-hoc signature. For a tag, V2's `--version` prints the tag's version; other builds print `dev`.
 2. Downloads V1's `dx-voyager.zip` (`V1_VERSION` in the workflow, `v1.6.2`), copies the launchers over V1's own `voyager.sh` and `voyager.bat`, adds the V2 programs, and zips the `voyager` folder as `dx-voyager.zip`.
 
-The Full Instrument Release runs `voyenv install` on `voyenv.yml`. It installs the engine from the release named by `voyager_version` (the file named by `voyager_asset`, `dx-voyager.zip`) and the instruments, each at its `tag`, and zips them as `voyager-full.zip`.
+The Full Instrument Release runs `voyenv install` on `voyenv.yml`. It installs the engine from the release named by `voyager_version` (the file named by `voyager_asset`, `dx-voyager.zip`) and the instruments, each at its `tag`, and zips them as `voyager-full.zip`. When `voyager_version` is a draft, the engine zip is taken from that draft. The zip goes to the release named by `full_release_tag`, created as a draft if missing; nothing is published.
 
 To release V2: set `voyager_version` in `voyenv.yml` on `main` to the new tag, push the tag, publish the draft release, then run the Full Instrument Release. The pins are set by hand. V2 is built from the commit the workflow runs on.
