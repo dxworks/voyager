@@ -1,9 +1,9 @@
 name: voyager
 
-voyager_version: v1.6.2
+voyager_version: v2.0.1
 
 voyager_asset: dx-voyager.zip # engine file in that release (voyenv after 0.4.3)
-full_release_tag: v1.6.2 # release that gets voyager-full.zip
+full_release_tag: v2.0.1 # release that gets voyager-full.zip
 
 instruments:
   - name: dxworks/inspector-git
