@@ -66,9 +66,74 @@ jobs:
         run: |
           node -e "require('node:fs').accessSync('dist/sea/${{ matrix.target.output_file }}')"
 
+      # Developer ID signing + Apple notarization (hardened runtime), so Gatekeeper
+      # accepts the program even when the zip was downloaded with a browser (quarantine).
+      # Same secrets and steps as honeydew's release (dxworks/honeydew#72). Without the
+      # secrets it keeps the ad-hoc seal, which Apple Silicon needs to start the program at all.
       - name: Sign macOS binary
         if: runner.os == 'macOS'
-        run: codesign --sign - --force dist/sea/${{ matrix.target.output_file }}
+        env:
+          BIN: dist/sea/${{ matrix.target.output_file }}
+          MACOS_CERT_P12_BASE64: ${{ secrets.MACOS_CERT_P12_BASE64 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          # App Store Connect API team key (role Developer) for the notary service.
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "$MACOS_CERT_P12_BASE64" ] || [ -z "$APPLE_API_KEY_P8" ]; then
+            echo "::warning::macOS signing secrets not set; ${{ matrix.target.id }} ships ad-hoc signed only (not notarized)."
+            codesign --sign - --force "$BIN"
+            exit 0
+          fi
+
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          kc_pass="$(openssl rand -base64 24)"
+          echo "$MACOS_CERT_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$kc_pass" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$kc_pass" "$keychain"
+          security import "$RUNNER_TEMP/cert.p12" -P "$MACOS_CERT_PASSWORD" -f pkcs12 -k "$keychain" -T /usr/bin/codesign
+          # Developer ID certs are issued by Apple's G2 intermediate, which a fresh
+          # macOS install may lack; without it the identity is not valid for signing.
+          # Pinned SHA-256 of Apple's DeveloperIDG2CA.cer (valid until 2031-09-17); a different file stops the release.
+          curl -fsSL -o "$RUNNER_TEMP/DeveloperIDG2CA.cer" https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
+          echo "f16cd3c54c7f83cea4bf1a3e6a0819c8aaa8e4a1528fd144715f350643d2df3a  $RUNNER_TEMP/DeveloperIDG2CA.cer" | shasum -a 256 -c -
+          security import "$RUNNER_TEMP/DeveloperIDG2CA.cer" -k "$keychain" || true
+          security set-key-partition-list -S apple-tool:,apple: -k "$kc_pass" "$keychain" > /dev/null
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          rm -f "$RUNNER_TEMP/cert.p12"
+
+          identity="$(security find-identity -v -p codesigning "$keychain" | grep 'Developer ID Application' | head -1 | awk '{print $2}')"
+          if [ -z "$identity" ]; then echo "::error::No 'Developer ID Application' identity in the certificate."; exit 1; fi
+
+          codesign --force --options runtime --timestamp \
+            --entitlements .github/macos/node-sea.entitlements \
+            --sign "$identity" "$BIN"
+          codesign --verify --strict --verbose=2 "$BIN"
+          # The hardened runtime must not stop Node from starting (V8 needs the JIT entitlements).
+          "$BIN" --version
+
+          printf '%s\n' "$APPLE_API_KEY_P8" > "$RUNNER_TEMP/notary-key.p8"
+          notary_auth=(--key "$RUNNER_TEMP/notary-key.p8" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER_ID")
+
+          ditto -c -k --keepParent "$BIN" "$RUNNER_TEMP/notarize.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" "${notary_auth[@]}" \
+            --wait --timeout 2h --output-format json | tee "$RUNNER_TEMP/notary.json"
+          status="$(plutil -extract status raw -o - "$RUNNER_TEMP/notary.json" 2>/dev/null || true)"
+          if [ "$status" != "Accepted" ]; then
+            id="$(plutil -extract id raw -o - "$RUNNER_TEMP/notary.json" 2>/dev/null || true)"
+            [ -n "$id" ] && xcrun notarytool log "$id" "${notary_auth[@]}" || true
+            echo "::error::Notarization status: ${status:-unknown}"
+            exit 1
+          fi
+
+      - name: Remove signing keychain
+        if: always() && runner.os == 'macOS'
+        run: |
+          security delete-keychain "$RUNNER_TEMP/signing.keychain-db" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/notary-key.p8" "$RUNNER_TEMP/cert.p12"
 
       - name: Upload SEA binary artifact
         uses: actions/upload-artifact@v4
