@@ -1,14 +1,14 @@
 import {Instrument} from '../model/Instrument'
 import {missionContext} from '../context/MissionContext'
 import {loadAndParseData} from '../parser/data-parser'
-import {cleanActionKey, packageActionKey, summaryActionKey, unpackActionKey, verifyActionKey} from './action-utils'
+import {cleanActionKey, packageActionKey, startActionKey, summaryActionKey, unpackActionKey, verifyActionKey} from './action-utils'
 import {DefaultAction} from '../model/Action'
 import {runCleanAction} from './default-actions/clean-action-runner'
 import {runSummaryAction} from './default-actions/summary-action-runner'
 import archiver, {Archiver} from 'archiver'
 import fs from 'fs-extra'
 import {getCurrentDateTime, getLogFilePath, getLogsStream, getTimeInSeconds} from '../report/logs-collector-utils'
-import {generateMissionSummary} from '../report/mission-summary-generator'
+import {generateMissionSummary, hasFailedCommand, logInstrumentsResult} from '../report/mission-summary-generator'
 import path from 'node:path'
 import {generateHtmlReport} from '../report/html/html-report-generator'
 import {getHtmlFilePath, getHtmlLogContent} from '../report/html/html-report-utils'
@@ -68,8 +68,14 @@ export function packMission(missionFilePath?: string, verbose = false): void {
             runPackageAction(instrument.id, instrument.name, archive, packAction)
         })
         archive.finalize().then()
-        archive.pipe(fs.createWriteStream(missionContext.getVariable(RESULTS_ZIP_DIR)!))
-        console.log(`Mission ${missionContext.name} was packed successfully.`)
+        fs.mkdirSync(path.dirname(missionContext.getVariable(RESULTS_ZIP_DIR)!), {recursive: true})
+        const resultsZipStream = fs.createWriteStream(missionContext.getVariable(RESULTS_ZIP_DIR)!)
+        resultsZipStream.on('finish', () => console.log(`Mission ${missionContext.name} was packed successfully.`))
+        resultsZipStream.on('error', (error) => {
+            console.error(`Mission ${missionContext.name} could not be packed: ${error.message}`)
+            process.exitCode = 1
+        })
+        archive.pipe(resultsZipStream)
     }
 }
 
@@ -126,6 +132,7 @@ export async function summaryMission(missionFilePath?: string, verbose = false):
         const summaryInstruments = getMissionScopedInstrumentsWithAction(summaryActionKey)
         logExecutionOrder(summaryInstruments)
         console.log(`Running summary actions for mission ${missionContext.name}...`)
+        const failedInstrumentNames: string[] = []
         for (let i = 0; i < summaryInstruments.length; i++) {
             const instrument = summaryInstruments[i]
             const summaryAction = instrument.actions.get(summaryActionKey) as DefaultAction | undefined
@@ -134,14 +141,19 @@ export async function summaryMission(missionFilePath?: string, verbose = false):
                 const instrumentSummary = new InstrumentSummary()
                 missionContext.missionSummary.addInstrumentSummary(instrument.name, instrumentSummary)
                 const startTime = performance.now()
-                await runSummaryAction(summaryAction, instrument.instrumentPath, instrument.id, verbose)
+                const summaryResult = await runSummaryAction(summaryAction, instrument.instrumentPath, instrument.id, verbose)
                 const endTime = performance.now()
                 instrumentSummary.runningTime = getTimeInSeconds(startTime, endTime)
                 instrumentSummary.finishedAt = getCurrentDateTime()
                 logSummaryToolEnd(i + 1, summaryInstruments.length, instrument.name, instrumentSummary.runningTime)
+                const summaryFileMissing = (!!summaryAction.summaryMdFile && !summaryResult.summaryMdFilePath)
+                    || (!!summaryAction.summaryHtmlFile && !summaryResult.summaryHtmlFilePath)
+                if (hasFailedCommand(instrumentSummary) || summaryFileMissing)
+                    failedInstrumentNames.push(instrument.name)
             }
         }
         console.log(`Summary actions for mission ${missionContext.name} completed.`)
+        logInstrumentsResult(summaryInstruments.map(instrument => instrument.name), failedInstrumentNames)
     }
 }
 
@@ -170,9 +182,12 @@ export async function runMission(missionFilePath: string, actions: string[] | un
 
     const instruments = getMissionScopedInstruments()
     logExecutionOrder(instruments)
+    deleteLogsOfLastRun(instruments)
     missionContext.logsStream = getLogsStream()
     let archive: Archiver | null = null
     const customRun = actions != undefined
+    if (!customRun || actions.includes(startActionKey))
+        deleteSummariesOfLastRun(instruments)
     const requireVerifyActionReport = customRun ? !!actions.includes(verifyActionKey) : false
     const requirePackaging = customRun ? !!actions.includes(packageActionKey) : true
 
@@ -191,10 +206,38 @@ export async function runMission(missionFilePath: string, actions: string[] | un
         addMissionYmlToArchive(missionFilePath, archive!)
         addMissionLockFileToArchive(missionLockFilePath, archive!)
         archive!.finalize().then(() => cleanLogsAndHtmlFileFromDisk(instruments))
+        fs.mkdirSync(path.dirname(missionContext.getVariable(RESULTS_ZIP_DIR)!), {recursive: true})
         archive!.pipe(fs.createWriteStream(missionContext.getVariable(RESULTS_ZIP_DIR)!))
     }
     generateMissionSummary()
+    logRunResult(instruments)
     missionContext.logsStream.close()
+}
+
+// Only the instruments that ran a command: one with nothing to run (e.g. no start action) neither succeeded nor failed
+function logRunResult(instruments: Instrument[]): void {
+    const ranInstrumentSummaries = instruments
+        .map(instrument => ({name: instrument.name, summary: missionContext.missionSummary.instrumentsSummary.get(instrument.name)}))
+        .filter(({summary}) => summary != undefined && summary.commandsSummary.size > 0)
+    logInstrumentsResult(ranInstrumentSummaries.map(({name}) => name),
+        ranInstrumentSummaries.filter(({summary}) => hasFailedCommand(summary!)).map(({name}) => name))
+}
+
+// The mission and instrument logs are appended to while a run goes on; start them empty
+function deleteLogsOfLastRun(instruments: Instrument[]): void {
+    [missionContext.name, ...instruments.map(instrument => instrument.name)]
+        .forEach(name => fs.rmSync(getLogFilePath(name), {force: true}))
+}
+
+// The summary action skips an instrument whose summary files exist, and the run packs them:
+// delete them before the instruments produce new results, so neither shows the last run's summary
+function deleteSummariesOfLastRun(instruments: Instrument[]): void {
+    instruments.forEach(instrument => {
+        const summaryAction = instrument.actions.get(summaryActionKey) as DefaultAction | undefined
+        const summaryFiles = [summaryAction?.summaryMdFile, summaryAction?.summaryHtmlFile]
+        summaryFiles.filter((file): file is string => !!file)
+            .forEach(file => fs.rmSync(path.resolve(instrument.instrumentPath, file), {force: true}))
+    })
 }
 
 async function runInstruments(instruments: Instrument[], actions: string[] | undefined, archive: Archiver | null, customRun: boolean, verbose = false) {

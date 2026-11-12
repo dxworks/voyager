@@ -1,0 +1,234 @@
+name: Create Voyager2 Release
+
+on:
+  pull_request:
+    branches:
+      - voyager2
+  push:
+    tags:
+      - 'v2.*'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build-v2:
+    name: Build Voyager2 ${{ matrix.target.id }}
+    runs-on: ${{ matrix.target.runs_on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - id: win-x64
+            runs_on: windows-latest
+            output_file: dx-voyager-win-x64.exe
+          - id: linux-x64
+            runs_on: ubuntu-latest
+            output_file: dx-voyager-linux-x64
+          # No Intel Mac (macos-x64) build: Node 25's single executables crash at start on Intel
+          # Macs, and V2 has no Intel Mac users (user, 2026-11-12). There the launcher runs V1.
+          - id: macos-arm64
+            runs_on: macos-15
+            output_file: dx-voyager-macos-arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '25.x'
+          cache: npm
+          cache-dependency-path: package-lock.json
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@dxworks'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fill Version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          # Voyager2's version, from the release tag
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v v="$VERSION" '!/^program\.version\(/ {print} /^program\.version\(/ {print "program.version(\"" v "\")"}' src/voyager.ts > src/voyager.ts.tmp
+          mv src/voyager.ts.tmp src/voyager.ts
+
+      - name: Build SEA binary
+        run: npm run build:sea
+
+      - name: Verify binary exists
+        run: |
+          node -e "require('node:fs').accessSync('dist/sea/${{ matrix.target.output_file }}')"
+
+      # Developer ID signing + Apple notarization (hardened runtime), so Gatekeeper
+      # accepts the program even when the zip was downloaded with a browser (quarantine).
+      # Same secrets and steps as honeydew's release (dxworks/honeydew#72). Without the
+      # secrets it keeps the ad-hoc seal, which Apple Silicon needs to start the program at all.
+      - name: Sign macOS binary
+        if: runner.os == 'macOS'
+        env:
+          BIN: dist/sea/${{ matrix.target.output_file }}
+          MACOS_CERT_P12_BASE64: ${{ secrets.MACOS_CERT_P12_BASE64 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          # App Store Connect API team key (role Developer) for the notary service.
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "$MACOS_CERT_P12_BASE64" ] || [ -z "$APPLE_API_KEY_P8" ]; then
+            echo "::warning::macOS signing secrets not set; ${{ matrix.target.id }} ships ad-hoc signed only (not notarized)."
+            codesign --sign - --force "$BIN"
+            exit 0
+          fi
+
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          kc_pass="$(openssl rand -base64 24)"
+          echo "$MACOS_CERT_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$kc_pass" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$kc_pass" "$keychain"
+          security import "$RUNNER_TEMP/cert.p12" -P "$MACOS_CERT_PASSWORD" -f pkcs12 -k "$keychain" -T /usr/bin/codesign
+          # Developer ID certs are issued by Apple's G2 intermediate, which a fresh
+          # macOS install may lack; without it the identity is not valid for signing.
+          # Pinned SHA-256 of Apple's DeveloperIDG2CA.cer (valid until 2031-09-17); a different file stops the release.
+          curl -fsSL -o "$RUNNER_TEMP/DeveloperIDG2CA.cer" https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
+          echo "f16cd3c54c7f83cea4bf1a3e6a0819c8aaa8e4a1528fd144715f350643d2df3a  $RUNNER_TEMP/DeveloperIDG2CA.cer" | shasum -a 256 -c -
+          security import "$RUNNER_TEMP/DeveloperIDG2CA.cer" -k "$keychain" || true
+          security set-key-partition-list -S apple-tool:,apple: -k "$kc_pass" "$keychain" > /dev/null
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          rm -f "$RUNNER_TEMP/cert.p12"
+
+          identity="$(security find-identity -v -p codesigning "$keychain" | grep 'Developer ID Application' | head -1 | awk '{print $2}')"
+          if [ -z "$identity" ]; then echo "::error::No 'Developer ID Application' identity in the certificate."; exit 1; fi
+
+          codesign --force --options runtime --timestamp \
+            --entitlements .github/macos/node-sea.entitlements \
+            --sign "$identity" "$BIN"
+          codesign --verify --strict --verbose=2 "$BIN"
+          # The hardened runtime must not stop Node from starting (V8 needs the JIT entitlements).
+          "$BIN" --version
+
+          printf '%s\n' "$APPLE_API_KEY_P8" > "$RUNNER_TEMP/notary-key.p8"
+          notary_auth=(--key "$RUNNER_TEMP/notary-key.p8" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER_ID")
+
+          ditto -c -k --keepParent "$BIN" "$RUNNER_TEMP/notarize.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" "${notary_auth[@]}" \
+            --wait --timeout 2h --output-format json | tee "$RUNNER_TEMP/notary.json"
+          status="$(plutil -extract status raw -o - "$RUNNER_TEMP/notary.json" 2>/dev/null || true)"
+          if [ "$status" != "Accepted" ]; then
+            id="$(plutil -extract id raw -o - "$RUNNER_TEMP/notary.json" 2>/dev/null || true)"
+            [ -n "$id" ] && xcrun notarytool log "$id" "${notary_auth[@]}" || true
+            echo "::error::Notarization status: ${status:-unknown}"
+            exit 1
+          fi
+
+      - name: Remove signing keychain
+        if: always() && runner.os == 'macOS'
+        run: |
+          security delete-keychain "$RUNNER_TEMP/signing.keychain-db" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/notary-key.p8" "$RUNNER_TEMP/cert.p12"
+
+      - name: Upload SEA binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyager2-${{ matrix.target.id }}
+          path: dist/sea/${{ matrix.target.output_file }}
+          retention-days: 1
+
+  package:
+    name: Package Voyager2
+    runs-on: ubuntu-latest
+    needs: build-v2
+    permissions:
+      contents: write
+      actions: write
+    env:
+      # V1, packed with V2 as its fallback
+      V1_VERSION: v1.6.2
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Voyager1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "$V1_VERSION" -R dxworks/voyager -p dx-voyager.zip -D v1
+
+      - name: Download Voyager2 binaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: voyager2-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Prepare Voyager2 release
+        run: |
+          # The engine zip only (V2, the launchers, V1); the Full Instrument Release adds the instruments
+          mkdir -p release
+          cd release
+          unzip -q ../v1/dx-voyager.zip
+          cp ../voyager.sh voyager/voyager.sh
+          cp ../voyager.bat voyager/voyager.bat
+          cp ../MissionAdapter.java voyager/MissionAdapter.java
+          # Our .config.yml, .doctor.yml and mission.yml replace V1's (doctor minimums of today's instruments)
+          cp ../.config.yml ../.doctor.yml ../mission.yml voyager/
+          cp ../artifacts/dx-voyager-win-x64.exe voyager/
+          cp ../artifacts/dx-voyager-linux-x64 voyager/
+          cp ../artifacts/dx-voyager-macos-arm64 voyager/
+          chmod +x voyager/voyager.sh
+          chmod +x voyager/dx-voyager-linux-x64
+          chmod +x voyager/dx-voyager-macos-arm64
+          zip -r dx-voyager.zip voyager
+
+      - name: Upload Voyager2 package
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dx-voyager
+          path: release/dx-voyager.zip
+
+      - name: Delete older packages of this PR
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_BRANCH: ${{ github.head_ref }}
+        run: |
+          # Keep only the newest PR build: remove the package zips of this PR's earlier runs
+          gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?name=dx-voyager" \
+            -q '.artifacts[] | select(.workflow_run.head_branch == env.PR_BRANCH and .workflow_run.id < (env.GITHUB_RUN_ID | tonumber)) | .id' \
+            | while read -r id; do gh api -X DELETE "repos/$GITHUB_REPOSITORY/actions/artifacts/$id"; done
+
+      - name: Extract Semver
+        if: startsWith(github.ref, 'refs/tags/')
+        id: semver_parser
+        run: |
+          semver=${TAG#"refs/tags/v"}
+          echo "semver=$semver" >> "$GITHUB_OUTPUT"
+        env:
+          TAG: ${{ github.ref }}
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          NAME: Voyager ${{ steps.semver_parser.outputs.semver }}
+        run: |
+          # Always a draft on the tagged commit; a re-run of the tag replaces the zip in that same draft
+          if IS_DRAFT=$(gh release view "$TAG" --json isDraft -q .isDraft 2>/dev/null); then
+            if [ "$IS_DRAFT" != "true" ]; then
+              echo "::error::Release $TAG is already published; it is left unchanged"
+              exit 1
+            fi
+            gh release edit "$TAG" --target "$GITHUB_SHA" --title "$NAME"
+            gh release upload "$TAG" release/dx-voyager.zip --clobber
+          else
+            gh release create "$TAG" release/dx-voyager.zip --draft --target "$GITHUB_SHA" --title "$NAME" --notes ""
+          fi

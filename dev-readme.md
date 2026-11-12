@@ -5,10 +5,24 @@ CLI application locally.
 
 ## Prerequisites
 
--   Node.js **24.13.0**
+-   Node.js **25** (`nvm use` reads it from `.nvmrc`; building the
+    single-file programs with `npm run build:sea` needs Node 25)
 -   npm (bundled with Node)
 
 ## Install dependencies
+
+Two dependencies (`@dxworks/cli-common` and `@dxworks/ktextensions`) come
+from GitHub Packages (see `.npmrc`), which needs a login even for reading.
+Create a GitHub token with the `read:packages` scope and add it once to your
+npm user config:
+
+``` bash
+npm config set //npm.pkg.github.com/:_authToken=<your-token>
+```
+
+If the GitHub CLI is logged in with that scope
+(`gh auth refresh -s read:packages`), `$(gh auth token)` can be used as the
+token.
 
 From the project root directory:
 
