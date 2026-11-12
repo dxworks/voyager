@@ -16,7 +16,7 @@ instruments:
     tag: v1.25.2-voyager
     asset: lizard-voyager.zip
   - name: dxworks/honeydew
-    tag: v3.3.1-voyager
+    tag: v3.3.3-voyager
     asset: honeydew.zip
   - name: dxworks/jafax
     tag: v0.6.2-voyager
