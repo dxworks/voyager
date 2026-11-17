@@ -27,7 +27,7 @@ voyager
 ```
 
 * **V2** is one standalone program per platform. It does not need Node.js. The launcher picks the program for your system.
-* **V1** is Voyager `v1.6.2`, packed with V2 in the release's `dx-voyager.zip`.
+* **V1** is Voyager `v1.6.3`, packed with V2 in the release's `dx-voyager.zip`.
 * **Instruments** are the ones listed in `voyenv.yml`, each at its pinned `tag`: inspector-git, insider, dude, lizard, honeydew, jafax, depminer and codeframe.
 
 Each instrument folder can hold two descriptors: `instrument.v2.yml`, read by V2, and `instrument.yml`, read by V1.
@@ -141,7 +141,7 @@ Two GitHub workflows build it, as for V1:
 `release-voyager2.yml` makes the engine zip, without instruments:
 
 1. Builds the four V2 programs with Node.js 26 (single executable applications): Windows, Linux, Mac (Apple Silicon and Intel). The Mac programs are signed with the Developer ID and notarized (secrets `MACOS_CERT_P12_BASE64`, `MACOS_CERT_PASSWORD`, `APPLE_API_KEY_P8`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER_ID`); without them it gets an ad-hoc signature. For a tag, V2's `--version` prints the tag's version; other builds print `dev`.
-2. Downloads V1's `dx-voyager.zip` (`V1_VERSION` in the workflow, `v1.6.2`), copies the launchers over V1's own `voyager.sh` and `voyager.bat`, adds the V2 programs, and zips the `voyager` folder as `dx-voyager.zip`.
+2. Downloads V1's `dx-voyager.zip` (`V1_VERSION` in the workflow, `v1.6.3`), copies the launchers over V1's own `voyager.sh` and `voyager.bat`, adds the V2 programs, and zips the `voyager` folder as `dx-voyager.zip`.
 
 The Full Instrument Release runs `voyenv install` on `voyenv.yml`. It installs the engine from the release named by `voyager_version` (the file named by `voyager_asset`, `dx-voyager.zip`) and the instruments, each at its `tag`, and zips them as `voyager-full.zip`. When `voyager_version` is a draft, the engine zip is taken from that draft. The zip goes to the release named by `full_release_tag`, created as a draft if missing; nothing is published.
 

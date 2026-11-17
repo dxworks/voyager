@@ -151,7 +151,7 @@ jobs:
       actions: write
     env:
       # V1, packed with V2 as its fallback
-      V1_VERSION: v1.6.2
+      V1_VERSION: v1.6.3
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
