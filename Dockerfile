@@ -9,6 +9,9 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends openjdk-21-jre-headless python3 git unzip && \
     rm -rf /var/lib/apt/lists/*
 
+# UTF-8 locale, so Java can open files with non-ASCII names.
+ENV LANG=C.UTF-8
+
 # Copy and setup Voyager
 COPY release/voyager-full.zip /usr
 WORKDIR /usr
