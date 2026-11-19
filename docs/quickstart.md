@@ -61,7 +61,7 @@ voyager-target
 ```
 
 ### The TARGET Directory
-The `TARGET` directory is the absolute path to the `voyager-target` folder defined in [the steps above](#Create an empty target folder).
+The `TARGET` directory is the absolute path to the `voyager-target` folder defined in [the steps above](#create-an-empty-target-folder).
 
 ## Configure Mission
 Open the `mission.yml` file from the [`VOYAGER_HOME`](#voyager_home-folder) folder in a text editor and fill in the `target` field with the [`TARGET`](#the-target-directory) directory.

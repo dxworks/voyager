@@ -16,7 +16,7 @@ voyenv -version
 
 ### Usage
 To generate a Voyager release, open a command line in the folder you want to generate the release in.
-Before running the command you have to create a `yml` file described in the [Configuration](#Configuration) section, e.g. `my-voyenv.yml`.
+Before running the command you have to create a `yml` file described in the [Configuration](configuration.md) section, e.g. `my-voyenv.yml`.
 
 Run the following command in a terminal window:
 ```yaml

@@ -41,7 +41,7 @@ voyager-target
 ```
 
 ### The TARGET Directory
-The `TARGET` directory is the absolute path to the `voyager-target` folder defined in [the steps above](#Create an empty target folder).
+The `TARGET` directory is the absolute path to the `voyager-target` folder defined in [the steps above](#create-an-empty-target-folder).
 
 ## Prepare Docker run
 The `dxworks/voyager` image is executable and needs 2 volumes to be mounted:
