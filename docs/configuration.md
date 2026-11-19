@@ -5,7 +5,7 @@ A voyenv.yml example:
 # Name of the release (a folder with this name will be created in the working directory)
 name: voyager-test-1
 # The Voyager version to download. See at https://github.com/dxworks/voyager/releases 
-voyager_version: v1.4.1
+voyager_version: v{{ voyager_version }}
 # A list of instruments to download (from Github only)
 instruments:
     # Name in owner/repo format

@@ -30,3 +30,7 @@ target
 mission-report
 
 development-mission.yml
+
+# Shared docs theme, added by the docs workflow
+docs/stylesheets/dxworks-theme.css
+site/

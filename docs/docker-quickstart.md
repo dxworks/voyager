@@ -1,5 +1,5 @@
 ## Voyager Docker Quickstart
-The docker image for voyager is available on Dockerhub under the name [`dxworks/voyager`](https://hub.docker.com/repository/docker/dxworks/voyager).
+The docker image for voyager is available on Dockerhub under the name [`dxworks/voyager`](https://hub.docker.com/r/dxworks/voyager).
 
 ## Prepare TARGET Folder
 The `TARGET` folder is the folder that Voyager will analyze. The children of the `TARGET` folder should be folders that are git repositories.
@@ -13,15 +13,17 @@ cd voyager-target
 ```
 
 #### Clone repositories
-Clone all repositories you want to analyze in the voyager-repos folder. Make sure to checkout the main branch for each repository.
+Clone all repositories you want to analyze in the voyager-target folder. Make sure to checkout the main branch for each repository.
 ```shell
 git clone <repo1-url>
 cd <repo1>
 git checkout <repo1-main-branch>
+cd ..
 
 git clone <repo2-url>
 cd <repo2>
 git checkout <repo2-main-branch>
+cd ..
 ```
 
 ### Final Structure:
@@ -41,7 +43,7 @@ voyager-target
 ```
 
 ### The TARGET Directory
-The `TARGET` directory is the absolute path to the `voyager-target` folder defined in [the steps above](#Create an empty target folder).
+The `TARGET` directory is the absolute path to the `voyager-target` folder defined in [the steps above](#create-an-empty-target-folder).
 
 ## Prepare Docker run
 The `dxworks/voyager` image is executable and needs 2 volumes to be mounted:
@@ -56,7 +58,7 @@ To run voyager, run the following command from the `TARGET` directory:
 
 ```shell
 mkdir results
-docker run -v $(PWD):/usr/project:ro -v $(PWD)/results:/usr/voyager/results dxworks/voyager
+docker run -v "$(pwd)":/usr/project:ro -v "$(pwd)"/results:/usr/voyager/results dxworks/voyager:{{ voyager_version }}
 ```
 Alternatively, you can adjust the volume mounts to point to the `TARGET` folder and to a result folder.
 
@@ -70,7 +72,7 @@ version: '3.8'
 
 services:
   voyager:
-    image: dxworks/voyager
+    image: dxworks/voyager:{{ voyager_version }}
     volumes:
       - ./results:/usr/voyager/results # please mount a new folder where the result archive will be added
       - .:/usr/project:ro # please input the target folder you want to analyse (read-only: Voyager never changes your code)

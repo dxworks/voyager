@@ -2,8 +2,24 @@
 
 #### VOYAGER_HOME Folder
 Download a Voyager archive and unzip it to a folder of your choosing. We will call this folder `VOYAGER_HOME`. 
-The latest Voyager archive with all instruments is available [here](https://github.com/dxworks/voyager/releases/download/v1.6.0/voyager-full.zip).
+The Voyager {{ voyager_version }} archive with all instruments is available [here](https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full.zip).
 If you want to run Voyager in Docker, please visit our [Voyager Docker Quickstart Guide](docker-quickstart.md).
+
+Or download it from a terminal. This creates a `voyager` folder, which is your `VOYAGER_HOME`:
+
+=== "macOS / Linux"
+
+    ```shell
+    curl -fLO https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full.zip
+    unzip -q voyager-full.zip
+    ```
+
+=== "Windows (PowerShell)"
+
+    ```powershell
+    curl.exe -fLO https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full.zip
+    Expand-Archive voyager-full.zip -DestinationPath .
+    ```
 
 ## Prepare TARGET Folder
 The `TARGET` folder is the folder that Voyager will analyze. The children of the `TARGET` folder should be folders that are git repositories.
@@ -17,15 +33,17 @@ cd voyager-target
 ```
 
 #### Clone repositories
-Clone all repositories you want to analyze in the voyager-repos folder. Make sure to checkout the main branch for each repository.
+Clone all repositories you want to analyze in the voyager-target folder. Make sure to checkout the main branch for each repository.
 ```shell
 git clone <repo1-url>
 cd <repo1>
 git checkout <repo1-main-branch>
+cd ..
 
 git clone <repo2-url>
 cd <repo2>
 git checkout <repo2-main-branch>
+cd ..
 ```
 
 ### Final Structure:
@@ -45,7 +63,7 @@ voyager-target
 ```
 
 ### The TARGET Directory
-The `TARGET` directory is the absolute path to the `voyager-target` folder defined in [the steps above](#Create an empty target folder).
+The `TARGET` directory is the absolute path to the `voyager-target` folder defined in [the steps above](#create-an-empty-target-folder).
 
 ## Configure Mission
 Open the `mission.yml` file from the [`VOYAGER_HOME`](#voyager_home-folder) folder in a text editor and fill in the `target` field with the [`TARGET`](#the-target-directory) directory.
@@ -68,8 +86,8 @@ To check that Voyager has access to all required runtime environments, open a te
 
 
 === "Windows"
-    ```shell
-    voyager.bat doctor
+    ```powershell
+    .\voyager.bat doctor
     ```
 === "Mac / Linux"
     ```shell
@@ -85,8 +103,8 @@ Please check that all version checks have passed.
 To run voyager, run the following command:
 
 === "Windows"
-    ```shell
-    voyager.bat 
+    ```powershell
+    .\voyager.bat 
     ```
 === "Mac / Linux"
     ```shell

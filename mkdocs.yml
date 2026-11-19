@@ -1,8 +1,9 @@
 site_name: Voyager
+site_url: https://dxworks.org/voyager/
 
 repo_url: https://github.com/dxworks/voyager
 repo_name: dxworks/voyager
-edit_uri: edit/docs/docs/
+edit_uri: edit/main/docs/
 
 copyright: Copyright &copy; 2021 Dxworks
 
@@ -17,6 +18,7 @@ theme:
     - navigation.indexes
     - search.suggest
     - search.highlight
+    - content.code.copy
 
   palette:
     # Toggle light mode
@@ -26,7 +28,7 @@ theme:
       accent: teal
       toggle:
         icon: material/toggle-switch-off-outline
-        name: Switch to light mode
+        name: Switch to dark mode
 
     # Toggle dark mode
     - scheme: slate
@@ -35,13 +37,15 @@ theme:
       accent: teal
       toggle:
         icon: material/toggle-switch
-        name: Switch to dark mode
+        name: Switch to light mode
 
   logo: assets/icons/dxworks-white-square-thick.png
 
 plugins:
   - search:
       prebuild_index: true
+  # Fills {{ voyager_version }} in the docs from extra below
+  - markdownextradata
 
 markdown_extensions:
   - toc:
@@ -50,19 +54,20 @@ markdown_extensions:
   - attr_list
   - admonition
   - pymdownx.details
-  - pymdownx.tabbed
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.superfences
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:zensical.extensions.emoji.twemoji
+      emoji_generator: !!python/name:zensical.extensions.emoji.to_svg
 
 extra_css:
-  - stylesheets/styles.css
+  - stylesheets/dxworks-theme.css
 
 extra:
   generator: false
-  version:
-    provider: mike
+  # The one place to change the Voyager version used in all download links
+  voyager_version: 1.6.3
 
 use_directory_urls: false
 
