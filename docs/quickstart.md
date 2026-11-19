@@ -33,15 +33,17 @@ cd voyager-target
 ```
 
 #### Clone repositories
-Clone all repositories you want to analyze in the voyager-repos folder. Make sure to checkout the main branch for each repository.
+Clone all repositories you want to analyze in the voyager-target folder. Make sure to checkout the main branch for each repository.
 ```shell
 git clone <repo1-url>
 cd <repo1>
 git checkout <repo1-main-branch>
+cd ..
 
 git clone <repo2-url>
 cd <repo2>
 git checkout <repo2-main-branch>
+cd ..
 ```
 
 ### Final Structure:

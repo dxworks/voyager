@@ -1,4 +1,5 @@
 site_name: Voyager
+site_url: https://dxworks.org/voyager/
 
 repo_url: https://github.com/dxworks/voyager
 repo_name: dxworks/voyager
@@ -67,8 +68,6 @@ extra:
   generator: false
   # The one place to change the Voyager version used in all download links
   voyager_version: 1.6.3
-  version:
-    provider: mike
 
 use_directory_urls: false
 
