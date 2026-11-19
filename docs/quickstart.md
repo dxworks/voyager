@@ -2,7 +2,7 @@
 
 #### VOYAGER_HOME Folder
 Download a Voyager archive and unzip it to a folder of your choosing. We will call this folder `VOYAGER_HOME`. 
-The latest Voyager archive with all instruments is available [here](https://github.com/dxworks/voyager/releases/download/v1.6.3/voyager-full.zip).
+The Voyager {{ voyager_version }} archive with all instruments is available [here](https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full.zip).
 If you want to run Voyager in Docker, please visit our [Voyager Docker Quickstart Guide](docker-quickstart.md).
 
 Or download it from a terminal. This creates a `voyager` folder, which is your `VOYAGER_HOME`:
@@ -10,14 +10,14 @@ Or download it from a terminal. This creates a `voyager` folder, which is your `
 === "macOS / Linux"
 
     ```shell
-    curl -fLO https://github.com/dxworks/voyager/releases/latest/download/voyager-full.zip
+    curl -fLO https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full.zip
     unzip -q voyager-full.zip
     ```
 
 === "Windows (PowerShell)"
 
     ```powershell
-    Invoke-WebRequest https://github.com/dxworks/voyager/releases/latest/download/voyager-full.zip -OutFile voyager-full.zip
+    curl.exe -fLO https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full.zip
     Expand-Archive voyager-full.zip -DestinationPath .
     ```
 
@@ -84,8 +84,8 @@ To check that Voyager has access to all required runtime environments, open a te
 
 
 === "Windows"
-    ```shell
-    voyager.bat doctor
+    ```powershell
+    .\voyager.bat doctor
     ```
 === "Mac / Linux"
     ```shell
@@ -101,8 +101,8 @@ Please check that all version checks have passed.
 To run voyager, run the following command:
 
 === "Windows"
-    ```shell
-    voyager.bat 
+    ```powershell
+    .\voyager.bat 
     ```
 === "Mac / Linux"
     ```shell

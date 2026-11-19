@@ -56,7 +56,7 @@ To run voyager, run the following command from the `TARGET` directory:
 
 ```shell
 mkdir results
-docker run -v $(PWD):/usr/project:ro -v $(PWD)/results:/usr/voyager/results dxworks/voyager
+docker run -v $(PWD):/usr/project:ro -v $(PWD)/results:/usr/voyager/results dxworks/voyager:{{ voyager_version }}
 ```
 Alternatively, you can adjust the volume mounts to point to the `TARGET` folder and to a result folder.
 
@@ -70,7 +70,7 @@ version: '3.8'
 
 services:
   voyager:
-    image: dxworks/voyager
+    image: dxworks/voyager:{{ voyager_version }}
     volumes:
       - ./results:/usr/voyager/results # please mount a new folder where the result archive will be added
       - .:/usr/project:ro # please input the target folder you want to analyse (read-only: Voyager never changes your code)
