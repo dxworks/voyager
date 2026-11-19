@@ -5,6 +5,22 @@ Download a Voyager archive and unzip it to a folder of your choosing. We will ca
 The latest Voyager archive with all instruments is available [here](https://github.com/dxworks/voyager/releases/download/v1.6.3/voyager-full.zip).
 If you want to run Voyager in Docker, please visit our [Voyager Docker Quickstart Guide](docker-quickstart.md).
 
+Or download it from a terminal. This creates a `voyager` folder, which is your `VOYAGER_HOME`:
+
+=== "macOS / Linux"
+
+    ```shell
+    curl -fLO https://github.com/dxworks/voyager/releases/latest/download/voyager-full.zip
+    unzip -q voyager-full.zip
+    ```
+
+=== "Windows (PowerShell)"
+
+    ```powershell
+    Invoke-WebRequest https://github.com/dxworks/voyager/releases/latest/download/voyager-full.zip -OutFile voyager-full.zip
+    Expand-Archive voyager-full.zip -DestinationPath .
+    ```
+
 ## Prepare TARGET Folder
 The `TARGET` folder is the folder that Voyager will analyze. The children of the `TARGET` folder should be folders that are git repositories.
 

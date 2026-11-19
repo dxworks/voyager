@@ -17,6 +17,7 @@ theme:
     - navigation.indexes
     - search.suggest
     - search.highlight
+    - content.code.copy
 
   palette:
     # Toggle light mode
