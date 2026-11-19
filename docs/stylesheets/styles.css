@@ -20,3 +20,30 @@
   --md-code-bg-color--light: #e8eaeeb3;
   --md-code-bg-color--lighter: #e8eaee4d;
 }
+
+/* Copy button: above the code box on the right, level with the tab labels */
+.md-typeset :not(.tabbed-block) > .highlight > pre {
+  margin-top: 2.2rem;
+}
+.md-typeset .md-code__nav {
+  top: -1.9rem;
+  right: 0;
+  padding: .15rem;
+  background-color: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: .3rem;
+  opacity: .6;
+  transition: opacity .2s;
+}
+.md-typeset pre:hover .md-code__nav,
+.md-typeset .md-code__nav:focus-within {
+  opacity: 1;
+  background-color: var(--md-default-bg-color);
+}
+.md-typeset .md-code__button {
+  color: var(--md-default-fg-color--light);
+}
+.md-typeset .md-code__button:hover,
+.md-typeset .md-code__button--active {
+  color: var(--md-accent-fg-color) !important;
+}
