@@ -55,11 +55,11 @@ markdown_extensions:
       alternate_style: true
   - pymdownx.superfences
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:zensical.extensions.emoji.twemoji
+      emoji_generator: !!python/name:zensical.extensions.emoji.to_svg
 
 extra_css:
-  - stylesheets/styles.css
+  - stylesheets/dxworks-theme.css
 
 extra:
   generator: false
