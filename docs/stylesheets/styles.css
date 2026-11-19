@@ -1,0 +1,22 @@
+/* Softer dark theme: dark grey instead of near-black */
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color: hsla(var(--md-hue), 15%, 15%, 1);
+  --md-default-bg-color--light: hsla(var(--md-hue), 15%, 15%, 0.54);
+  --md-default-bg-color--lighter: hsla(var(--md-hue), 15%, 15%, 0.26);
+  --md-default-bg-color--lightest: hsla(var(--md-hue), 15%, 15%, 0.07);
+  --md-code-bg-color: hsla(var(--md-hue), 15%, 19%, 1);
+  --md-code-bg-color--light: hsla(var(--md-hue), 15%, 19%, 0.9);
+  --md-code-bg-color--lighter: hsla(var(--md-hue), 15%, 19%, 0.54);
+  --md-footer-bg-color: hsla(var(--md-hue), 15%, 11%, 0.87);
+}
+
+/* Softer light theme: off-white instead of pure white */
+[data-md-color-scheme="default"] {
+  --md-default-bg-color: #f4f5f7;
+  --md-default-bg-color--light: #f4f5f7b3;
+  --md-default-bg-color--lighter: #f4f5f74d;
+  --md-default-bg-color--lightest: #f4f5f71f;
+  --md-code-bg-color: #e8eaee;
+  --md-code-bg-color--light: #e8eaeeb3;
+  --md-code-bg-color--lighter: #e8eaee4d;
+}
