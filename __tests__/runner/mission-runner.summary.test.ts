@@ -72,4 +72,37 @@ describe('mission runner summary command', () => {
         expect(missionContext.missionSummary.getInstrumentSummary('Tool').finishedAt).toMatch(/^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}$/)
         expect(missionContext.missionSummary.instrumentsSummary.has('NoSummaryTool')).toBe(false)
     })
+
+    test('summaryMission should end with the failed instruments, one with a missing summary file included', async () => {
+        loadAndParseDataMock.mockImplementation(() => {
+            missionContext.name = 'summary-mission'
+            missionContext.instruments = [
+                {
+                    id: 'tool-ok',
+                    name: 'ToolOk',
+                    version: '1.0.0',
+                    instrumentPath: '/tmp/tool-ok',
+                    actions: new Map([['summary', {name: 'summary', commandsContext: []}]]),
+                    runOrder: 0,
+                },
+                {
+                    id: 'tool-missing',
+                    name: 'ToolMissing',
+                    version: '1.0.0',
+                    instrumentPath: '/tmp/tool-missing',
+                    actions: new Map([['summary', {name: 'summary', commandsContext: [], summaryMdFile: 'summary.md'}]]),
+                    runOrder: 0,
+                },
+            ]
+        })
+        const logSpy = jest.spyOn(console, 'log').mockImplementation()
+
+        await summaryMission(path.join(tempDir, 'mission.yml'))
+
+        const lines = logSpy.mock.calls.map(call => call[0])
+        expect(lines.slice(-2)).toEqual([
+            'Instruments succeeded (1): ToolOk',
+            'Instruments failed (1): ToolMissing',
+        ])
+    })
 })

@@ -1,4 +1,5 @@
 import {missionContext} from '../context/MissionContext'
+import {InstrumentSummary} from '../model/summary/InstrumentSummary'
 
 export const maxLength = 100
 
@@ -18,6 +19,17 @@ export function generateMissionSummary(): void {
     })
     output += padLine('Elapsed Time', ` [ ${missionSummary.runningTime} ]`, maxLength)
     console.log(output)
+}
+
+// Ends a run or a summary with the instruments that succeeded and failed, so a failure isn't lost in the output above
+export function logInstrumentsResult(instrumentNames: string[], failedInstrumentNames: string[]): void {
+    const succeededInstrumentNames = instrumentNames.filter(name => !failedInstrumentNames.includes(name))
+    console.log(`Instruments succeeded (${succeededInstrumentNames.length}): ${succeededInstrumentNames.join(', ') || 'none'}`)
+    console.log(`Instruments failed (${failedInstrumentNames.length}): ${failedInstrumentNames.join(', ') || 'none'}`)
+}
+
+export function hasFailedCommand(instrumentSummary: InstrumentSummary): boolean {
+    return [...instrumentSummary.commandsSummary.values()].some(commandSummary => !commandSummary.success)
 }
 
 export function centerText(text: string, maxLength: number, paddingCharacters: string): string {

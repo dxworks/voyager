@@ -74,3 +74,4 @@ nav:
 #      - Instruments: 'instruments.md'
 #      - Runtimes: 'runtimes.md'
   - Quick Start: 'quickstart.md'
+  - Voyager 2 Package: 'voyager2-package.md'

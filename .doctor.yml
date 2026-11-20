@@ -1,0 +1,29 @@
+versions:
+  - name: Java
+    min: 21
+    win: java -version
+    unix: java -version
+    match:
+      - java version "(?<version>.+)"
+      - (?i)openjdk(?-i) version "(?<version>.+)"
+
+  - name: Python
+    min: 3.9
+    win: python -V
+    unix: python3 -V
+    match:
+      - Python (?<version>.+)
+
+  - name: Dotnet
+    min: 10
+    win: dotnet --version
+    unix: dotnet --version
+    match:
+      - (?<version>.+)
+  - name: git
+    min: 2.12
+    win: git --version
+    unix: git --version
+    match:
+      - version (?<version>.+)
+
