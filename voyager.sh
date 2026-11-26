@@ -14,10 +14,15 @@ v2_args=()
 
 case "${uname_s}" in
     Linux*)
-        v2_binary="${SCRIPT_DIR}/dx-voyager-linux-x64"
+        if [[ "${uname_m}" == "aarch64" || "${uname_m}" == "arm64" ]]; then
+            v2_binary="${SCRIPT_DIR}/dx-voyager-linux-arm64"
+        else
+            v2_binary="${SCRIPT_DIR}/dx-voyager-linux-x64"
+        fi
         ;;
     Darwin*)
-        if [[ "${uname_m}" == "arm64" ]]; then
+        # Apple Silicon runs the x64 program through Rosetta when the package has no arm64 one
+        if [[ "${uname_m}" == "arm64" && -f "${SCRIPT_DIR}/dx-voyager-macos-arm64" ]]; then
             v2_binary="${SCRIPT_DIR}/dx-voyager-macos-arm64"
         else
             v2_binary="${SCRIPT_DIR}/dx-voyager-macos-x64"

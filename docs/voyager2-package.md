@@ -1,19 +1,17 @@
 # Voyager 2 Package
 
-The Voyager 2 package, `voyager-full.zip`, holds the new Voyager engine (Voyager 2, or V2), the previous engine (Voyager 1, or V1) as a fallback, and the instruments.
+The Voyager 2 package, `voyager-full-<platform>.zip`, holds the new Voyager engine (Voyager 2, or V2), the previous engine (Voyager 1, or V1) as a fallback, and the instruments.
 You start it with `voyager.sh` or `voyager.bat`, as before. The launcher runs V2 first. If V2 cannot run, it runs the same mission with V1.
 
 ## What the Package Holds
-Unzip `voyager-full.zip` to a folder of your choosing. You get a `voyager` folder, the `VOYAGER_HOME` folder of the [Quick Start](quickstart.md):
+There is one package per platform: `win-x64`, `linux-x64`, `linux-arm64`, `macos-x64` (Intel Mac) and `macos-arm64` (Apple Silicon). Each holds only its platform's programs.
+Unzip the one for your system to a folder of your choosing. You get a `voyager` folder, the `VOYAGER_HOME` folder of the [Quick Start](quickstart.md):
 
 ```text
 voyager
     voyager.sh                  launcher for Mac / Linux
     voyager.bat                 launcher for Windows
-    dx-voyager-macos-arm64      V2 for Mac (Apple Silicon)
-    dx-voyager-macos-x64        V2 for Mac (Intel)
-    dx-voyager-linux-x64        V2 for Linux
-    dx-voyager-win-x64.exe      V2 for Windows
+    dx-voyager-<platform>[.exe] V2 for the package's platform
     dx-voyager.jar              V1
     .config.yml                 V1 global configuration
     .doctor.yml                 V1 runtime version checks
@@ -136,13 +134,15 @@ Two GitHub workflows build it, as for V1:
 |--------------------------------------------------------------|------------------------------|----------------------------------------------------------------------------------------------|
 | `.github/workflows/release-voyager2.yml`                     | Pull request into `voyager2` | A workflow artifact `dx-voyager`. Each new run removes the artifact of the pull request's earlier runs. |
 |                                                              | Tag `v2.*`                   | A draft release `Voyager <version>` with `dx-voyager.zip`. Publish it on GitHub to make it public. |
-| Full Instrument Release (`full-instrument-release.yml` on `main`) | Run by hand             | `voyager-full.zip`, uploaded into the newest published release.                              |
+| Full Instrument Release (`full-instrument-release.yml` on `main`) | Run by hand             | `voyager-full-<platform>.zip` for each of the five platforms, uploaded into the release named by `full_release_tag` (else the newest published one). |
 
 `release-voyager2.yml` makes the engine zip, without instruments:
 
-1. Builds the four V2 programs with Node.js 26 (single executable applications): Windows, Linux, Mac (Apple Silicon and Intel). The Mac programs are signed with the Developer ID and notarized (secrets `MACOS_CERT_P12_BASE64`, `MACOS_CERT_PASSWORD`, `APPLE_API_KEY_P8`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER_ID`); without them it gets an ad-hoc signature. For a tag, V2's `--version` prints the tag's version; other builds print `dev`.
-2. Downloads V1's `dx-voyager.zip` (`V1_VERSION` in the workflow, `v1.6.3`), copies the launchers over V1's own `voyager.sh` and `voyager.bat`, adds the V2 programs, and zips the `voyager` folder as `dx-voyager.zip`.
+1. Builds the five V2 programs with Node.js 26 (single executable applications): Windows x64, Linux x64 and arm64, Mac (Apple Silicon and Intel). The Mac programs are signed with the Developer ID and notarized (secrets `MACOS_CERT_P12_BASE64`, `MACOS_CERT_PASSWORD`, `APPLE_API_KEY_P8`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER_ID`); without them it gets an ad-hoc signature. For a tag, V2's `--version` prints the tag's version; other builds print `dev`.
+2. Downloads V1's `dx-voyager.zip` (`V1_VERSION` in the workflow, `v1.6.3`), copies the launchers over V1's own `voyager.sh` and `voyager.bat`, adds the V2 programs, and zips the `voyager` folder as `dx-voyager.zip` (every program) and as `dx-voyager-<platform>.zip` (one program each).
 
-The Full Instrument Release runs `voyenv install` on `voyenv.yml`. It installs the engine from the release named by `voyager_version` (the file named by `voyager_asset`, `dx-voyager.zip`) and the instruments, each at its `tag`, and zips them as `voyager-full.zip`. When `voyager_version` is a draft, the engine zip is taken from that draft. The zip goes to the release named by `full_release_tag`, created as a draft if missing; nothing is published.
+The Full Instrument Release runs once per platform. Each run takes `voyenv.yml`, and for the engine and every instrument whose release has a `<asset stem>-<platform>.zip` (for example `depminer-voyager-linux-arm64.zip`) it uses that file instead of the one in `asset`; platform-independent instruments keep their single zip. It then runs `voyenv install` and zips the result as `voyager-full-<platform>.zip`. When `voyager_version` is a draft, the engine zip is taken from that draft. The zips go to the release named by `full_release_tag`, created as a draft if missing; nothing is published. In a draft, the old all-platform `voyager-full.zip` is removed.
+
+Instruments with per-platform zips: honeydew, depminer and voyager-summarizer. Their all-platform zip is still published, for `voyenv.yml` files that name it.
 
 To release V2: set `voyager_version` in `voyenv.yml` on `main` to the new tag, push the tag, publish the draft release, then run the Full Instrument Release. The pins are set by hand. V2 is built from the commit the workflow runs on.

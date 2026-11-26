@@ -5,9 +5,60 @@ on:
   - repository_dispatch
 
 jobs:
-  full-realease:
-    name: Create Full Instruments Release
+  # The release that gets the packages, read once so the platform jobs below don't race to create it
+  target-release:
+    name: Target release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      release: ${{ steps.pick.outputs.release }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - id: target_release
+        name: Read target release from voyenv.yml
+        run: |
+          release=$(yq '.full_release_tag // ""' voyenv.yml 2>/dev/null || true)
+          if [ -z "$release" ]; then
+            echo "voyenv.yml has no full_release_tag: using the latest Voyager release"
+          fi
+          echo "release=$release" >> $GITHUB_OUTPUT
+
+      - id: latest_release
+        if: steps.target_release.outputs.release == ''
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          repository: ${{ github.repository }}
+
+      - id: pick
+        name: Create the draft if missing
+        run: |
+          release="${{ steps.target_release.outputs.release || steps.latest_release.outputs.release }}"
+          # A full_release_tag with no release yet gets a draft, on this branch's commit; never published here
+          if ! gh release view "$release" >/dev/null 2>&1; then
+            gh release create "$release" --draft --target "$GITHUB_SHA" --title "Voyager ${release#v}" --notes ""
+          fi
+          # The all-platform voyager-full.zip is replaced by the per-platform zips: drop it from a
+          # draft. A published release keeps whatever it has (links to it may be in use).
+          if [ "$(gh release view "$release" --json isDraft -q .isDraft)" = "true" ]; then
+            gh release delete-asset "$release" voyager-full.zip -y 2>/dev/null || true
+          fi
+          echo "release=$release" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # One voyager-full-<platform>.zip per platform: the engine and every instrument at its
+  # <asset stem>-<platform>.zip when its release has one (only that platform's programs),
+  # else at the asset named in voyenv.yml (platform-independent instruments, or older releases).
+  full-release:
+    name: Full Instruments Release ${{ matrix.platform }}
+    needs: target-release
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        platform: [win-x64, linux-x64, linux-arm64, macos-x64, macos-arm64]
 
     permissions:
       contents: write
@@ -20,7 +71,7 @@ jobs:
         id: set_variables
         run: |
           currentDate=$(date +"%Y-%m-%d")
-          echo ::set-output name=currentDate::$currentDate
+          echo "currentDate=$currentDate" >> $GITHUB_OUTPUT
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -43,52 +94,59 @@ jobs:
             voyenv init -ci release
           fi
           cd release
+
+          # <repo> <tag> <asset>: the release's <asset stem>-$PLATFORM.zip if it has one, else <asset>
+          platform_asset() {
+            local candidate="${3%.zip}-$PLATFORM.zip"
+            if gh release view "$2" -R "$1" --json assets -q '.assets[].name' | grep -qxF "$candidate"; then
+              echo "$candidate"
+            else
+              echo "$3"
+            fi
+          }
+          n=$(yq '.instruments | length' voyenv.yml)
+          for i in $(seq 0 $((n - 1))); do
+            name=$(yq ".instruments[$i].name" voyenv.yml)
+            tag=$(yq ".instruments[$i].tag" voyenv.yml)
+            asset=$(yq ".instruments[$i].asset" voyenv.yml)
+            picked=$(platform_asset "$name" "$tag" "$asset")
+            echo "$name $tag: $picked"
+            yq -i ".instruments[$i].asset = \"$picked\"" voyenv.yml
+          done
+
+          engine=$(yq '.voyager_version' voyenv.yml)
+          engine_all=$(yq '.voyager_asset // "dx-voyager.zip"' voyenv.yml)
+          engine_asset=$(platform_asset "$GITHUB_REPOSITORY" "$engine" "$engine_all")
+          echo "engine $engine: $engine_asset"
+          [ "$engine_asset" != "$engine_all" ] || echo "::warning::$engine has no ${engine_all%.zip}-$PLATFORM.zip: the package gets every platform's V2 program"
+          yq -i ".voyager_asset = \"$engine_asset\"" voyenv.yml
+
           # voyenv fetches the engine only from a published release. When voyager_version names a
           # draft (V2 before it is published), voyenv installs the instruments with the newest
           # published engine, which is then replaced by the draft's engine zip (read with this
           # repo's token, which sees drafts). Nothing is published.
-          engine=$(yq '.voyager_version' voyenv.yml)
           if [ "$(gh release view "$engine" --json isDraft -q .isDraft)" = "true" ]; then
-            echo "Engine $engine is a draft: taking its $(yq '.voyager_asset // "dx-voyager.zip"' voyenv.yml) from the draft"
+            echo "Engine $engine is a draft: taking its $engine_asset from the draft"
             published=$(gh release list --exclude-drafts --exclude-pre-releases -L 1 --json tagName -q '.[0].tagName')
-            yq -i ".voyager_version = \"$published\"" voyenv.yml
+            yq -i ".voyager_version = \"$published\" | .voyager_asset = \"dx-voyager.zip\"" voyenv.yml
             voyenv install
             find voyager -mindepth 1 -maxdepth 1 ! -name instruments ! -name runtimes ! -name voyenv.yml -exec rm -rf {} +
-            gh release download "$engine" -p "$(yq '.voyager_asset // "dx-voyager.zip"' voyenv.yml)" -O engine.zip
+            gh release download "$engine" -p "$engine_asset" -O engine.zip
             unzip -q -o engine.zip -x 'voyager/instruments/*'   # as voyenv: the engine's demo instruments stay out
             rm engine.zip
-            yq -i ".voyager_version = \"$engine\"" voyenv.yml
-            yq -i ".voyager_version = \"$engine\"" voyager/voyenv.yml
+            for f in voyenv.yml voyager/voyenv.yml; do
+              yq -i ".voyager_version = \"$engine\" | .voyager_asset = \"$engine_asset\"" "$f"
+            done
           else
             voyenv install
           fi
-          zip -r voyager-full.zip voyager
+          zip -r "voyager-full-$PLATFORM.zip" voyager
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - id: target_release
-        name: Read target release from voyenv.yml
-        run: |
-          release=$(yq '.full_release_tag // ""' release/voyenv.yml)
-          if [ -z "$release" ]; then
-            echo "voyenv.yml has no full_release_tag: using the latest Voyager release"
-          fi
-          echo "release=$release" >> $GITHUB_OUTPUT
-
-      - id: latest_release
-        if: steps.target_release.outputs.release == ''
-        uses: pozetroninc/github-action-get-latest-release@master
-        with:
-          repository: ${{ github.repository }}
+          PLATFORM: ${{ matrix.platform }}
 
       - name: Upload New Release Asset
-        run: |
-          release="${{ steps.target_release.outputs.release || steps.latest_release.outputs.release }}"
-          # A full_release_tag with no release yet gets a draft, on this branch's commit; never published here
-          if ! gh release view "$release" >/dev/null 2>&1; then
-            gh release create "$release" --draft --target "$GITHUB_SHA" --title "Voyager ${release#v}" --notes ""
-          fi
-          gh release upload "$release" release/voyager-full.zip --clobber
+        run: gh release upload "${{ needs.target-release.outputs.release }}" "release/voyager-full-${{ matrix.platform }}.zip" --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

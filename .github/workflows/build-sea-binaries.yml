@@ -20,6 +20,9 @@ jobs:
           - id: linux-x64
             runs_on: ubuntu-latest
             output_file: dx-voyager-linux-x64
+          - id: linux-arm64
+            runs_on: ubuntu-24.04-arm
+            output_file: dx-voyager-linux-arm64
           - id: macos-x64
             runs_on: macos-15-intel
             output_file: dx-voyager-macos-x64

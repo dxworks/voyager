@@ -25,6 +25,9 @@ jobs:
           - id: linux-x64
             runs_on: ubuntu-latest
             output_file: dx-voyager-linux-x64
+          - id: linux-arm64
+            runs_on: ubuntu-24.04-arm
+            output_file: dx-voyager-linux-arm64
           - id: macos-x64
             runs_on: macos-15-intel
             output_file: dx-voyager-macos-x64
@@ -183,11 +186,26 @@ jobs:
           cp ../artifacts/dx-voyager-linux-x64 voyager/
           cp ../artifacts/dx-voyager-macos-x64 voyager/
           cp ../artifacts/dx-voyager-macos-arm64 voyager/
+          cp ../artifacts/dx-voyager-linux-arm64 voyager/
           chmod +x voyager/voyager.sh
           chmod +x voyager/dx-voyager-linux-x64
+          chmod +x voyager/dx-voyager-linux-arm64
           chmod +x voyager/dx-voyager-macos-x64
           chmod +x voyager/dx-voyager-macos-arm64
           zip -r dx-voyager.zip voyager
+          # One engine zip per platform, holding only that platform's V2 program (V1 and both
+          # launchers in each), for the per-platform voyager-full-<platform>.zip of the Full
+          # Instrument Release. dx-voyager.zip above keeps every program.
+          for p in win-x64 linux-x64 linux-arm64 macos-x64 macos-arm64; do
+            rm -rf stage && mkdir stage
+            cp -a voyager stage/
+            find stage/voyager -maxdepth 1 -name 'dx-voyager-*' ! -name "dx-voyager-$p" ! -name "dx-voyager-$p.exe" -delete
+            [ "$(find stage/voyager -maxdepth 1 -name 'dx-voyager-*' | wc -l)" -eq 1 ] \
+              || { echo "::error::$p: expected exactly one V2 program"; exit 1; }
+            (cd stage && zip -r -q "../dx-voyager-$p.zip" voyager)
+          done
+          rm -rf stage
+          ls -l dx-voyager*.zip
 
       - name: Upload Voyager2 package
         if: github.event_name == 'pull_request'
@@ -231,7 +249,7 @@ jobs:
               exit 1
             fi
             gh release edit "$TAG" --target "$GITHUB_SHA" --title "$NAME"
-            gh release upload "$TAG" release/dx-voyager.zip --clobber
+            gh release upload "$TAG" release/dx-voyager.zip release/dx-voyager-*.zip --clobber
           else
-            gh release create "$TAG" release/dx-voyager.zip --draft --target "$GITHUB_SHA" --title "$NAME" --notes ""
+            gh release create "$TAG" release/dx-voyager.zip release/dx-voyager-*.zip --draft --target "$GITHUB_SHA" --title "$NAME" --notes ""
           fi
