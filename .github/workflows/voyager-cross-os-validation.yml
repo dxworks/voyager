@@ -14,7 +14,7 @@ on:
       release_asset:
         description: Release asset zip file name
         required: true
-        default: voyager2-full.zip
+        default: voyager-full.zip
 
 permissions:
   contents: write

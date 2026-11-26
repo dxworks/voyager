@@ -39,18 +39,14 @@ jobs:
           if ! gh release view "$release" >/dev/null 2>&1; then
             gh release create "$release" --draft --target "$GITHUB_SHA" --title "Voyager ${release#v}" --notes ""
           fi
-          # The all-platform voyager-full.zip is replaced by the per-platform zips: drop it from a
-          # draft. A published release keeps whatever it has (links to it may be in use).
-          if [ "$(gh release view "$release" --json isDraft -q .isDraft)" = "true" ]; then
-            gh release delete-asset "$release" voyager-full.zip -y 2>/dev/null || true
-          fi
           echo "release=$release" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # One voyager-full-<platform>.zip per platform: the engine and every instrument at its
-  # <asset stem>-<platform>.zip when its release has one (only that platform's programs),
-  # else at the asset named in voyenv.yml (platform-independent instruments, or older releases).
+  # voyager-full.zip with every platform's programs, plus one voyager-full-<platform>.zip per platform:
+  # the engine and every instrument at its <asset stem>-<platform>.zip when its release has one (only
+  # that platform's programs), else at the asset named in voyenv.yml (platform-independent instruments,
+  # or older releases).
   full-release:
     name: Full Instruments Release ${{ matrix.platform }}
     needs: target-release
@@ -58,7 +54,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        platform: [win-x64, linux-x64, linux-arm64, macos-x64, macos-arm64]
+        # all = voyager-full.zip with every platform's programs, as before the split (kept for old links)
+        platform: [all, win-x64, linux-x64, linux-arm64, macos-x64, macos-arm64]
 
     permissions:
       contents: write
@@ -95,15 +92,25 @@ jobs:
           fi
           cd release
 
-          # <repo> <tag> <asset>: the release's <asset stem>-$PLATFORM.zip if it has one, else <asset>
+          # <repo> <tag> <asset>: the release's <asset stem>-$PLATFORM.zip if it has one, else <asset>.
+          # A release that can't be read fails the job: an API or token error never passes for "no platform zip".
           platform_asset() {
-            local candidate="${3%.zip}-$PLATFORM.zip"
-            if gh release view "$2" -R "$1" --json assets -q '.assets[].name' | grep -qxF "$candidate"; then
-              echo "$candidate"
-            else
-              echo "$3"
+            local candidate="${3%.zip}-$PLATFORM.zip" names
+            if [ "$PLATFORM" = all ]; then echo "$3"; return; fi
+            if ! names=$(gh release view "$2" -R "$1" --json assets -q '.assets[].name'); then
+              echo "::error::Cannot read release $2 of $1" >&2
+              return 1
             fi
+            if grep -qxF "$candidate" <<< "$names"; then echo "$candidate"; else echo "$3"; fi
           }
+          # What went into the package, on the run's summary page: per repo, its platform zip or the all-platform one
+          summary_row() {
+            local kind="$PLATFORM only"
+            if [ "$PLATFORM" = all ]; then kind="all platforms"
+            elif [ "$4" != "${3%.zip}-$PLATFORM.zip" ]; then kind="all platforms (no ${3%.zip}-$PLATFORM.zip)"; fi
+            echo "| $1 | $2 | $4 | $kind |" >> "$GITHUB_STEP_SUMMARY"
+          }
+          printf '### %s\n\n| Repo | Tag | Asset | Programs |\n|---|---|---|---|\n' "$ZIP" >> "$GITHUB_STEP_SUMMARY"
           n=$(yq '.instruments | length' voyenv.yml)
           for i in $(seq 0 $((n - 1))); do
             name=$(yq ".instruments[$i].name" voyenv.yml)
@@ -111,6 +118,7 @@ jobs:
             asset=$(yq ".instruments[$i].asset" voyenv.yml)
             picked=$(platform_asset "$name" "$tag" "$asset")
             echo "$name $tag: $picked"
+            summary_row "$name" "$tag" "$asset" "$picked"
             yq -i ".instruments[$i].asset = \"$picked\"" voyenv.yml
           done
 
@@ -118,7 +126,8 @@ jobs:
           engine_all=$(yq '.voyager_asset // "dx-voyager.zip"' voyenv.yml)
           engine_asset=$(platform_asset "$GITHUB_REPOSITORY" "$engine" "$engine_all")
           echo "engine $engine: $engine_asset"
-          [ "$engine_asset" != "$engine_all" ] || echo "::warning::$engine has no ${engine_all%.zip}-$PLATFORM.zip: the package gets every platform's V2 program"
+          summary_row "$GITHUB_REPOSITORY (engine)" "$engine" "$engine_all" "$engine_asset"
+          [ "$PLATFORM" = all ] || [ "$engine_asset" != "$engine_all" ] || echo "::warning::$engine has no ${engine_all%.zip}-$PLATFORM.zip: the package gets every platform's V2 program"
           yq -i ".voyager_asset = \"$engine_asset\"" voyenv.yml
 
           # voyenv fetches the engine only from a published release. When voyager_version names a
@@ -140,14 +149,16 @@ jobs:
           else
             voyenv install
           fi
-          zip -r "voyager-full-$PLATFORM.zip" voyager
+          zip -r "$ZIP" voyager
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PLATFORM: ${{ matrix.platform }}
+          ZIP: ${{ matrix.platform == 'all' && 'voyager-full.zip' || format('voyager-full-{0}.zip', matrix.platform) }}
 
       - name: Upload New Release Asset
-        run: gh release upload "${{ needs.target-release.outputs.release }}" "release/voyager-full-${{ matrix.platform }}.zip" --clobber
+        run: gh release upload "${{ needs.target-release.outputs.release }}" "release/$ZIP" --clobber
         env:
+          ZIP: ${{ matrix.platform == 'all' && 'voyager-full.zip' || format('voyager-full-{0}.zip', matrix.platform) }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 #      - name: Set up QEMU
