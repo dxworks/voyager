@@ -5,16 +5,39 @@ on:
   - repository_dispatch
 
 jobs:
-  full-realease:
-    name: Create Full Instruments Release
+  # The release that gets the packages, read once for the platform jobs and the Docker image
+  target-release:
+    name: Target release
     runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.latest_release.outputs.release }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - id: latest_release
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          repository: ${{ github.repository }}
+
+      - name: Image version
+        id: version
+        run: |
+          tag=${{ steps.latest_release.outputs.release }}
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+  # One voyager-full-<platform>.zip per platform: every instrument at its <asset stem>-<platform>.zip
+  # when its release has one (only that platform's programs), else at the asset named in voyenv.yml
+  # (platform-independent instruments, or older releases). The V1 engine is the same Java program on all.
+  full-realease:
+    name: Full Instruments Release ${{ matrix.platform }}
+    needs: target-release
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        platform: [win-x64, linux-x64, linux-arm64, macos-x64, macos-arm64]
 
     permissions:
       contents: write
-      packages: write
-
-    outputs:
-      version: ${{ steps.version.outputs.version }}
 
     steps:
       - uses: actions/checkout@v6
@@ -23,7 +46,7 @@ jobs:
         id: set_variables
         run: |
           currentDate=$(date +"%Y-%m-%d")
-          echo ::set-output name=currentDate::$currentDate
+          echo "currentDate=$currentDate" >> $GITHUB_OUTPUT
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -46,29 +69,40 @@ jobs:
             voyenv init -ci release
           fi
           cd release
-          voyenv install
-          zip -r voyager-full.zip voyager
 
-      - id: latest_release
-        uses: pozetroninc/github-action-get-latest-release@master
-        with:
-          repository: ${{ github.repository }}
+          # <repo> <tag> <asset>: the release's <asset stem>-$PLATFORM.zip if it has one, else <asset>
+          platform_asset() {
+            local candidate="${3%.zip}-$PLATFORM.zip"
+            if gh release view "$2" -R "$1" --json assets -q '.assets[].name' | grep -qxF "$candidate"; then
+              echo "$candidate"
+            else
+              echo "$3"
+            fi
+          }
+          n=$(yq '.instruments | length' voyenv.yml)
+          for i in $(seq 0 $((n - 1))); do
+            name=$(yq ".instruments[$i].name" voyenv.yml)
+            tag=$(yq ".instruments[$i].tag" voyenv.yml)
+            asset=$(yq ".instruments[$i].asset" voyenv.yml)
+            picked=$(platform_asset "$name" "$tag" "$asset")
+            echo "$name $tag: $picked"
+            yq -i ".instruments[$i].asset = \"$picked\"" voyenv.yml
+          done
+
+          voyenv install
+          zip -r "voyager-full-$PLATFORM.zip" voyager
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLATFORM: ${{ matrix.platform }}
 
       - name: Upload New Release Asset
-        run: |
-          gh release upload ${{ steps.latest_release.outputs.release }} release/voyager-full.zip --clobber
+        run: gh release upload "${{ needs.target-release.outputs.release }}" "release/voyager-full-${{ matrix.platform }}.zip" --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Image version
-        id: version
-        run: |
-          tag=${{ steps.latest_release.outputs.release }}
-          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
-
   docker:
     name: Docker Image
-    needs: full-realease
+    needs: [target-release, full-realease]
     # Only main publishes images; other branches just rebuild the bundle.
     if: github.ref == 'refs/heads/main'
     permissions:
@@ -76,7 +110,7 @@ jobs:
       packages: write
     uses: dxworks/pipelines/.github/workflows/release-docker.yml@v1
     with:
-      version: ${{ needs.full-realease.outputs.version }}
+      version: ${{ needs.target-release.outputs.version }}
       image-name: dxworks/voyager
       build-script: ./scripts/docker-prepare.sh
     secrets:

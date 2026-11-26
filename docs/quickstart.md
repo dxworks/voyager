@@ -2,7 +2,16 @@
 
 #### VOYAGER_HOME Folder
 Download a Voyager archive and unzip it to a folder of your choosing. We will call this folder `VOYAGER_HOME`. 
-The Voyager {{ voyager_version }} archive with all instruments is available [here](https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full.zip).
+There is one Voyager {{ voyager_version }} archive with all instruments per platform, holding only that platform's programs:
+
+| Platform | Archive |
+|---|---|
+| Windows (x64) | [voyager-full-win-x64.zip](https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full-win-x64.zip) |
+| Linux (x64) | [voyager-full-linux-x64.zip](https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full-linux-x64.zip) |
+| Linux (arm64) | [voyager-full-linux-arm64.zip](https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full-linux-arm64.zip) |
+| macOS (Apple Silicon) | [voyager-full-macos-arm64.zip](https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full-macos-arm64.zip) |
+| macOS (Intel) | [voyager-full-macos-x64.zip](https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full-macos-x64.zip) |
+
 If you want to run Voyager in Docker, please visit our [Voyager Docker Quickstart Guide](docker-quickstart.md).
 
 Or download it from a terminal. This creates a `voyager` folder, which is your `VOYAGER_HOME`:
@@ -10,15 +19,19 @@ Or download it from a terminal. This creates a `voyager` folder, which is your `
 === "macOS / Linux"
 
     ```shell
-    curl -fLO https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full.zip
-    unzip -q voyager-full.zip
+    case "$(uname -s)-$(uname -m)" in
+      Darwin-arm64) p=macos-arm64 ;; Darwin-*) p=macos-x64 ;;
+      Linux-aarch64|Linux-arm64) p=linux-arm64 ;; *) p=linux-x64 ;;
+    esac
+    curl -fLO https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full-$p.zip
+    unzip -q voyager-full-$p.zip
     ```
 
 === "Windows (PowerShell)"
 
     ```powershell
-    curl.exe -fLO https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full.zip
-    Expand-Archive voyager-full.zip -DestinationPath .
+    curl.exe -fLO https://github.com/dxworks/voyager/releases/download/v{{ voyager_version }}/voyager-full-win-x64.zip
+    Expand-Archive voyager-full-win-x64.zip -DestinationPath .
     ```
 
 ## Prepare TARGET Folder

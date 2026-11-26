@@ -12,10 +12,13 @@ RUN apt-get update && \
 # UTF-8 locale, so Java can open files with non-ASCII names.
 ENV LANG=C.UTF-8
 
-# Copy and setup Voyager
-COPY release/voyager-full.zip /usr
+# Copy and setup Voyager: the bundle of the image's own architecture (docker buildx sets TARGETARCH),
+# read through a bind mount so the other architecture's bundle never lands in a layer
+ARG TARGETARCH
 WORKDIR /usr
-RUN unzip voyager-full.zip
+RUN --mount=type=bind,source=release,target=/tmp/release \
+    case "$TARGETARCH" in amd64) p=linux-x64 ;; arm64) p=linux-arm64 ;; *) echo "unsupported TARGETARCH '$TARGETARCH'" >&2; exit 1 ;; esac && \
+    unzip -q "/tmp/release/voyager-full-$p.zip"
 
 COPY docker-mission.yml /usr/voyager/mission.yml
 
