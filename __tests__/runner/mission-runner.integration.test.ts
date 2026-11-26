@@ -139,4 +139,20 @@ describe('mission runner integration default flow', () => {
         const missionLogPath = path.join(tempDir, 'default-flow.log')
         expect(fs.existsSync(missionLogPath)).toBe(true)
     })
+
+    test('runMission should create the missing folder of resultsPath', async () => {
+        const missionFilePath = buildBasicMission(tempDir, 'nested-results')
+        writeYaml(missionFilePath, {
+            mission: 'nested-results',
+            instrumentsDir: './instruments',
+            resultsPath: './out/nested/results.zip',
+        })
+        const zipPath = path.join(tempDir, 'out', 'nested', 'results.zip')
+
+        await runMission(missionFilePath, undefined)
+        await waitForFile(zipPath)
+        const zip = await waitForValidZip(zipPath)
+
+        expect(zip.getEntries().map(entry => entry.entryName)).toContain('mission.yml')
+    })
 })

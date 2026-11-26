@@ -64,8 +64,10 @@ async function checkRequirement(command: string, requirement: Requirement, verbo
                     const regex = new RegExp(regexStr)  //global RegExp are stateful, so we make sure to use a new state free RegExp
                     const match = regex.exec(output)
                     if (match && match.groups) {
-                        const version = String(parseIntoMap(match.groups).get(group))
-                        if (semver.gte(version, requirement.min, true))
+                        //coerce reads versions like '21', '1.8.0_381' or '2.50.1 (Apple Git-155)'; an unreadable one fails the requirement
+                        const version = semver.coerce(String(parseIntoMap(match.groups).get(group)))
+                        const min = semver.coerce(String(requirement.min))
+                        if (version && min && semver.gte(version, min))
                             fulfilled = true
                     }
                 }

@@ -14,7 +14,7 @@ on:
       release_asset:
         description: Release asset zip file name
         required: true
-        default: voyager2-full.zip
+        default: voyager-full.zip
 
 permissions:
   contents: write
@@ -64,7 +64,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '25.x'
+          node-version: '26.x'
           cache: npm
           cache-dependency-path: voyager2-src/package-lock.json
           scope: '@dxworks'

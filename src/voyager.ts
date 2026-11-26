@@ -87,6 +87,6 @@ program
         summaryMission(options.missionPath, !!options.verbose).then()
     })
 
-program.version("0.0.1")
+program.version("dev")
 
 program.parse(process.argv)

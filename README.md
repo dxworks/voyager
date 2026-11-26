@@ -39,7 +39,7 @@ Examples:
 - Linux x64: `dist/sea/dx-voyager-linux-x64`
 - macOS arm64: `dist/sea/dx-voyager-macos-arm64`
 
-Use Node.js 25.5+ for `node --build-sea`.
+Use Node.js 26+ for `node --build-sea`.
 
 ## Mission
 
